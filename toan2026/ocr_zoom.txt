@@ -1,0 +1,39 @@
+---- P1_C3_C4 ----
+Cau 2. ChohinhlapphuongABCD.A'B'C'D'(xemhinhduoi).Vectonaosau daybangvectoAB?
+A'
+B'
+D'
+B
+D
+C
+---- P1_C2 ----
+io,tentm
+Ma de: 0103
+So bao danh:
+PHAN I: Thi sinh tra loi ti cau 1 dén cau 12. Moi cau hoi thi sinh chi chon mot phuong an.
+Cau 1. Nghiem cua phuong trinh log3(x - 1) = 1 la
+A.x=5.
+B.x = 3.
+C.x=2.
+D.x =4.
+Cau2.ChohinhlapphuongABCD.A'B'C'D'
+(xem hinh duoi).Vecto nao sau daybang vecto AB?
+---- P2_C11 ----
+A.f（x）=12x²
+B.f(x)=4x+.
+C.f（x）=3x².
+D.f（x)=x4
+Cau 12. Cho cap so nhan （u,) co so hang dau u va cong boi g voi u ≠0.q > 1. So hang u4 la
+A.u4=uuq
+B.u4=u.q
+C.4=+3q
+be+m=tmC
+PHAN II:Thi sinh tra Ioi ti cau 1 dén cau 4. Trong moi  a).b).c).d) o moi cau thi sinh chon
+diinghoacsai.
+---- P2_C12 ----
+tren thuc te. Mot muc tieu can duoc bao ve co vi tri o goc toa do O. Nguoi ta thiet lap mot vanh dai
+bao ve quanh muc tieu theo mot duong tron tam O c6 ban kinh bang 7 don vi (tuong ing 70 met
+tren thue te) nam trong mat phang (Oxy). Mot may bay khong nguoi lai (duoe coi nhu mot hat)
+bay theo mot duong thang ti vi tui M(5; 10:4) dén vi tri N(14; -2:4). Tai moi vi tri cua may bay,
+khoangcach tu maybayden vanh dai bao vela do daingan nhatcua cac doan thangnoi ti vi tri
+do den mot diem bat ki tren vanh dai.

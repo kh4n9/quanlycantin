@@ -1,0 +1,258 @@
+============================== PAGE 1-1781178432795945544434.jpg ==============================
+BOGIAODUCVADAOTAOKY THITOTNGHIEPTRUNGHOCPHOTHONGNAM2026
+DE THI CHINH THUC
+Mon thi: TOAN
+(Dethic604trang)
+Thoigian lambai:90phut,khongkethoigianphatde
+Ho,ten thi sinh:
+Ma de:0103
+Sobaodanh:.
+PHAN I: Thi sinh tra loi ti cau 1 dén cau 12. Moi cau hoi thi sinh chi chon mot phuong an.
+Cau 1. Nghiem cua phuong trinh log3(x - 1) = 1 la
+A.x=5.
+B.x=3.
+C.x=2.
+D.x=4.
+Cau 2.ChohinhlapphuongABCD.A'B'C'D'(xemhinh duoi).Vectonaosau daybangvectoAB?
+A'
+B'
+D'
+D
+A.
+CD
+B.D'C'.
+AA'
+D. AD.
+Cau 3.Cho hai bien codoc lap AvaB coxac suat thoa man P(A)=0,5vaP(B)=0,4.Gia tri cua
+P(AB) bang
+A.0,9.
+B.0,1.
+C.0,2.
+D.0,8.
+Cau4.Choham soy
+ax+b
+(c≠ O,ad-bc≠0)c6bangbien thiennhuhinh duoi day:
+cx+d
+x
+-8
+1
++8
+y
++
++
++8
+08
+Duongtiemcanngangcuado thihamsodachocophuongtrinhla
+A.x=-2.
+B.y=1.
+C.y=-2.
+D.x=1.
+Cau 5.Cho f(x)dx= sinx + C.Phat bieu nao sau day la dung?
+============================== PAGE 2-1781178445382560226102.jpg ==============================
+A./[3+f（x)）]dx=3x+cosx+C.
+B./[3+f（x)]dx=3x+sinx+C.
+C./[3+f（x)]dx=3x-cosx+C.
+D.[3+f（x)]dx=3x-sinx+C.
+Cau 6.Khao sat thoi gian (don vi:phit) hoc truc tuven trong mot ngay ciia 42 hoc sinh,nguoi ta
+thu duocmausolieughepnhomnhusau:
+Thoi gian hoc true tuyen
+[10;20)
+[20;30)
+[30:40)
+[40:50)
+[50;60)
+[60;70)
+So hoc sinh
+4
+8
+14
+7
+4
+Trungvi cuamau so lieu tren thuocnhom nao sau day?
+A.[50;60).
+B.[60;70).
+C.[30;40).
+D.[40;50).
+Cau 7.Cho cap socong（u,)cou1=5va cong sai d=-1.Gia tri cua ubang
+A.5.
+B.4.
+C.-4.
+D.-5.
+Cau 8. Cho cac ham so y=f(x)va y=g(x) co dao ham tren tap so thuc R thoa man f'（x)=x va
+g’（x)=x².Dao ham cia ham soy=f(x)+g(x) la
+A.x+x².
+B.1+2x.
+C.1+x².
+D.3x.
+Cau 9. Trong khong gian voi he toa do Oxyz, cho hai dicm A(1; 5: 1) va B(3;3;1). Vecto AB co toa
+dola
+A.（4:8:2）.
+B.(2:4:1).
+C.(2:-2:0).
+D.(-2:2:0).
+x+y-3<0
+Cau 10.Cap sonao sau dayla nghiemcuahebatphuong trinh
+？
+x-y+1>0
+A.(0:2）.
+B.(1:2).
+C.(-1:1).
+D.(1:0).
+Cau 11.Ham so F(x) =4x²la mot nguyen ham cua ham sonao sau day?
+A.f3（x）=12x².
+B.f（x）=4x.
+C.f（x）=3x².
+D.f（x)=x4.
+Cau 12.Cho cap sonhan（u,）co sohangdau uvacongboigvoi u≠0,q> 1.Sohangu4la
+A.u4=u.q²
+B.u4=u.q
+C.u4=u+3q
+D.u4=u+4q.
+PHAN I:Thi sinh tra loi ti cau 1 dén cau 4.Trong moi  a).b).c).d) omoi cau, thi sinh chon
+dung hoac sai.
+Cau 1.Trong khonggianxethetoa do Oxyzc6mot don vi dai tren cac truc tuonguing voi 10 met
+tren thuc te. Mot muc tieu can duocbao veco vi tri ogoc toa do O. Nguoi ta thiet lapmotvanh dai
+baovequanh muctieu theomot duongtron tam Oc6ban kinh bang7donvi(tuongting70 met
+tren thue te)nam trong mat phang （Oxy).Mot may bay khong nguoi lai (duoe coi nhu mot hat)
+bay theo mot duong thang tu vi tri M(5:10:4) dén vi tri N(14;-2:4).Tai moi vi tri cua may bay,
+khoang cach ti maybay den vanh daibao ve la do daingan nhatcua cac doan thangnoi tit vi tri
+do den mot diembatki tren vanh dai.
+2
+============================== PAGE 3-17811784582152112769980.jpg ==============================
+a)MN=（9:-12:0).
+x=5+31
+b)PhuongtrinhthamsociadrongthangMNla
+x=10-41
+voiIER.
+0=2
+c)Trong qua trinh bay tir M den N,khoang cach ngan nhat tir may bay den vanh dai bao ve la
+50met.
+d)Trongqua trinh bay tir MdenN.khoangcach tit maybay denvanh dai baove la ngan nhat
+khimay bay 0 vj trico toa do la (8:6:4).
+Cau 2.Nham dua ra canh bao som ve tinh trang sue khoe cha cu dan,nguoi ta si dung mot ing
+dung tri tuenhantaodesanglocnguycomacbenh dua trenhosoy te ditochnu trf.Khiphathien
+nguy cd mac benh.mg dung nay se gui canh bao de giup nguoi dan di kham benh kip thoi. Nguoi
+ta dungimg dung nay de tam soat nguy comacmot loai benh.
+Ketqua thu duoekhi quet thit nghiemho sdy tecua 10000 nguoinhu sau:C61000nguoinhan
+duoccanhbaova9000nguoi conlaikhongnhan duoccanhbao timg dung.Trong so1000nguoi
+nhan duoccanh bao thico700nguoic6benhva300nguoikhong c6benh.Trongso9000nguoi
+khongnhanduoccanhbao thi c6100nguoic6benhva8900nguoikhongc6benh.
+Chon ngau nhienmot nguoitrong so 10000 nguoin6i tren.
+a)Xacsuatdenguoi d6khongnhan duoccanh bao tit ng dungbang 0,9
+b)Xac suat de nguoi d6 khong co benh,bict rang nguoi d6 khong nhan duqc canh bao ti ing
+dung.16n hon 0,98.
+c)Xac suat denguoi dokhong co benh bang 0,9.
+d)Xac suat de nguoi d6 khong nhan duoe canh bao ti ung dung.biet rang nguoi d6khong co
+benh,nho hon 0,95.
+Cau 3.Mot he thong pin nang huongmat trdi gom cac tam pin duocket noi voi mot boluru tri dien.
+Trong thdi gian mat troi chieu sang cua mot ngaynang huong dien thu duoc ti cac tam pin duoe
+luu trong bo luru trir dien. Goi F(t) la nang luong dien (kWh) hru tru duoe ke ti thoi diem he thong
+bat dauhoat dongden thoi diem1,trongdor la thoigiantinh theogio（0≤1≤12)va thoi diem he
+thong bat dan hoat dong ng voi =0.Bietrang F(o)=0.
+Toc do lru tru nang luongdien (kW)cha he thongnay la ham sof()= F'(0)voi 0≤7 ≤12.So
+lieu ghinhan duoe omot ngay cu thetrongnam cho thay f(t)=-0.3r²+3.6r voi 0≤1≤12.
+a)F(t)=-0.1r²+1.8r²v0i0≤1≤12.
+b)Nang luong dien （kWh） luru tru dugeke tu thoi diem 1=a den thoi diemt=b (O≤a<b≤12)
+b
+laf(t)dt.
+3
+============================== PAGE 4-1781178467999285914374.jpg ==============================
+c)Nang luongdien luu tru duocketithoi diem t=1 den thoidiem 1=4nhohon20,6kWh.
+d)Nangluong dien luu tru duocke ti thoi diemt =1 den thoi diem t = 7gaphailan nang luong
+dienlru truduocketi thoidiemt=1 den thoi diem t=4.
+Cau4.Choham sof（x)=↓x3-5x²+9x+8.
+a)Ham sodachoc6daohamlaf′（x)=x²-10x+9.
+b)Phuong trinh f'（x)=0 co tap nghiemla S={1;9}.
+c)Ham soda chonghichbien trenkhoang(1;9).
+d) Gia tri cuc tieu cuia ham so da cho bang 
+PHAN III:Thi sinh tra loi ti cau 1 dén cau 6.
+Cau 1. Mot khung hinh trang tri c6 dang mot da giac deu 12 canh AA2...A12 (xem hinh duoi)
+duocgancodinhtrenmottrannha.BanDungc612bongdengombonbongmaudova tambong
+mauxanh,c6cong suat doimotkhacnhau.BanDunglapngau nhien 12bong den tren vao 12 dinh
+A,A2,...,A1 sao chomoi dinh co dung mot bong den.Goi P la xac suat demoi hinh vuong（co
+bon dinh la cac dinh cua da giac da cho)deuc6 it nhat mot bongden mau do.Gia tri cua3190P
+bang bao nhieu?
+A1
+A12
+A2
+A1
+A3
+A10
+A4
+Ag
+A5
+A8
+A6
+A7
+Cau2.Motnong traicungcaprau qua cho sieu thi Avoi solieu banhangcuabonngay trong tuan
+duocghilai trongbangsau:
+So ki-lo-gam
+Tong so tien
+Ngay
+Rau muong
+Bi xanh
+Ca chua
+(nghin dong)
+ThuTu
+19
+14
+10
+600
+Thu Nam
+20
+12
+8
+540
+ThuSau
+25
+12
+7
+570
+Thu Bay
+50
+25
+20
+？
+4
+============================== PAGE 5-17811784782501218450596.jpg ==============================
+Bietrang dou gia theoki-lo-gam cua moi loai rau qua trongbang tren la khong doi.Tong so tien
+nong trai thu duoeongay thiBaytirbaloai rau qua trenkhi cungcapcho sieu thi A labaonhieu
+nghindong?
+Cau 3.De che tacmot hat cuom.nguoi ta Iay mot khoi vat the co dangmot khoi tron xoay duoe
+tao thanh khi quay hinh phang gioi han boi truc Ox va mita tren cia elip  +=1 (mot don vi
+dai trenmoi truc toa do tuong mgvoi motxang-ti-met trong thue te) quanh truc Ox:sau dokhoan
+doe theo trucxoay(xemhinhduroi）.Lokhoan codanghinh try voi bankinh 0.2cmvac6 truenam
+tren true xoay.Phan con lai sau khi khoan la hat cuom,co dang mot khoi tron xoay.
+The tich cua hat cuom dobang bao nhieu xang-ti-met khbi (khong lam tron ket qua caephep
+tinh trung gian.chi lam tron ket qua cuoi cing den hang phan tram)?
++#=1
++#=1
+Basi kinh 1o kbcat
+0,2
+y=0.2
+0
+Thac oc
+Luruy: Cac kich thutoe trong hinh minh hoa co thekhong dung ti le thue te.
+Cau4Trongmot trochoi banBinh canvuot quamotthit thach.Theoyeu cau cua thit thach,Binh
+can dien tat ca 15 s6thu0c tap hop {0;1;2:3:4:5;6:7;8:10;11;12:15:16;20}vao 150vuong trong
+hinh duoithoaman dong thoibadieukien sau:
+-Moi o dien dung mot sova moi sochi duoc sit dung mot lan:
+-Hieu hai so o hai o bat ki khacnhau tren cingmot hangkhong chia het cho 5;
+-Hieu hai so a hai o bat ki khacnhau tren cing mot cot khong chia het cho 5.
+Hai cachdiengoi lagiongnhauneusodienomoio tutongungtrong15olagiongnhan（khong tinh
+dénthittu dien cac sovao 15ovuong).Goi Hla so cach dienkhacnhau debanBinhvuot qua duge
+thir thach.Gia tri cua  bang bao nlhieu?
+Hang5
+Hang4
+Hang3
+Hang2
+Hang1
+5
+Cau 5.Mot cong ty nong san cocong suat chebienkhongqua 20o tan nguyen lieu mot thang.Nen
+cong tychebienx tan nguyen lieu trongmot thang(≤x≤200) thi chi phi sanxuat va doanh thu
+lanluot Ia C（x）=0.001x²+30x+10 （trieu dong）va R（x）=60x（trien dong）.Loinhuan lonnhat
+ma cong ty dat duoc trong mot thang la bao nhieu tricu dong?
+Cau 6.Cho.hinh lapphirongABCD.MNPQco canh bang 6.Goi Ela trungdiem cua doan thang
+AB.Khoang cach tit diem P den mat phang (MED) bang bao nhieu (khong lam tron ket qua cac
+phep tinh trunggian,chi lam tron ketqua cuoi cing den hangphan tram)?
+HET

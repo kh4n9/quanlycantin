@@ -1,0 +1,91 @@
+{
+  "products": [
+    {
+      "id": "sp_mur6iedhn0geln",
+      "ma": "H-MÌ GẤU Đ",
+      "ten": "MÌ GẤU ĐỎ CHUA CAY",
+      "nhom": "Thực phẩm",
+      "donViTinh": "GÓI",
+      "giaBan": 5000,
+      "dangDung": true,
+      "ghiChu": "",
+      "createdAt": "2026-10-02T16:30:03.077Z"
+    },
+    {
+      "id": "sp_mur6ivyc6tipba",
+      "ma": "H-CHÁO GẤU",
+      "ten": "CHÁO GẤU ĐỎ CHUA CAY",
+      "nhom": "Thực phẩm",
+      "donViTinh": "GÓI",
+      "giaBan": 4000,
+      "dangDung": true,
+      "ghiChu": "",
+      "createdAt": "2026-10-02T16:30:25.860Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "pb_mur6jle6l3r1rn",
+      "soPhieu": "PB-2026-0001",
+      "ngay": "2026-10-02",
+      "hoTen": "NGUYỄN VĂN A",
+      "namSinh": 1990,
+      "buongGiam": "B19",
+      "items": [
+        {
+          "productId": "sp_mur6ivyc6tipba",
+          "ma": "H-CHÁO GẤU",
+          "ten": "CHÁO GẤU ĐỎ CHUA CAY",
+          "donViTinh": "GÓI",
+          "soLuong": 30,
+          "donGia": 3600,
+          "thanhTien": 108000
+        },
+        {
+          "productId": "sp_mur6iedhn0geln",
+          "ma": "H-MÌ GẤU Đ",
+          "ten": "MÌ GẤU ĐỎ CHUA CAY",
+          "donViTinh": "GÓI",
+          "soLuong": 25,
+          "donGia": 5000,
+          "thanhTien": 125000
+        }
+      ],
+      "tongTien": 233000,
+      "ghiChu": "",
+      "createdAt": "2026-10-02T16:30:58.830Z"
+    },
+    {
+      "id": "pb_mur6kobeubkcxp",
+      "soPhieu": "PB-2026-0002",
+      "ngay": "2026-10-02",
+      "hoTen": "NGUYỄN VĂN B",
+      "namSinh": 2000,
+      "buongGiam": "B18",
+      "items": [
+        {
+          "productId": "sp_mur6ivyc6tipba",
+          "ma": "H-CHÁO GẤU",
+          "ten": "CHÁO GẤU ĐỎ CHUA CAY",
+          "donViTinh": "GÓI",
+          "soLuong": 60,
+          "donGia": 3600,
+          "thanhTien": 216000
+        }
+      ],
+      "tongTien": 216000,
+      "ghiChu": "",
+      "createdAt": "2026-10-02T16:31:49.274Z"
+    }
+  ],
+  "counters": {
+    "order": {
+      "2026": 3
+    }
+  },
+  "settings": {
+    "tenDonVi": "CĂN TIN PHẠM NHÂN",
+    "diaChi": "",
+    "nguoiLapPhieu": ""
+  }
+}

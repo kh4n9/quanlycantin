@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Cascadia Mono", Consolas, "Courier New", monospace;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: #eef2f6;
+  color: #0f172a;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Bỏ mũi tên tăng/giảm của ô nhập số cho gọn, dễ gõ tay */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Thanh cuộn mảnh cho bảng dữ liệu */
+.mem-cuon::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.mem-cuon::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.mem-cuon::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+  background-clip: content-box;
+}
+
+/* ---------- In phiếu ---------- */
+#print-area {
+  display: none;
+}
+
+@media print {
+  .khong-in {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  #print-area {
+    display: block !important;
+  }
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+}
+
+.phieu-in {
+  font-family: "Times New Roman", Times, serif;
+  color: #000;
+  font-size: 13pt;
+  line-height: 1.45;
+}
+.phieu-in table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.phieu-in th,
+.phieu-in td {
+  border: 1px solid #000;
+  padding: 4px 6px;
+}
+.phieu-in th {
+  text-align: center;
+  font-weight: 700;
+}
