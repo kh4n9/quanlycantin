@@ -2,7 +2,7 @@ name: Deploy Next.js to VPS with PM2
 
 on:
   push:
-    branches: ["production"] # Lưu ý: sửa thành "production" nếu bạn push lên nhánh đó
+    branches: ["production"] # Hoặc "main" tùy vào nhánh bạn đang dùng thực tế
   workflow_dispatch:
 
 jobs:
@@ -26,17 +26,11 @@ jobs:
       - name: Copy files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          # Các thông tin này lấy từ màn hình của bạn
           host: "0.tcp.ap.ngrok.io"
           username: "khang"
           port: 10644
-          # Lấy khóa bí mật từ GitHub Secrets
           key: ${{ secrets.DEPLOY_KEY }}
-          
-          # Chỉ copy các file cần thiết để chạy Next.js (bỏ qua src, node_modules)
           source: ".next,public,package.json,package-lock.json,next.config.js,next.config.mjs"
-          
-          # THAY ĐỔI ĐƯỜNG DẪN NÀY: Thư mục chứa code trên VPS của bạn
           target: "/var/www/quanlycantin" 
 
       - name: Install & Restart PM2 on VPS
@@ -47,11 +41,10 @@ jobs:
           port: 10644
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
-            # Di chuyển vào thư mục code
             cd /var/www/quanlycantin
             
-            # Sử dụng đường dẫn tuyệt đối chuẩn xác trên VPS của bạn
+            # Sử dụng đường dẫn tuyệt đối đã kiểm tra trên VPS của bạn
             /home/khang/.local/bin/npm install --production
             
-            # Khởi động lại PM2 hoặc chạy mới bằng lệnh tuyệt đối
+            # Restart bằng đường dẫn tuyệt đối của PM2
             /home/khang/.local/bin/pm2 restart quanlycantin || /home/khang/.local/bin/pm2 start /home/khang/.local/bin/npm --name "quanlycantin" -- start
