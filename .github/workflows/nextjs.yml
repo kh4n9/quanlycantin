@@ -2,7 +2,7 @@ name: Deploy Next.js to VPS with PM2
 
 on:
   push:
-    branches: ["main"] # Lưu ý: sửa thành "production" nếu bạn push lên nhánh đó
+    branches: ["production"] # Lưu ý: sửa thành "production" nếu bạn push lên nhánh đó
   workflow_dispatch:
 
 jobs:
@@ -47,8 +47,11 @@ jobs:
           port: 10644
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
-            # Di chuyển vào thư mục code (phải trùng với target ở trên)
+            # Di chuyển vào thư mục code
             cd /var/www/quanlycantin
+            
+            # Khai báo thêm đường dẫn hệ thống để nhận diện npm và pm2
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
             
             # Cài đặt các package cần thiết cho môi trường production
             npm install --production
