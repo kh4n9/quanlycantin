@@ -43,8 +43,11 @@ jobs:
           script: |
             cd /var/www/quanlycantin
             
-            # Sử dụng đường dẫn tuyệt đối đã kiểm tra trên VPS của bạn
-            /home/khang/.local/bin/npm install --production
+            # Khai báo đầy đủ đường dẫn tới thư mục chứa lệnh node, npm và pm2 của user
+            export PATH="/home/khang/.local/bin:/usr/local/bin:/usr/bin:/bin"
             
-            # Restart bằng đường dẫn tuyệt đối của PM2
-            /home/khang/.local/bin/pm2 restart quanlycantin || /home/khang/.local/bin/pm2 start /home/khang/.local/bin/npm --name "quanlycantin" -- start
+            # Cài đặt các package production
+            npm install --production
+            
+            # Khởi động lại PM2
+            pm2 restart quanlycantin || pm2 start npm --name "quanlycantin" -- start
