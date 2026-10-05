@@ -73,7 +73,7 @@ export function ManCaiDat() {
 
   const xoaHet = async () => {
     const buoc1 = window.confirm(
-      "XOÁ SẠCH toàn bộ mặt hàng, can phạm và phiếu bán?\n\nThao tác này không thể hoàn tác. Nên bấm “Tải file sao lưu” trước khi xoá.",
+      "XOÁ SẠCH toàn bộ mặt hàng và phiếu bán?\n\nThao tác này không thể hoàn tác và không xoá được tài khoản. Nên bấm “Tải file sao lưu” trước khi xoá.",
     );
     if (!buoc1) return;
     if (!window.confirm("Chắc chắn xoá hết? Đây là lần xác nhận cuối.")) return;
@@ -149,7 +149,7 @@ export function ManCaiDat() {
         </div>
       </The>
 
-      <The tieuDe="Dữ liệu" phuDe="Toàn bộ dữ liệu được lưu trong file data/db.json trên máy này">
+      <The tieuDe="Dữ liệu" phuDe="Toàn bộ dữ liệu được lưu trên MongoDB, nhiều máy cùng dùng chung">
         <div className="flex flex-col gap-3 p-4">
           <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
             <span>
@@ -176,8 +176,9 @@ export function ManCaiDat() {
             )}
           </div>
           <p className="text-[12px] text-slate-500">
-            Nên sao lưu định kỳ: file sao lưu chứa toàn bộ mặt hàng, can phạm và phiếu bán. Để khôi phục, chép đè
-            nội dung vào file <code className="rounded bg-slate-100 px-1">data/db.json</code> trong thư mục dự án.
+            Nên sao lưu định kỳ: file tải về chứa toàn bộ mặt hàng và phiếu bán, dùng để đối chiếu hoặc khôi phục
+            khi cần. Việc xoá sạch chỉ ảnh hưởng mặt hàng và phiếu bán — tài khoản và thông tin đơn vị vẫn giữ
+            nguyên.
           </p>
         </div>
       </The>
@@ -190,7 +191,7 @@ export function ManCaiDat() {
             ["Enter", "Thêm mặt hàng đang chọn vào phiếu"],
             ["5 + dấu cách + tên", "Nhập nhanh số lượng, ví dụ “5 mì”"],
             ["Esc", "Đóng danh sách gợi ý / hộp thoại"],
-            ["Alt + 1…5", "Chuyển nhanh giữa các mục"],
+            ["Alt + 1…6", "Chuyển nhanh giữa các mục đang thấy"],
           ].map(([k, v]) => (
             <div key={k} className="flex items-start gap-2">
               <kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap text-slate-700">
