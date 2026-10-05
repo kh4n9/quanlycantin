@@ -1,23 +1,33 @@
 import { NextResponse } from "next/server";
-import { getDB, mutate } from "@/lib/db";
+import { yeuCau } from "@/lib/auth";
+import { khoiTao, layCaiDat, luuCaiDat } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const db = await getDB();
-  return NextResponse.json({ settings: db.settings });
+  try {
+    await khoiTao();
+    const kq = await yeuCau();
+    if ("res" in kq) return kq.res;
+    return NextResponse.json({ settings: await layCaiDat() });
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  }
 }
 
 export async function PATCH(req: Request) {
   try {
+    await khoiTao();
+    const kq = await yeuCau("sua_cai_dat");
+    if ("res" in kq) return kq.res;
+
     const body = await req.json();
-    const settings = await mutate((db) => {
-      if (body.tenDonVi !== undefined) db.settings.tenDonVi = String(body.tenDonVi);
-      if (body.diaChi !== undefined) db.settings.diaChi = String(body.diaChi);
-      if (body.nguoiLapPhieu !== undefined) db.settings.nguoiLapPhieu = String(body.nguoiLapPhieu);
-      return db.settings;
-    });
-    return NextResponse.json({ settings });
+    const patch: Record<string, string> = {};
+    if (body.tenDonVi !== undefined) patch.tenDonVi = String(body.tenDonVi);
+    if (body.diaChi !== undefined) patch.diaChi = String(body.diaChi);
+    if (body.nguoiLapPhieu !== undefined) patch.nguoiLapPhieu = String(body.nguoiLapPhieu);
+
+    return NextResponse.json({ settings: await luuCaiDat(patch) });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });
   }

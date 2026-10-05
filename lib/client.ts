@@ -1,6 +1,16 @@
 "use client";
 
-import type { CanPhamGoiY, LineInput, Order, Product, Settings } from "./types";
+import type { Quyen } from "./quyen";
+import type { CanPhamGoiY, LineInput, NguoiDungCongKhai, Order, Product, Settings } from "./types";
+
+/** Lỗi trả về từ API kèm mã trạng thái, để chỗ gọi biết là 401 hay 403. */
+export class LoiApi extends Error {
+  ma: number;
+  constructor(message: string, ma: number) {
+    super(message);
+    this.ma = ma;
+  }
+}
 
 export async function api<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -9,7 +19,7 @@ export async function api<T>(url: string, init?: RequestInit): Promise<T> {
     cache: "no-store",
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((data as { error?: string })?.error || `Lỗi ${res.status}`);
+  if (!res.ok) throw new LoiApi((data as { error?: string })?.error || `Lỗi ${res.status}`, res.status);
   return data as T;
 }
 
@@ -51,7 +61,42 @@ export type DuLieuPhieu = {
   items: LineInput[];
 };
 
+export type DuLieuTaiKhoan = {
+  tenDangNhap: string;
+  hoTen: string;
+  matKhau: string;
+  quyen: Quyen[];
+  dangHoatDong: boolean;
+};
+
 export const apiClient = {
+  /* ------------------------------ Xác thực ------------------------------ */
+  toi: () => api<{ nguoiDung: NguoiDungCongKhai; caiDat: Settings }>("/api/auth/toi"),
+  dangNhap: (tenDangNhap: string, matKhau: string) =>
+    api<{ nguoiDung: NguoiDungCongKhai }>("/api/auth/dang-nhap", {
+      method: "POST",
+      body: JSON.stringify({ tenDangNhap, matKhau }),
+    }),
+  dangXuat: () => api<{ ok: boolean }>("/api/auth/dang-xuat", { method: "POST" }),
+  doiMatKhau: (matKhauCu: string, matKhauMoi: string) =>
+    api<{ ok: boolean }>("/api/auth/doi-mat-khau", {
+      method: "POST",
+      body: JSON.stringify({ matKhauCu, matKhauMoi }),
+    }),
+
+  /* ------------------------------ Tài khoản ------------------------------ */
+  dsTaiKhoan: () => api<{ nguoiDung: NguoiDungCongKhai[] }>("/api/tai-khoan"),
+  themTaiKhoan: (body: DuLieuTaiKhoan) =>
+    api<{ nguoiDung: NguoiDungCongKhai }>("/api/tai-khoan", { method: "POST", body: JSON.stringify(body) }),
+  suaTaiKhoan: (id: string, body: Partial<DuLieuTaiKhoan> & { matKhauMoi?: string }) =>
+    api<{ nguoiDung: NguoiDungCongKhai }>(`/api/tai-khoan/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+  xoaTaiKhoan: (id: string) =>
+    api<{ ok: boolean; hoTen: string }>(`/api/tai-khoan/${id}`, { method: "DELETE" }),
+
+  /* ------------------------------ Nghiệp vụ ------------------------------ */
   products: () => api<{ products: Product[] }>("/api/products"),
   themHang: (body: Partial<Product>) =>
     api<{ product: Product }>("/api/products", { method: "POST", body: JSON.stringify(body) }),
