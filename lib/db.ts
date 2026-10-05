@@ -1,182 +1,296 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { CanPhamGoiY, DB, LineItem, LineInput, Product } from "./types";
+import { COL, KHONG_LAY_ID, getDb } from "./mongo";
+import { QUYEN_DAY_DU } from "./quyen";
+import { bamMatKhau } from "./auth";
+import type { CanPhamGoiY, LineItem, LineInput, Order, Product, Settings } from "./types";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const DB_FILE = path.join(DATA_DIR, "db.json");
+/* ============================ Khởi tạo ============================ */
 
-function emptyDB(): DB {
-  return {
-    products: [],
-    orders: [],
-    counters: { order: {} },
-    settings: { tenDonVi: "", diaChi: "", nguoiLapPhieu: "" },
-  };
+let daKhoiTao: Promise<void> | null = null;
+
+/** Tạo chỉ mục, tài khoản quản trị đầu tiên và chuyển dữ liệu cũ nếu cần. */
+export function khoiTao(): Promise<void> {
+  if (!daKhoiTao) {
+    daKhoiTao = chayKhoiTao().catch((e) => {
+      daKhoiTao = null; // lần sau thử lại
+      throw e;
+    });
+  }
+  return daKhoiTao;
 }
 
-/** Bù các trường thiếu để file dữ liệu cũ vẫn đọc được. */
-function chuanHoa(p: Partial<DB>): DB {
-  const goc = emptyDB();
-  const soDuong = (v: unknown) => {
-    const n = Math.round(Number(v));
-    return Number.isFinite(n) && n > 0 ? n : 0;
-  };
-  return {
-    products: (p.products ?? []).map((x) => ({ ...x, giaBan: soDuong(x?.giaBan) })),
-    orders: (p.orders ?? []).map((x) => {
-      const o = x as unknown as Record<string, unknown>;
-      return {
-        ...x,
-        hoTen: String(o.hoTen ?? ""),
-        namSinh: soDuong(o.namSinh),
-        buongGiam: String(o.buongGiam ?? ""),
-      } as DB["orders"][number];
-    }),
-    counters: { order: {}, ...(p.counters || {}) },
-    settings: { ...goc.settings, ...(p.settings || {}) },
-  };
-}
+async function chayKhoiTao(): Promise<void> {
+  const db = await getDb();
 
-const CHO_RETRY = new Set(["EPERM", "EBUSY", "EACCES", "EEXIST"]);
+  await Promise.all([
+    db.collection(COL.nguoiDung).createIndex({ tenDangNhap: 1 }, { unique: true }),
+    db.collection(COL.nguoiDung).createIndex({ id: 1 }, { unique: true }),
+    db.collection(COL.sanPham).createIndex({ id: 1 }, { unique: true }),
+    db.collection(COL.phieuBan).createIndex({ id: 1 }, { unique: true }),
+    db.collection(COL.phieuBan).createIndex({ ngay: -1 }),
+    db.collection(COL.phieuBan).createIndex({ hoTen: 1 }),
+  ]);
 
-/**
- * Ghi dữ liệu xuống đĩa.
- *
- * Trên Windows, thao tác đổi tên file có thể tạm thời bị chặn (OneDrive,
- * antivirus, trình đánh chỉ mục) nên phải thử lại vài lần. Tên file tạm có
- * kèm pid + thời điểm để nhiều tiến trình không ghi đè lên nhau.
- */
-async function ghiFile(db: DB): Promise<void> {
-  await fs.promises.mkdir(DATA_DIR, { recursive: true });
-  const noiDung = JSON.stringify(db, null, 2);
-  const tmp = `${DB_FILE}.${process.pid}.${Date.now()}.tmp`;
-  await fs.promises.writeFile(tmp, noiDung, "utf8");
-
-  let loiCuoi: unknown = null;
-  for (let lan = 0; lan < 8; lan++) {
-    try {
-      await fs.promises.rename(tmp, DB_FILE);
-      return;
-    } catch (e) {
-      const ma = (e as NodeJS.ErrnoException).code ?? "";
-      if (!CHO_RETRY.has(ma)) throw e;
-      loiCuoi = e;
-      await new Promise((r) => setTimeout(r, 20 * (lan + 1)));
-    }
-  }
-
-  // Vẫn bị khoá: ghi thẳng vào file đích, thà chấp nhận rủi ro nhỏ còn hơn mất dữ liệu
-  try {
-    await fs.promises.writeFile(DB_FILE, noiDung, "utf8");
-    await fs.promises.unlink(tmp).catch(() => {});
-  } catch {
-    throw loiCuoi;
-  }
+  await taoQuanTriDauTien();
+  await chuyenDuLieuTuFileJson();
 }
 
 /**
- * Đọc dữ liệu. Luôn đọc mới từ đĩa: file nhỏ nên chi phí không đáng kể, đổi lại
- * không bao giờ trả về dữ liệu cũ khi có nhiều tiến trình cùng phục vụ.
+ * Chưa có tài khoản nào thì tạo sẵn một tài khoản quản trị
+ * với tên đăng nhập và mật khẩu đều là "admin".
  */
-export async function getDB(): Promise<DB> {
-  try {
-    const raw = await fs.promises.readFile(DB_FILE, "utf8");
-    if (!raw.trim()) throw new Error("File dữ liệu rỗng");
-    return chuanHoa(JSON.parse(raw) as Partial<DB>);
-  } catch (e) {
-    const ma = (e as NodeJS.ErrnoException).code;
-    if (ma === "ENOENT") {
-      const moi = emptyDB();
-      await ghiFile(moi);
-      return moi;
-    }
-    // File hỏng: giữ lại bản cũ để còn cứu dữ liệu, rồi bắt đầu file mới
-    const saoLuu = `${DB_FILE}.hong-${Date.now()}`;
-    await fs.promises.rename(DB_FILE, saoLuu).catch(() => {});
-    console.error(`[db] File dữ liệu không đọc được, đã chuyển sang ${saoLuu}`);
-    const moi = emptyDB();
-    await ghiFile(moi);
-    return moi;
-  }
-}
+async function taoQuanTriDauTien(): Promise<void> {
+  const db = await getDb();
+  const dem = await db.collection(COL.nguoiDung).countDocuments();
+  if (dem > 0) return;
 
-/**
- * Hàng đợi ghi: mọi thao tác thay đổi dữ liệu được xếp hàng để không hai
- * request nào cùng đọc-sửa-ghi một lúc.
- */
-let hangDoi: Promise<unknown> = Promise.resolve();
-
-export function mutate<T>(fn: (db: DB) => T): Promise<T> {
-  const chay = hangDoi.then(async () => {
-    const db = await getDB();
-    const ketQua = fn(db);
-    await ghiFile(db);
-    return ketQua;
+  await db.collection(COL.nguoiDung).insertOne({
+    id: newId("nd"),
+    tenDangNhap: "admin",
+    hoTen: "Quản trị viên",
+    quyen: QUYEN_DAY_DU,
+    dangHoatDong: true,
+    phaiDoiMatKhau: true,
+    matKhauHash: await bamMatKhau("admin"),
+    lanDangNhapCuoi: "",
+    createdAt: new Date().toISOString(),
   });
-  // Lỗi của lần này không được làm kẹt hàng đợi
-  hangDoi = chay.then(
-    () => undefined,
-    () => undefined,
-  );
-  return chay;
+  console.log("[db] Đã tạo tài khoản quản trị mặc định: admin / admin");
+}
+
+/**
+ * Lần đầu chạy với cơ sở dữ liệu trống: chuyển mặt hàng và phiếu bán từ file
+ * data/db.json (bản lưu cũ) lên MongoDB. File cũ được giữ nguyên làm bản sao.
+ */
+async function chuyenDuLieuTuFileJson(): Promise<void> {
+  const db = await getDb();
+  const daCoSanPham = await db.collection(COL.sanPham).countDocuments();
+  if (daCoSanPham > 0) return;
+
+  const fileCu = path.join(process.cwd(), "data", "db.json");
+  if (!fs.existsSync(fileCu)) return;
+
+  try {
+    const cu = JSON.parse(fs.readFileSync(fileCu, "utf8")) as {
+      products?: Product[];
+      orders?: Order[];
+      settings?: Settings;
+    };
+    const sanPham = cu.products ?? [];
+    const phieu = cu.orders ?? [];
+    if (sanPham.length === 0 && phieu.length === 0) return;
+
+    if (sanPham.length) await db.collection(COL.sanPham).insertMany(sanPham);
+    if (phieu.length) await db.collection(COL.phieuBan).insertMany(phieu);
+    if (cu.settings) await luuCaiDat(cu.settings);
+
+    // Đánh số phiếu tiếp nối đúng theo dữ liệu vừa chuyển
+    const theoNam = new Map<string, number>();
+    for (const o of phieu) {
+      const nam = (o.ngay || "").slice(0, 4);
+      const so = Number((o.soPhieu || "").split("-").pop()) || 0;
+      if (nam) theoNam.set(nam, Math.max(theoNam.get(nam) ?? 0, so));
+    }
+    for (const [nam, so] of theoNam) {
+      await db
+        .collection<DocBoDem>(COL.dem)
+        .updateOne({ _id: `phieu_ban_${nam}` }, { $max: { giaTri: so } }, { upsert: true });
+    }
+
+    console.log(`[db] Đã chuyển ${sanPham.length} mặt hàng và ${phieu.length} phiếu bán từ data/db.json lên MongoDB`);
+  } catch (e) {
+    console.error("[db] Không chuyển được dữ liệu cũ từ data/db.json:", (e as Error).message);
+  }
 }
 
 export function newId(tienTo = "id"): string {
   return `${tienTo}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
 
-/** Sinh số phiếu dạng PB-2026-0001, đếm lại từ đầu mỗi năm. */
-export function soPhieuMoi(db: DB, ngay: string): string {
+/** Bảng đếm dùng _id kiểu chuỗi, ví dụ "phieu_ban_2026". */
+type DocBoDem = { _id: string; giaTri: number };
+
+/* ============================ Mặt hàng ============================ */
+
+export async function laySanPham(): Promise<Product[]> {
+  const db = await getDb();
+  return (await db.collection(COL.sanPham).find({}, KHONG_LAY_ID).toArray()) as unknown as Product[];
+}
+
+export async function timSanPham(id: string): Promise<Product | null> {
+  const db = await getDb();
+  const doc = await db.collection(COL.sanPham).findOne({ id }, KHONG_LAY_ID);
+  return (doc as unknown as Product) ?? null;
+}
+
+export async function themSanPham(sp: Product): Promise<Product> {
+  const db = await getDb();
+  await db.collection(COL.sanPham).insertOne({ ...sp });
+  return sp;
+}
+
+export async function suaSanPham(id: string, patch: Partial<Product>): Promise<Product | null> {
+  const db = await getDb();
+  await db.collection(COL.sanPham).updateOne({ id }, { $set: patch });
+  return timSanPham(id);
+}
+
+export async function xoaSanPham(id: string): Promise<void> {
+  const db = await getDb();
+  await db.collection(COL.sanPham).deleteOne({ id });
+}
+
+export async function sanPhamDaLenPhieu(id: string): Promise<boolean> {
+  const db = await getDb();
+  return (await db.collection(COL.phieuBan).countDocuments({ "items.productId": id }, { limit: 1 })) > 0;
+}
+
+/* ============================ Phiếu bán ============================ */
+
+/** Sinh số phiếu dạng PB-2026-0001. Bộ đếm tăng nguyên tử nên nhiều người cùng lập phiếu vẫn không trùng số. */
+export async function soPhieuMoi(ngay: string): Promise<string> {
   const nam = (ngay || new Date().toISOString()).slice(0, 4);
-  const so = (db.counters.order[nam] || 0) + 1;
-  db.counters.order[nam] = so;
+  const db = await getDb();
+  const kq = await db
+    .collection<DocBoDem>(COL.dem)
+    .findOneAndUpdate(
+      { _id: `phieu_ban_${nam}` },
+      { $inc: { giaTri: 1 } },
+      { upsert: true, returnDocument: "after" },
+    );
+  const so = Number(kq?.giaTri ?? 1);
   return `PB-${nam}-${String(so).padStart(4, "0")}`;
 }
 
-export function timProduct(db: DB, id: string): Product | undefined {
-  return db.products.find((p) => p.id === id);
+export type LocPhieu = { tu?: string; den?: string; hoTen?: string };
+
+export async function layPhieuBan(loc: LocPhieu = {}): Promise<Order[]> {
+  const db = await getDb();
+  const dieuKien: Record<string, unknown> = {};
+  if (loc.tu || loc.den) {
+    const khoang: Record<string, string> = {};
+    if (loc.tu) khoang.$gte = loc.tu;
+    if (loc.den) khoang.$lte = loc.den;
+    dieuKien.ngay = khoang;
+  }
+  if (loc.hoTen) {
+    dieuKien.hoTen = new RegExp(`^${loc.hoTen.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+  }
+  return (await db
+    .collection(COL.phieuBan)
+    .find(dieuKien, KHONG_LAY_ID)
+    .sort({ ngay: -1, createdAt: -1 })
+    .toArray()) as unknown as Order[];
+}
+
+export async function timPhieuBan(id: string): Promise<Order | null> {
+  const db = await getDb();
+  const doc = await db.collection(COL.phieuBan).findOne({ id }, KHONG_LAY_ID);
+  return (doc as unknown as Order) ?? null;
+}
+
+export async function themPhieuBan(o: Order): Promise<Order> {
+  const db = await getDb();
+  await db.collection(COL.phieuBan).insertOne({ ...o });
+  return o;
+}
+
+export async function suaPhieuBan(id: string, patch: Partial<Order>): Promise<Order | null> {
+  const db = await getDb();
+  await db.collection(COL.phieuBan).updateOne({ id }, { $set: patch });
+  return timPhieuBan(id);
+}
+
+export async function xoaPhieuBan(id: string): Promise<Order | null> {
+  const db = await getDb();
+  const phieu = await timPhieuBan(id);
+  if (!phieu) return null;
+  await db.collection(COL.phieuBan).deleteOne({ id });
+  return phieu;
 }
 
 /**
  * Danh sách can phạm suy ra từ các phiếu bán đã lập, dùng cho ô gợi ý.
  * Gộp theo họ tên (không phân biệt hoa thường, khoảng trắng thừa).
  */
-/** Ưu tiên cách viết có chữ hoa đầu ("Nguyễn Văn An" hơn "nguyễn văn an"). */
-function vietHoaDau(s: string): boolean {
-  return /^\p{Lu}/u.test(s.trim());
+export async function danhSachCanPham(): Promise<CanPhamGoiY[]> {
+  const db = await getDb();
+  const ds = await db
+    .collection(COL.phieuBan)
+    .aggregate([
+      { $sort: { ngay: 1, createdAt: 1 } },
+      {
+        $group: {
+          _id: {
+            $toLower: { $trim: { input: { $replaceAll: { input: "$hoTen", find: "  ", replacement: " " } } } },
+          },
+          hoTen: { $last: "$hoTen" },
+          namSinh: { $last: "$namSinh" },
+          buongGiam: { $last: "$buongGiam" },
+          soLan: { $sum: 1 },
+          lanCuoi: { $last: "$ngay" },
+        },
+      },
+      { $project: { _id: 0 } },
+      { $sort: { lanCuoi: -1 } },
+    ])
+    .toArray();
+
+  return (ds as unknown as CanPhamGoiY[]).map((c) => ({
+    hoTen: String(c.hoTen ?? "").trim(),
+    namSinh: Number(c.namSinh) || 0,
+    buongGiam: String(c.buongGiam ?? ""),
+    soLan: Number(c.soLan) || 0,
+    lanCuoi: String(c.lanCuoi ?? ""),
+  }));
 }
 
-export function danhSachCanPham(db: DB): CanPhamGoiY[] {
-  const map = new Map<string, CanPhamGoiY>();
-  for (const o of db.orders) {
-    const hoTen = o.hoTen.trim();
-    if (!hoTen) continue;
-    const khoa = hoTen.toLowerCase().replace(/\s+/g, " ");
-    const cu = map.get(khoa);
-    if (!cu) {
-      map.set(khoa, { hoTen, namSinh: o.namSinh, buongGiam: o.buongGiam, soLan: 1, lanCuoi: o.ngay });
-    } else {
-      cu.soLan += 1;
-      // Giữ thông tin của phiếu mới nhất
-      if (o.ngay >= cu.lanCuoi) {
-        cu.lanCuoi = o.ngay;
-        if (vietHoaDau(hoTen) || !vietHoaDau(cu.hoTen)) cu.hoTen = hoTen;
-        if (o.namSinh) cu.namSinh = o.namSinh;
-        if (o.buongGiam) cu.buongGiam = o.buongGiam;
-      }
-    }
-  }
-  return [...map.values()].sort((a, b) => b.lanCuoi.localeCompare(a.lanCuoi));
+/* ============================ Sổ đếm & cài đặt ============================ */
+
+/** Xoá sạch mặt hàng và phiếu bán, giữ lại tài khoản và thông tin đơn vị. */
+export async function xoaHetDuLieu(): Promise<{ soHang: number; soPhieu: number }> {
+  const db = await getDb();
+  const [soHang, soPhieu] = await Promise.all([
+    db.collection(COL.sanPham).countDocuments(),
+    db.collection(COL.phieuBan).countDocuments(),
+  ]);
+  await Promise.all([db.collection(COL.sanPham).deleteMany({}), db.collection(COL.phieuBan).deleteMany({})]);
+  await db.collection(COL.dem).deleteMany({});
+  return { soHang, soPhieu };
 }
+
+const CAI_DAT_MAC_DINH: Settings = { tenDonVi: "", diaChi: "", nguoiLapPhieu: "" };
+
+export async function layCaiDat(): Promise<Settings> {
+  const db = await getDb();
+  const doc = await db.collection(COL.cauHinh).findOne({ khoa: "don_vi" }, { projection: { _id: 0 } });
+  if (!doc) return { ...CAI_DAT_MAC_DINH };
+  return {
+    tenDonVi: String(doc.tenDonVi ?? ""),
+    diaChi: String(doc.diaChi ?? ""),
+    nguoiLapPhieu: String(doc.nguoiLapPhieu ?? ""),
+  };
+}
+
+export async function luuCaiDat(patch: Partial<Settings>): Promise<Settings> {
+  const db = await getDb();
+  await db
+    .collection(COL.cauHinh)
+    .updateOne({ khoa: "don_vi" }, { $set: { ...patch, khoa: "don_vi" } }, { upsert: true });
+  return layCaiDat();
+}
+
+/* ============================ Dòng hàng ============================ */
 
 /**
  * Dựng danh sách dòng hàng từ dữ liệu người dùng gửi lên, kiểm tra mặt hàng có
  * tồn tại và tính lại thành tiền ở phía máy chủ.
  */
-export function dungDongHang(db: DB, inputs: LineInput[]): { items: LineItem[]; tongTien: number } {
+export async function dungDongHang(inputs: LineInput[]): Promise<{ items: LineItem[]; tongTien: number }> {
   const items: LineItem[] = [];
   for (const input of inputs) {
-    const p = timProduct(db, input.productId);
+    const p = await timSanPham(String(input.productId || ""));
     if (!p) throw new Error(`Không tìm thấy mặt hàng: ${input.productId}`);
     const soLuong = Math.round(Number(input.soLuong) || 0);
     if (soLuong <= 0) throw new Error(`Số lượng không hợp lệ cho "${p.ten}"`);

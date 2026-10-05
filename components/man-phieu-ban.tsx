@@ -17,6 +17,10 @@ function dauThang(): string {
 
 export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
   const { xemTruoc } = useInPhieu();
+  const { coQuyen } = useStore();
+  const duocSua = coQuyen("sua_phieu");
+  const duocXoa = coQuyen("xoa_phieu");
+  const duocBan = coQuyen("ban_hang");
   const [ds, setDs] = useState<Order[]>([]);
   const [tu, setTu] = useState(dauThang());
   const [den, setDen] = useState(homNay());
@@ -138,9 +142,11 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
         <Nut onClick={xuatCsv} disabled={hienThi.length === 0}>
           <BieuTuong ten="tai" /> Excel
         </Nut>
-        <Nut kieu="chinh" onClick={onSangBanHang}>
-          <BieuTuong ten="them" /> Lập phiếu bán
-        </Nut>
+        {duocBan && (
+          <Nut kieu="chinh" onClick={onSangBanHang}>
+            <BieuTuong ten="them" /> Lập phiếu bán
+          </Nut>
+        )}
       </div>
 
       <div className="mem-cuon max-h-[64vh] overflow-auto">
@@ -188,21 +194,25 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
                 </td>
                 <td onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-1">
-                    <Nut kieu="mo" co="sm" onClick={() => setDangSua(o)} title="Sửa phiếu">
-                      <BieuTuong ten="sua" className="h-4 w-4" />
-                    </Nut>
+                    {duocSua && (
+                      <Nut kieu="mo" co="sm" onClick={() => setDangSua(o)} title="Sửa phiếu">
+                        <BieuTuong ten="sua" className="h-4 w-4" />
+                      </Nut>
+                    )}
                     <Nut kieu="mo" co="sm" onClick={() => xemTruoc(o)} title="Xem và in phiếu">
                       <BieuTuong ten="in" className="h-4 w-4" />
                     </Nut>
-                    <Nut
-                      kieu="mo"
-                      co="sm"
-                      onClick={() => void xoa(o)}
-                      title="Xoá phiếu"
-                      className="hover:text-rose-600"
-                    >
-                      <BieuTuong ten="xoa" className="h-4 w-4" />
-                    </Nut>
+                    {duocXoa && (
+                      <Nut
+                        kieu="mo"
+                        co="sm"
+                        onClick={() => void xoa(o)}
+                        title="Xoá phiếu"
+                        className="hover:text-rose-600"
+                      >
+                        <BieuTuong ten="xoa" className="h-4 w-4" />
+                      </Nut>
+                    )}
                   </div>
                 </td>
               </tr>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { danhSachCanPham, getDB } from "@/lib/db";
+import { yeuCau } from "@/lib/auth";
+import { danhSachCanPham, khoiTao } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +9,12 @@ export const dynamic = "force-dynamic";
  * lập phiếu mới. Không có danh mục can phạm riêng.
  */
 export async function GET() {
-  const db = await getDB();
-  return NextResponse.json({ canPham: danhSachCanPham(db) });
+  try {
+    await khoiTao();
+    const kq = await yeuCau("ban_hang");
+    if ("res" in kq) return kq.res;
+    return NextResponse.json({ canPham: await danhSachCanPham() });
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  }
 }

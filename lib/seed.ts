@@ -1,5 +1,6 @@
-import type { DB, Product } from "./types";
+import { COL, getDb } from "./mongo";
 import { newId } from "./db";
+import type { Product } from "./types";
 
 /** [mã, tên, nhóm, đơn vị tính, giá bán] */
 const HANG_MAU: [string, string, string, string, number][] = [
@@ -30,10 +31,11 @@ const HANG_MAU: [string, string, string, string, number][] = [
   ["MA-003", "Dép nhựa", "May mặc", "đôi", 28000],
 ];
 
-/** Nạp danh mục mặt hàng mẫu để dùng thử ngay. */
-export function napDuLieuMau(db: DB) {
+/** Thay danh mục mặt hàng bằng bộ dữ liệu mẫu. Phiếu bán đã lập giữ nguyên. */
+export async function napDuLieuMau(): Promise<{ soHang: number }> {
+  const db = await getDb();
   const now = new Date().toISOString();
-  db.products = HANG_MAU.map<Product>(([ma, ten, nhom, donViTinh, giaBan]) => ({
+  const ds: Product[] = HANG_MAU.map(([ma, ten, nhom, donViTinh, giaBan]) => ({
     id: newId("sp"),
     ma,
     ten,
@@ -44,6 +46,7 @@ export function napDuLieuMau(db: DB) {
     ghiChu: "",
     createdAt: now,
   }));
-  if (!db.settings.tenDonVi) db.settings.tenDonVi = "CĂN TIN PHẠM NHÂN";
-  return { soHang: db.products.length };
+  await db.collection(COL.sanPham).deleteMany({});
+  await db.collection(COL.sanPham).insertMany(ds);
+  return { soHang: ds.length };
 }

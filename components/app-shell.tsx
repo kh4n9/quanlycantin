@@ -1,39 +1,57 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { apiClient } from "@/lib/client";
+import type { Quyen } from "@/lib/quyen";
 import { StoreProvider, useStore } from "@/lib/store";
-import { PhieuInProvider, useInPhieu } from "./print";
 import { ManBanHang } from "./man-ban-hang";
 import { ManBaoCao } from "./man-bao-cao";
 import { ManCaiDat } from "./man-cai-dat";
+import { ManDangNhap } from "./man-dang-nhap";
 import { ManMatHang } from "./man-mat-hang";
+import { HopDoiMatKhau, ManTaiKhoan } from "./man-tai-khoan";
 import { HopXemTruocPhieu, ManPhieuBan } from "./man-phieu-ban";
-import { BieuTuong, HopThongBao } from "./ui";
+import { PhieuInProvider, useInPhieu } from "./print";
+import { bao, BieuTuong, HopThongBao, Nut, Trong } from "./ui";
 
-type Khoa = "ban" | "phieu" | "mathang" | "bieu" | "cai";
+type Khoa = "ban" | "phieu" | "mathang" | "baocao" | "taikhoan" | "cai";
 
-const MUC: { khoa: Khoa; nhan: string; icon: string; moTa: string }[] = [
-  { khoa: "ban", nhan: "Bán hàng", icon: "ban", moTa: "Lập phiếu bán: nhập can phạm và số lượng hàng" },
-  { khoa: "phieu", nhan: "Phiếu bán", icon: "phieu", moTa: "Tra cứu, xem lại và in phiếu đã lập" },
-  { khoa: "mathang", nhan: "Mặt hàng", icon: "kho", moTa: "Danh mục mặt hàng và giá bán" },
-  { khoa: "bieu", nhan: "Báo cáo", icon: "bieu", moTa: "Số phiếu, mặt hàng và can phạm mua nhiều" },
-  { khoa: "cai", nhan: "Cài đặt", icon: "cai", moTa: "Thông tin đơn vị, sao lưu và dữ liệu mẫu" },
+type Muc = {
+  khoa: Khoa;
+  nhan: string;
+  icon: string;
+  moTa: string;
+  /** Quyền cần có để thấy mục này. Không có nghĩa là ai đăng nhập cũng thấy. */
+  quyen?: Quyen;
+};
+
+const MUC: Muc[] = [
+  { khoa: "ban", nhan: "Bán hàng", icon: "ban", moTa: "Lập phiếu bán: nhập can phạm và số lượng hàng", quyen: "ban_hang" },
+  { khoa: "phieu", nhan: "Phiếu bán", icon: "phieu", moTa: "Tra cứu, xem lại và in phiếu đã lập", quyen: "xem_phieu" },
+  { khoa: "mathang", nhan: "Mặt hàng", icon: "kho", moTa: "Danh mục mặt hàng, giá bán, tắt/bật bán", quyen: "quan_ly_mat_hang" },
+  { khoa: "baocao", nhan: "Báo cáo", icon: "bieu", moTa: "Số phiếu, mặt hàng và can phạm mua nhiều", quyen: "xem_bao_cao" },
+  { khoa: "taikhoan", nhan: "Tài khoản", icon: "nguoi", moTa: "Tạo tài khoản, phân quyền, đặt lại mật khẩu", quyen: "quan_ly_tai_khoan" },
+  { khoa: "cai", nhan: "Cài đặt", icon: "cai", moTa: "Thông tin đơn vị, sao lưu và dữ liệu" },
 ];
 
-export function AppShell() {
-  return (
-    <StoreProvider>
-      <PhieuInProvider>
-        <Khung />
-      </PhieuInProvider>
-    </StoreProvider>
-  );
-}
-
 function Khung() {
+  const { nguoiDung, dangKhoiDong, loi, coQuyen } = useStore();
   const [muc, setMuc] = useState<Khoa>("ban");
-  const { settings } = useStore();
+  const [doiMatKhau, setDoiMatKhau] = useState(false);
   const { dangXem, dongXemTruoc } = useInPhieu();
+
+  const mucChoPhep = useMemo(() => MUC.filter((m) => !m.quyen || coQuyen(m.quyen)), [coQuyen]);
+
+  const chonMuc = useCallback(
+    (k: Khoa) => {
+      setMuc(k);
+      dongXemTruoc();
+      if (window.location.hash.slice(1) !== k) {
+        window.history.replaceState(null, "", `#${k}`);
+      }
+    },
+    [dongXemTruoc],
+  );
 
   // Mở trang thì đọc mục từ hash; chỉ ghi hash khi người dùng bấm chuyển mục.
   // (Không ghi hash trong effect: StrictMode chạy effect hai lần sẽ ghi đè hash
@@ -51,33 +69,69 @@ function Khung() {
     return () => window.removeEventListener("hashchange", doc);
   }, [dongXemTruoc]);
 
-  const chonMuc = useCallback(
-    (k: Khoa) => {
-      setMuc(k);
-      // Đổi mục thì đóng luôn hộp thoại xem trước phiếu đang mở
-      dongXemTruoc();
-      if (window.location.hash.slice(1) !== k) {
-        window.history.replaceState(null, "", `#${k}`);
-      }
-    },
-    [dongXemTruoc],
-  );
+  // Mục đang mở bị mất quyền (đổi quyền, hoặc mở bằng hash không hợp lệ) thì nhảy về mục đầu tiên được phép
+  useEffect(() => {
+    if (mucChoPhep.length > 0 && !mucChoPhep.some((m) => m.khoa === muc)) {
+      setMuc(mucChoPhep[0].khoa);
+    }
+  }, [mucChoPhep, muc]);
 
-  // Alt + 1…6 chuyển nhanh giữa các mục
+  // Alt + 1…6 chuyển nhanh giữa các mục đang thấy
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!e.altKey) return;
       const so = Number(e.key);
-      if (so >= 1 && so <= MUC.length) {
+      if (so >= 1 && so <= mucChoPhep.length) {
         e.preventDefault();
-        chonMuc(MUC[so - 1].khoa);
+        chonMuc(mucChoPhep[so - 1].khoa);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [chonMuc]);
+  }, [mucChoPhep, chonMuc]);
 
-  const dangChon = MUC.find((m) => m.khoa === muc)!;
+  const dangXuat = useCallback(async () => {
+    try {
+      await apiClient.dangXuat();
+      window.location.reload();
+    } catch {
+      bao("Không đăng xuất được, thử lại");
+    }
+  }, []);
+
+  if (dangKhoiDong) {
+    return (
+      <div className="khong-in flex min-h-screen items-center justify-center bg-slate-900 text-slate-400">
+        Đang tải…
+      </div>
+    );
+  }
+
+  if (loi) {
+    return (
+      <div className="khong-in flex min-h-screen items-center justify-center bg-slate-900 p-4">
+        <div className="max-w-md rounded-lg border border-rose-800 bg-rose-950/60 p-4 text-sm text-rose-200">
+          <div className="mb-1 font-semibold text-rose-100">Không kết nối được máy chủ dữ liệu</div>
+          <p className="leading-relaxed">{loi}</p>
+          <p className="mt-2 text-rose-300/80">
+            Kiểm tra lại <code className="rounded bg-black/30 px-1">MONGODB_URI</code> trong file{" "}
+            <code className="rounded bg-black/30 px-1">.env</code> và kết nối mạng.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!nguoiDung) {
+    return (
+      <>
+        <ManDangNhap />
+        <HopThongBao />
+      </>
+    );
+  }
+
+  const dangChon = MUC.find((m) => m.khoa === muc);
 
   return (
     <>
@@ -89,12 +143,12 @@ function Khung() {
             </div>
             <div className="min-w-0">
               <div className="truncate text-sm font-semibold text-white">Quản lý căn tin</div>
-              <div className="truncate text-[11px] text-slate-400">{settings.tenDonVi || "Căn tin phạm nhân"}</div>
+              <div className="truncate text-[11px] text-slate-400">{nguoiDung.hoTen}</div>
             </div>
           </div>
 
           <nav className="mem-cuon flex gap-1 overflow-x-auto px-2 pb-2 lg:flex-1 lg:flex-col lg:overflow-x-visible lg:pb-0">
-            {MUC.map((m, i) => {
+            {mucChoPhep.map((m, i) => {
               const chon = m.khoa === muc;
               return (
                 <button
@@ -117,27 +171,76 @@ function Khung() {
             })}
           </nav>
 
+          <div className="flex flex-col gap-1.5 border-t border-slate-800 px-2 py-3">
+            <button
+              onClick={() => setDoiMatKhau(true)}
+              className="flex items-center gap-2 rounded-md px-3 py-1.5 text-left text-[13px] text-slate-400 transition hover:bg-slate-800 hover:text-white"
+            >
+              <BieuTuong ten="cai" className="h-4 w-4" /> Đổi mật khẩu
+            </button>
+            <button
+              onClick={() => void dangXuat()}
+              className="flex items-center gap-2 rounded-md px-3 py-1.5 text-left text-[13px] text-slate-400 transition hover:bg-slate-800 hover:text-white"
+            >
+              <BieuTuong ten="xuat" className="h-4 w-4" /> Đăng xuất
+            </button>
+          </div>
         </aside>
 
         <main className="mem-cuon flex min-w-0 flex-1 flex-col overflow-y-auto">
           <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-2.5 backdrop-blur">
-            <h1 className="text-base font-semibold text-slate-900">{dangChon.nhan}</h1>
-            <p className="text-[12px] text-slate-500">{dangChon.moTa}</p>
+            <h1 className="text-base font-semibold text-slate-900">{dangChon?.nhan ?? "Căn tin"}</h1>
+            <p className="text-[12px] text-slate-500">{dangChon?.moTa}</p>
           </header>
 
+          {nguoiDung.phaiDoiMatKhau && (
+            <div className="mx-4 mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-800">
+              <BieuTuong ten="canh" className="h-4 w-4 shrink-0" />
+              <span className="flex-1">
+                Tài khoản của bạn đang dùng mật khẩu ban đầu. Nên đổi ngay để bảo đảm an toàn.
+              </span>
+              <Nut co="sm" kieu="chinh" onClick={() => setDoiMatKhau(true)}>
+                Đổi mật khẩu
+              </Nut>
+            </div>
+          )}
+
           <div className="flex-1 p-4">
-            {muc === "ban" && <ManBanHang />}
-            {muc === "phieu" && <ManPhieuBan onSangBanHang={() => chonMuc("ban")} />}
-            {muc === "mathang" && <ManMatHang />}
-            {muc === "bieu" && <ManBaoCao />}
-            {muc === "cai" && <ManCaiDat />}
+            {mucChoPhep.length === 0 ? (
+              <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+                <Trong
+                  tieuDe="Tài khoản chưa được cấp quyền nào"
+                  moTa="Liên hệ quản trị viên để được cấp quyền sử dụng."
+                />
+              </div>
+            ) : (
+              <>
+                {muc === "ban" && coQuyen("ban_hang") && <ManBanHang />}
+                {muc === "phieu" && coQuyen("xem_phieu") && <ManPhieuBan onSangBanHang={() => chonMuc("ban")} />}
+                {muc === "mathang" && coQuyen("quan_ly_mat_hang") && <ManMatHang />}
+                {muc === "baocao" && coQuyen("xem_bao_cao") && <ManBaoCao />}
+                {muc === "taikhoan" && coQuyen("quan_ly_tai_khoan") && <ManTaiKhoan />}
+                {muc === "cai" && <ManCaiDat />}
+              </>
+            )}
           </div>
         </main>
       </div>
 
       {/* Hộp thoại và thông báo — cũng thuộc phần không in */}
       {dangXem !== null && <HopXemTruocPhieu />}
+      <HopDoiMatKhau mo={doiMatKhau} dong={() => setDoiMatKhau(false)} />
       <HopThongBao />
     </>
+  );
+}
+
+export function AppShell() {
+  return (
+    <StoreProvider>
+      <PhieuInProvider>
+        <Khung />
+      </PhieuInProvider>
+    </StoreProvider>
   );
 }

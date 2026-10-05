@@ -1,5 +1,7 @@
 // Kiểu dữ liệu dùng chung cho ứng dụng quản lý phiếu bán căn tin.
 
+import type { Quyen } from "./quyen";
+
 export type Product = {
   id: string;
   ma: string;
@@ -59,12 +61,22 @@ export type Settings = {
   nguoiLapPhieu: string;
 };
 
-export type DB = {
-  products: Product[];
-  orders: Order[];
-  counters: { order: Record<string, number> };
-  settings: Settings;
+/** Tài khoản đăng nhập. Mật khẩu chỉ lưu dạng đã băm, không bao giờ trả về client. */
+export type NguoiDung = {
+  id: string;
+  tenDangNhap: string;
+  hoTen: string;
+  quyen: Quyen[];
+  dangHoatDong: boolean;
+  /** Bật khi tài khoản vừa được tạo/đặt lại mật khẩu — nhắc người dùng đổi ngay. */
+  phaiDoiMatKhau: boolean;
+  matKhauHash: string;
+  lanDangNhapCuoi: string;
+  createdAt: string;
 };
+
+/** Bản rút gọn để gửi ra ngoài, không có mật khẩu. */
+export type NguoiDungCongKhai = Omit<NguoiDung, "matKhauHash">;
 
 export type LineInput = {
   productId: string;

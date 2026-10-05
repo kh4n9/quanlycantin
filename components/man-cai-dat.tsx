@@ -6,7 +6,9 @@ import { useStore } from "@/lib/store";
 import { bao, baoLoi, BieuTuong, Nut, ONhan, OText, The } from "./ui";
 
 export function ManCaiDat() {
-  const { settings, capNhatSettings, napLai } = useStore();
+  const { settings, capNhatSettings, napLai, coQuyen } = useStore();
+  const duocSua = coQuyen("sua_cai_dat");
+  const duocSuaHang = coQuyen("quan_ly_mat_hang");
   const [soHang, setSoHang] = useState(0);
   const [soPhieu, setSoPhieu] = useState(0);
   const [tenDonVi, setTenDonVi] = useState(settings.tenDonVi);
@@ -134,10 +136,15 @@ export function ManCaiDat() {
               placeholder="Không bắt buộc"
             />
           </div>
-          <div>
-            <Nut kieu="chinh" onClick={() => void luu()} disabled={dangLuu}>
+          <div className="flex items-center gap-3">
+            <Nut kieu="chinh" onClick={() => void luu()} disabled={dangLuu || !duocSua}>
               {dangLuu ? "Đang lưu…" : "Lưu thông tin"}
             </Nut>
+            {!duocSua && (
+              <span className="text-[12px] text-slate-500">
+                Tài khoản của bạn không có quyền sửa cài đặt.
+              </span>
+            )}
           </div>
         </div>
       </The>
@@ -156,13 +163,17 @@ export function ManCaiDat() {
             <Nut onClick={() => void saoLuu()}>
               <BieuTuong ten="tai" /> Tải file sao lưu (JSON)
             </Nut>
-            <Nut onClick={() => void napMau()} disabled={dangNap}>
-              <BieuTuong ten="them" />
-              {dangNap ? "Đang xử lý…" : "Nạp danh mục mặt hàng & can phạm mẫu"}
-            </Nut>
-            <Nut kieu="nguy" onClick={() => void xoaHet()} disabled={dangNap}>
-              <BieuTuong ten="xoa" /> Xoá sạch dữ liệu
-            </Nut>
+            {duocSuaHang && (
+              <Nut onClick={() => void napMau()} disabled={dangNap}>
+                <BieuTuong ten="them" />
+                {dangNap ? "Đang xử lý…" : "Nạp danh mục mặt hàng mẫu"}
+              </Nut>
+            )}
+            {duocSua && (
+              <Nut kieu="nguy" onClick={() => void xoaHet()} disabled={dangNap}>
+                <BieuTuong ten="xoa" /> Xoá sạch dữ liệu
+              </Nut>
+            )}
           </div>
           <p className="text-[12px] text-slate-500">
             Nên sao lưu định kỳ: file sao lưu chứa toàn bộ mặt hàng, can phạm và phiếu bán. Để khôi phục, chép đè
