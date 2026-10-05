@@ -50,11 +50,8 @@ jobs:
             # Di chuyển vào thư mục code
             cd /var/www/quanlycantin
             
-            # Khai báo thêm đường dẫn hệ thống để nhận diện npm và pm2
-            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
+            # Sử dụng đường dẫn tuyệt đối chuẩn xác trên VPS của bạn
+            /home/khang/.local/bin/npm install --production
             
-            # Cài đặt các package cần thiết cho môi trường production
-            npm install --production
-            
-            # Khởi động lại PM2 nếu đã có, hoặc tạo mới nếu chưa có
-            pm2 restart quanlycantin || pm2 start npm --name "quanlycantin" -- start
+            # Khởi động lại PM2 hoặc chạy mới bằng lệnh tuyệt đối
+            /home/khang/.local/bin/pm2 restart quanlycantin || /home/khang/.local/bin/pm2 start /home/khang/.local/bin/npm --name "quanlycantin" -- start
