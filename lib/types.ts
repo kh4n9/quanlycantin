@@ -54,6 +54,8 @@ export type Order = {
   xoaLuc: string;
   /** Họ tên người đã chuyển phiếu vào thùng rác. */
   xoaBoi: string;
+  /** Lý do xoá phiếu, người xoá ghi lại khi chuyển vào thùng rác. */
+  lyDoXoa: string;
 };
 
 /** Can phạm suy ra từ các phiếu bán cũ, dùng cho ô gợi ý khi lập phiếu. */

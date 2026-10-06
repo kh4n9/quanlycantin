@@ -191,6 +191,7 @@ function chuanHoaPhieu(doc: Record<string, unknown>): Order {
     kiemGhiChu: String(doc.kiemGhiChu ?? ""),
     xoaLuc: String(doc.xoaLuc ?? ""),
     xoaBoi: String(doc.xoaBoi ?? ""),
+    lyDoXoa: String(doc.lyDoXoa ?? ""),
   };
 }
 
@@ -270,13 +271,13 @@ export async function suaPhieuBan(id: string, patch: Partial<Order>): Promise<Or
   return timPhieuBan(id);
 }
 
-/** Chuyển phiếu vào thùng rác. Dữ liệu vẫn còn, phục hồi được. */
-export async function xoaPhieuBan(id: string, nguoiXoa: string): Promise<Order | null> {
+/** Chuyển phiếu vào thùng rác kèm lý do. Dữ liệu vẫn còn, phục hồi được. */
+export async function xoaPhieuBan(id: string, nguoiXoa: string, lyDo: string): Promise<Order | null> {
   const db = await getDb();
   if (!(await timPhieuBan(id))) return null;
   await db.collection(COL.phieuBan).updateOne(
     { id },
-    { $set: { xoaLuc: new Date().toISOString(), xoaBoi: nguoiXoa } },
+    { $set: { xoaLuc: new Date().toISOString(), xoaBoi: nguoiXoa, lyDoXoa: lyDo } },
   );
   return timPhieuBan(id);
 }
@@ -284,7 +285,9 @@ export async function xoaPhieuBan(id: string, nguoiXoa: string): Promise<Order |
 /** Lấy phiếu ra khỏi thùng rác. */
 export async function phucHoiPhieuBan(id: string): Promise<Order | null> {
   const db = await getDb();
-  await db.collection(COL.phieuBan).updateOne({ id }, { $set: { xoaLuc: "", xoaBoi: "" } });
+  await db
+    .collection(COL.phieuBan)
+    .updateOne({ id }, { $set: { xoaLuc: "", xoaBoi: "", lyDoXoa: "" } });
   return timPhieuBan(id);
 }
 

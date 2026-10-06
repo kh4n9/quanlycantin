@@ -62,14 +62,17 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 /** Chuyển phiếu vào thùng rác (không xoá hẳn — phục hồi được). */
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await khoiTao();
     const kq = await yeuCau("xoa_phieu");
     if ("res" in kq) return kq.res;
 
+    // Lý do xoá là tuỳ chọn — không bắt buộc để khỏi cản việc xoá nhanh
+    const body = await req.json().catch(() => ({}));
+
     const { id } = await params;
-    const phieu = await xoaPhieuBan(id, kq.nd.hoTen || kq.nd.tenDangNhap);
+    const phieu = await xoaPhieuBan(id, kq.nd.hoTen || kq.nd.tenDangNhap, String(body.lyDo ?? "").trim());
     if (!phieu) return NextResponse.json({ error: "Không tìm thấy phiếu bán" }, { status: 404 });
     return NextResponse.json({ ok: true, soPhieu: phieu.soPhieu });
   } catch (e) {

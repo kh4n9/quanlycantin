@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "@/lib/client";
-import { ngayVN, so, tien } from "@/lib/format";
+import { khop, ngayVN, so } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import type { Order } from "@/lib/types";
-import { bao, baoLoi, BieuTuong, HopThoai, Nut, Trong } from "./ui";
+import { bao, baoLoi, BieuTuong, HopThoai, Nut, OText, Trong } from "./ui";
 
 /** Hộp thoại quản lý phiếu bán đã chuyển vào thùng rác. */
 export function HopThungRac({
@@ -23,6 +23,7 @@ export function HopThungRac({
   const [ds, setDs] = useState<Order[]>([]);
   const [dangTai, setDangTai] = useState(false);
   const [dangChay, setDangChay] = useState<string | null>(null);
+  const [q, setQ] = useState("");
 
   const nap = useCallback(async () => {
     setDangTai(true);
@@ -35,9 +36,23 @@ export function HopThungRac({
     }
   }, []);
 
+  // Mở lại thì bắt đầu với ô tìm kiếm trống
   useEffect(() => {
-    if (mo) void nap();
+    if (!mo) return;
+    setQ("");
+    void nap();
   }, [mo, nap]);
+
+  const hienThi = useMemo(
+    () =>
+      q
+        ? ds.filter(
+            (o) =>
+              khop(o.soPhieu, q) || khop(o.hoTen, q) || khop(o.buongGiam, q) || khop(o.lyDoXoa, q),
+          )
+        : ds,
+    [ds, q],
+  );
 
   const phucHoi = async (o: Order) => {
     setDangChay(o.id);
@@ -88,29 +103,54 @@ export function HopThungRac({
           lúc nào. Chỉ <b>xoá vĩnh viễn</b> mới không lấy lại được.
         </p>
 
+        {ds.length > 0 && (
+          <div className="relative">
+            <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400">
+              <BieuTuong ten="tim" className="h-4 w-4" />
+            </span>
+            <OText
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Tìm theo số phiếu, họ tên, buồng giam hoặc lý do xoá…"
+              className="pl-8"
+            />
+            {q && (
+              <span className="absolute top-1/2 right-2.5 -translate-y-1/2 text-[12px] text-slate-500">
+                {so(hienThi.length)} / {so(ds.length)}
+              </span>
+            )}
+          </div>
+        )}
+
         {dangTai ? (
           <p className="py-8 text-center text-sm text-slate-500">Đang tải…</p>
         ) : ds.length === 0 ? (
           <Trong tieuDe="Thùng rác đang trống" moTa="Các phiếu bị xoá sẽ được giữ ở đây để phục hồi khi cần." />
+        ) : hienThi.length === 0 ? (
+          <Trong
+            tieuDe={`Không có phiếu nào khớp “${q}”`}
+            moTa="Thử từ khoá khác, hoặc xoá ô tìm kiếm để xem tất cả."
+          />
         ) : (
-          <div className="mem-cuon max-h-[58vh] overflow-auto rounded-md border border-slate-200">
+          <div className="mem-cuon max-h-[54vh] overflow-auto rounded-md border border-slate-200">
             <table className="w-full border-collapse text-sm">
               <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
                 <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:text-left [&>th]:font-semibold">
-                  <th className="w-32">Số phiếu</th>
+                  <th className="w-28">Số phiếu</th>
                   <th className="w-24">Ngày bán</th>
                   <th>Can phạm</th>
-                  <th className="w-16 text-center">Món</th>
-                  <th className="w-28 text-right">Tổng tiền</th>
-                  <th className="w-36">Đã xoá</th>
-                  <th className="w-40" />
+                  <th className="w-14 text-center">Món</th>
+                  <th className="w-24 text-right">Tổng tiền</th>
+                  <th>Lý do xoá</th>
+                  <th className="w-32">Đã xoá</th>
+                  <th className="w-28" />
                 </tr>
               </thead>
               <tbody>
-                {ds.map((o) => (
+                {hienThi.map((o) => (
                   <tr
                     key={o.id}
-                    className={`[&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-2 ${
+                    className={`align-top [&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-2 ${
                       dangChay === o.id ? "opacity-50" : ""
                     }`}
                   >
@@ -125,6 +165,13 @@ export function HopThungRac({
                     <td className="text-center text-slate-600">{o.items.length}</td>
                     <td className="text-right text-slate-700 tabular-nums">
                       {o.tongTien > 0 ? so(o.tongTien) : "—"}
+                    </td>
+                    <td className="text-[12px]">
+                      {o.lyDoXoa ? (
+                        <span className="text-slate-700">{o.lyDoXoa}</span>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
                     </td>
                     <td className="text-[12px] text-slate-500">
                       {o.xoaLuc
@@ -141,8 +188,9 @@ export function HopThungRac({
                               onClick={() => void phucHoi(o)}
                               disabled={dangChay === o.id}
                               title="Đưa phiếu trở lại danh sách"
+                              className="whitespace-nowrap"
                             >
-                              <BieuTuong ten="check" className="h-4 w-4" /> Phục hồi
+                              Phục hồi
                             </Nut>
                             <Nut
                               kieu="mo"
@@ -150,7 +198,7 @@ export function HopThungRac({
                               onClick={() => void xoaVinhVien(o)}
                               disabled={dangChay === o.id}
                               title="Xoá hẳn, không lấy lại được"
-                              className="hover:text-rose-600"
+                              className="hover:text-rose-500"
                             >
                               <BieuTuong ten="xoa" className="h-4 w-4" />
                             </Nut>

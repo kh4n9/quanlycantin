@@ -76,6 +76,7 @@ export async function POST(req: Request) {
       kiemGhiChu: "",
       xoaLuc: "",
       xoaBoi: "",
+      lyDoXoa: "",
     };
     await themPhieuBan(moi);
     return NextResponse.json({ order: moi }, { status: 201 });

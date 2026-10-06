@@ -114,8 +114,12 @@ export const apiClient = {
   /** Sửa phiếu bán: gửi trường nào thì cập nhật trường đó (màn Kiểm phiếu chỉ gửi items). */
   suaPhieuBan: (id: string, body: Partial<DuLieuPhieu>) =>
     api<{ order: Order }>(`/api/orders/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
-  /** Chuyển phiếu vào thùng rác (phục hồi được). */
-  xoaPhieuBan: (id: string) => api<{ ok: boolean; soPhieu: string }>(`/api/orders/${id}`, { method: "DELETE" }),
+  /** Chuyển phiếu vào thùng rác kèm lý do (phục hồi được). */
+  xoaPhieuBan: (id: string, lyDo = "") =>
+    api<{ ok: boolean; soPhieu: string }>(`/api/orders/${id}`, {
+      method: "DELETE",
+      body: JSON.stringify({ lyDo }),
+    }),
   thungRac: () => api<{ orders: Order[] }>("/api/thung-rac"),
   phucHoiPhieuBan: (id: string) =>
     api<{ order: Order }>(`/api/orders/${id}/phuc-hoi`, { method: "POST" }),

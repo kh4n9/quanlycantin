@@ -140,10 +140,13 @@ Xoá một phiếu bán **không làm mất dữ liệu** — phiếu được c
 - Nút **Thùng rác (số lượng)** nằm trên thanh công cụ màn hình *Phiếu bán*.
 - Phiếu trong thùng rác **biến khỏi danh sách, báo cáo và ô gợi ý can phạm**, nhưng
   vẫn nằm nguyên trong cơ sở dữ liệu.
-- Bấm **Phục hồi** để đưa phiếu trở lại đúng chỗ cũ.
+- Khi xoá, hộp thoại hỏi **lý do xoá** (không bắt buộc, nhưng nên ghi để sau này
+  đối chiếu — ví dụ "lập trùng phiếu", "can phạm báo nhầm số lượng").
+- Thùng rác có **ô tìm kiếm**: tìm theo số phiếu, họ tên, buồng giam hoặc lý do xoá.
+- Bấm **Phục hồi** để đưa phiếu trở lại đúng chỗ cũ; lý do xoá được xoá theo.
 - Chỉ **xoá vĩnh viễn** mới không lấy lại được, và chỉ áp dụng được với phiếu
   đang ở trong thùng rác.
-- Mỗi phiếu ghi lại **ai xoá và xoá lúc nào**.
+- Mỗi phiếu ghi lại **ai xoá, xoá lúc nào và vì sao**.
 
 Cần quyền *Xoá phiếu bán* mới xem và thao tác được trong thùng rác.
 

@@ -9,7 +9,7 @@ import type { CanPhamGoiY, Order, Product } from "@/lib/types";
 import { HopThungRac } from "./hop-thung-rac";
 import { PhieuBanForm } from "./phieu-ban-form";
 import { MauPhieuBan, useInPhieu } from "./print";
-import { bao, baoLoi, BieuTuong, HopThoai, Nut, OText, Trong } from "./ui";
+import { bao, baoLoi, BieuTuong, HopThoai, Nut, ONhan, OText, OVung, Trong } from "./ui";
 
 function dauThang(): string {
   const d = new Date();
@@ -30,6 +30,9 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
   const [dangSua, setDangSua] = useState<Order | null>(null);
   const [moThungRac, setMoThungRac] = useState(false);
   const [soThungRac, setSoThungRac] = useState(0);
+  const [dangXoa, setDangXoa] = useState<Order | null>(null);
+  const [lyDoXoa, setLyDoXoa] = useState("");
+  const [dangXoaLuu, setDangXoaLuu] = useState(false);
 
   // Dữ liệu cho form sửa phiếu
   const [sanPham, setSanPham] = useState<Product[]>([]);
@@ -96,21 +99,24 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
     [dangSua, nap],
   );
 
-  const xoa = async (o: Order) => {
-    if (
-      !window.confirm(
-        `Chuyển phiếu ${o.soPhieu} của ${o.hoTen} vào thùng rác?\n\nPhiếu sẽ biến khỏi danh sách và báo cáo, nhưng vẫn phục hồi được.`,
-      )
-    ) {
-      return;
-    }
+  const moXoa = (o: Order) => {
+    setDangXoa(o);
+    setLyDoXoa("");
+  };
+
+  const xacNhanXoa = async () => {
+    if (!dangXoa) return;
+    setDangXoaLuu(true);
     try {
-      await apiClient.xoaPhieuBan(o.id);
-      bao(`Đã chuyển phiếu ${o.soPhieu} vào thùng rác`);
+      await apiClient.xoaPhieuBan(dangXoa.id, lyDoXoa.trim());
+      bao(`Đã chuyển phiếu ${dangXoa.soPhieu} vào thùng rác`);
+      setDangXoa(null);
       await nap();
       void demThungRac();
     } catch (e) {
       baoLoi((e as Error).message);
+    } finally {
+      setDangXoaLuu(false);
     }
   };
 
@@ -242,7 +248,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
                       <Nut
                         kieu="mo"
                         co="sm"
-                        onClick={() => void xoa(o)}
+                        onClick={() => moXoa(o)}
                         title="Chuyển vào thùng rác"
                         className="hover:text-rose-600"
                       >
@@ -288,6 +294,50 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
             onHuy={() => setDangSua(null)}
             trongHopThoai
           />
+        )}
+      </HopThoai>
+
+      {/* --- Xác nhận chuyển vào thùng rác, kèm lý do --- */}
+      <HopThoai
+        mo={dangXoa !== null}
+        dong={() => setDangXoa(null)}
+        tieuDe={dangXoa ? `Chuyển phiếu ${dangXoa.soPhieu} vào thùng rác` : ""}
+        chanTrang={
+          <>
+            <Nut onClick={() => setDangXoa(null)} disabled={dangXoaLuu}>
+              Huỷ
+            </Nut>
+            <Nut kieu="nguy" onClick={() => void xacNhanXoa()} disabled={dangXoaLuu}>
+              <BieuTuong ten="xoa" className="h-4 w-4" />
+              {dangXoaLuu ? "Đang chuyển…" : "Chuyển vào thùng rác"}
+            </Nut>
+          </>
+        }
+      >
+        {dangXoa && (
+          <div className="flex flex-col gap-3">
+            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+              <div className="text-sm font-medium text-slate-800">{dangXoa.hoTen}</div>
+              <div className="text-[12px] text-slate-500">
+                Ngày bán {ngayVN(dangXoa.ngay)} · {dangXoa.items.length} món
+                {dangXoa.tongTien > 0 ? ` · ${tien(dangXoa.tongTien)}` : ""}
+                {dangXoa.buongGiam ? ` · ${dangXoa.buongGiam}` : ""}
+              </div>
+            </div>
+            <p className="text-[13px] text-slate-600">
+              Phiếu sẽ biến khỏi danh sách và báo cáo, nhưng vẫn nằm trong thùng rác và phục hồi được.
+            </p>
+            <div>
+              <ONhan>Lý do xoá — không bắt buộc, nhưng nên ghi để sau này đối chiếu</ONhan>
+              <OVung
+                autoFocus
+                rows={3}
+                value={lyDoXoa}
+                onChange={(e) => setLyDoXoa(e.target.value)}
+                placeholder="Ví dụ: lập trùng phiếu, can phạm báo nhầm số lượng…"
+              />
+            </div>
+          </div>
         )}
       </HopThoai>
 
