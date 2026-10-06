@@ -3,6 +3,7 @@ export const TEN_QUYEN = {
   xem_phieu: "Xem phiếu bán",
   ban_hang: "Lập phiếu bán",
   sua_phieu: "Sửa phiếu bán",
+  kiem_phieu: "Kiểm phiếu",
   xoa_phieu: "Xoá phiếu bán",
   quan_ly_mat_hang: "Quản lý mặt hàng",
   xem_bao_cao: "Xem báo cáo",
@@ -18,6 +19,7 @@ export const MO_TA_QUYEN: Record<Quyen, string> = {
   xem_phieu: "Xem danh sách phiếu bán, xem lại và in phiếu",
   ban_hang: "Lập phiếu bán mới cho can phạm",
   sua_phieu: "Sửa nội dung phiếu bán đã lập",
+  kiem_phieu: "Rà soát lại số lượng, đánh dấu phiếu đã kiểm",
   xoa_phieu: "Xoá phiếu bán khỏi hệ thống",
   quan_ly_mat_hang: "Thêm, sửa, xoá và tắt/bật bán mặt hàng",
   xem_bao_cao: "Xem báo cáo và xuất Excel",
@@ -27,7 +29,7 @@ export const MO_TA_QUYEN: Record<Quyen, string> = {
 
 /** Quyền gom theo nhóm để hiển thị cho dễ đọc. */
 export const NHOM_QUYEN: { nhom: string; quyen: Quyen[] }[] = [
-  { nhom: "Phiếu bán", quyen: ["xem_phieu", "ban_hang", "sua_phieu", "xoa_phieu"] },
+  { nhom: "Phiếu bán", quyen: ["xem_phieu", "ban_hang", "sua_phieu", "kiem_phieu", "xoa_phieu"] },
   { nhom: "Danh mục và báo cáo", quyen: ["quan_ly_mat_hang", "xem_bao_cao"] },
   { nhom: "Hệ thống", quyen: ["sua_cai_dat", "quan_ly_tai_khoan"] },
 ];

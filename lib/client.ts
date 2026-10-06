@@ -111,9 +111,14 @@ export const apiClient = {
   orders: (q = "") => api<{ orders: Order[] }>(`/api/orders${q ? `?${q}` : ""}`),
   themPhieuBan: (body: DuLieuPhieu) =>
     api<{ order: Order }>("/api/orders", { method: "POST", body: JSON.stringify(body) }),
-  suaPhieuBan: (id: string, body: DuLieuPhieu) =>
+  /** Sửa phiếu bán: gửi trường nào thì cập nhật trường đó (màn Kiểm phiếu chỉ gửi items). */
+  suaPhieuBan: (id: string, body: Partial<DuLieuPhieu>) =>
     api<{ order: Order }>(`/api/orders/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
   xoaPhieuBan: (id: string) => api<{ ok: boolean }>(`/api/orders/${id}`, { method: "DELETE" }),
+  danhDauDaKiem: (id: string, ghiChu: string) =>
+    api<{ order: Order }>(`/api/orders/${id}/kiem`, { method: "POST", body: JSON.stringify({ ghiChu }) }),
+  boDanhDauKiem: (id: string) =>
+    api<{ order: Order }>(`/api/orders/${id}/kiem`, { method: "DELETE" }),
 
   baoCao: (tu: string, den: string) =>
     api<BaoCao>(`/api/reports?tu=${encodeURIComponent(tu)}&den=${encodeURIComponent(den)}`),

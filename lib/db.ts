@@ -33,7 +33,24 @@ async function chayKhoiTao(): Promise<void> {
   ]);
 
   await taoQuanTriDauTien();
+  await capNhatQuyenMoi();
   await chuyenDuLieuTuFileJson();
+}
+
+/**
+ * Cấp quyền mới cho tài khoản đang có. Hiện dùng cho quyền "kiểm phiếu" vừa thêm:
+ * ai đã được phép sửa phiếu thì mặc định cũng được kiểm. Quản trị viên có thể
+ * bỏ lại trong màn hình Tài khoản.
+ */
+async function capNhatQuyenMoi(): Promise<void> {
+  const db = await getDb();
+  const kq = await db.collection(COL.nguoiDung).updateMany(
+    { $and: [{ quyen: "sua_phieu" }, { quyen: { $ne: "kiem_phieu" } }] },
+    { $addToSet: { quyen: "kiem_phieu" } },
+  );
+  if (kq.modifiedCount > 0) {
+    console.log(`[db] Đã cấp quyền "kiểm phiếu" cho ${kq.modifiedCount} tài khoản`);
+  }
 }
 
 /**
@@ -165,6 +182,16 @@ export async function soPhieuMoi(ngay: string): Promise<string> {
 
 export type LocPhieu = { tu?: string; den?: string; hoTen?: string };
 
+/** Bù các trường kiểm phiếu cho những phiếu lập trước khi có tính năng này. */
+function chuanHoaPhieu(doc: Record<string, unknown>): Order {
+  return {
+    ...(doc as unknown as Order),
+    kiemLuc: String(doc.kiemLuc ?? ""),
+    kiemBoi: String(doc.kiemBoi ?? ""),
+    kiemGhiChu: String(doc.kiemGhiChu ?? ""),
+  };
+}
+
 export async function layPhieuBan(loc: LocPhieu = {}): Promise<Order[]> {
   const db = await getDb();
   const dieuKien: Record<string, unknown> = {};
@@ -177,17 +204,35 @@ export async function layPhieuBan(loc: LocPhieu = {}): Promise<Order[]> {
   if (loc.hoTen) {
     dieuKien.hoTen = new RegExp(`^${loc.hoTen.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
   }
-  return (await db
+  const ds = await db
     .collection(COL.phieuBan)
     .find(dieuKien, KHONG_LAY_ID)
     .sort({ ngay: -1, createdAt: -1 })
-    .toArray()) as unknown as Order[];
+    .toArray();
+  return (ds as Record<string, unknown>[]).map(chuanHoaPhieu);
 }
 
 export async function timPhieuBan(id: string): Promise<Order | null> {
   const db = await getDb();
   const doc = await db.collection(COL.phieuBan).findOne({ id }, KHONG_LAY_ID);
-  return (doc as unknown as Order) ?? null;
+  return doc ? chuanHoaPhieu(doc as Record<string, unknown>) : null;
+}
+
+/** Đánh dấu phiếu đã kiểm (kèm ghi chú nếu có sai sót). */
+export async function danhDauDaKiem(id: string, nguoiKiem: string, ghiChu: string): Promise<Order | null> {
+  const db = await getDb();
+  await db.collection(COL.phieuBan).updateOne(
+    { id },
+    { $set: { kiemLuc: new Date().toISOString(), kiemBoi: nguoiKiem, kiemGhiChu: ghiChu } },
+  );
+  return timPhieuBan(id);
+}
+
+/** Bỏ đánh dấu đã kiểm. */
+export async function boDanhDauKiem(id: string): Promise<Order | null> {
+  const db = await getDb();
+  await db.collection(COL.phieuBan).updateOne({ id }, { $set: { kiemLuc: "", kiemBoi: "", kiemGhiChu: "" } });
+  return timPhieuBan(id);
 }
 
 export async function themPhieuBan(o: Order): Promise<Order> {

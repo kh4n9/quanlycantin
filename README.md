@@ -65,6 +65,18 @@ Thứ tự gõ tự nhiên, `Enter` nhảy sang ô kế tiếp:
 Nếu không dùng đến tiền, cứ để **giá bán = 0**: phiếu in và báo cáo sẽ chỉ hiện
 mặt hàng cùng số lượng, không có cột đơn giá/thành tiền.
 
+## Xuất Excel
+
+Nút **Excel** ở các màn hình Phiếu bán, Mặt hàng và Báo cáo tải về file **`.xlsx` thật**
+(đúng định dạng Office Open XML, không phải CSV đổi đuôi):
+
+- Có sẵn dòng tiêu đề in đậm, tô nền, kẻ khung và độ rộng cột hợp lý.
+- Cột tiền được định dạng số `#,##0`, mở lên là lọc và tính tổng được ngay.
+- Tiếng Việt có dấu hiển thị đúng, không bị lỗi phông như CSV.
+- Báo cáo xuất thành **4 trang tính** trong cùng một file: Tổng quan, Theo ngày,
+  Mặt hàng, Can phạm.
+- File phiếu bán có thêm cột trạng thái kiểm để đối chiếu với màn hình Kiểm phiếu.
+
 ## Đăng nhập và phân quyền
 
 Lần đầu chạy, hệ thống tự tạo một tài khoản quản trị:
@@ -137,7 +149,7 @@ Các bảng: `nguoi_dung`, `san_pham`, `phieu_ban`, `bo_dem`, `cau_hinh`.
 
 ## Ghi chú kỹ thuật
 
-- Next.js 16 + React 19 + Tailwind CSS 4 + driver `mongodb`.
+- Next.js 16 + React 19 + Tailwind CSS 4 + driver `mongodb` + `write-excel-file`.
 - Mật khẩu băm bằng `scrypt` và phiên đăng nhập ký bằng HMAC — đều dùng module
   `node:crypto` sẵn có, không cần thư viện ngoài.
 - Khoá ký phiên sinh một lần và lưu trong MongoDB, nên phiên vẫn hiệu lực sau khi

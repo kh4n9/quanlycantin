@@ -71,6 +71,9 @@ export async function POST(req: Request) {
       tongTien,
       ghiChu: String(body.ghiChu || ""),
       createdAt: new Date().toISOString(),
+      kiemLuc: "",
+      kiemBoi: "",
+      kiemGhiChu: "",
     };
     await themPhieuBan(moi);
     return NextResponse.json({ order: moi }, { status: 201 });

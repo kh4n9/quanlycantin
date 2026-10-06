@@ -191,7 +191,8 @@ export function ManCaiDat() {
             ["Enter", "Thêm mặt hàng đang chọn vào phiếu"],
             ["5 + dấu cách + tên", "Nhập nhanh số lượng, ví dụ “5 mì”"],
             ["Esc", "Đóng danh sách gợi ý / hộp thoại"],
-            ["Alt + 1…6", "Chuyển nhanh giữa các mục đang thấy"],
+            ["Alt + 1…7", "Chuyển nhanh giữa các mục đang thấy"],
+            ["Ctrl + ↵ (Kiểm phiếu)", "Xác nhận phiếu đúng và sang phiếu kế tiếp"],
           ].map(([k, v]) => (
             <div key={k} className="flex items-start gap-2">
               <kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap text-slate-700">

@@ -5,6 +5,7 @@ import type { DuLieuPhieu } from "@/lib/client";
 import { homNay, so, tien } from "@/lib/format";
 import type { CanPhamGoiY, LineItem, Order, Product } from "@/lib/types";
 import { ChonHang, OTenCanPham } from "./pickers";
+import { useInPhieu } from "./print";
 import { baoLoi, BieuTuong, Nut, ONhan, OText, Trong } from "./ui";
 
 /**
@@ -31,6 +32,7 @@ export function PhieuBanForm({
   trongHopThoai?: boolean;
 }) {
   const suaDoi = Boolean(banDau);
+  const { dangXem } = useInPhieu();
 
   const [hoTen, setHoTen] = useState(banDau?.hoTen ?? "");
   const [namSinh, setNamSinh] = useState(banDau?.namSinh ? String(banDau.namSinh) : "");
@@ -126,9 +128,11 @@ export function PhieuBanForm({
     }
   }, [hoTen, namSinh, buongGiam, dsDong, ngay, ghiChu, onLuu, suaDoi, lamMoi]);
 
-  // Ctrl+Enter để lưu
+  // Ctrl+Enter để lưu. Khi cửa sổ xem trước đang mở thì nhường phím này cho
+  // cửa sổ đó (dùng để đóng), tránh vừa đóng vừa lưu thêm một phiếu trống.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (dangXem) return;
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
         void luu();
@@ -136,7 +140,7 @@ export function PhieuBanForm({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [luu]);
+  }, [luu, dangXem]);
 
   return (
     <div className="flex flex-col gap-3">

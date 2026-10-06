@@ -44,6 +44,12 @@ export type Order = {
   tongTien: number;
   ghiChu: string;
   createdAt: string;
+  /** Thời điểm kiểm phiếu, rỗng nghĩa là chưa kiểm. */
+  kiemLuc: string;
+  /** Họ tên người đã kiểm phiếu này. */
+  kiemBoi: string;
+  /** Ghi chú khi kiểm, thường dùng để ghi lại sai sót đã phát hiện. */
+  kiemGhiChu: string;
 };
 
 /** Can phạm suy ra từ các phiếu bán cũ, dùng cho ô gợi ý khi lập phiếu. */

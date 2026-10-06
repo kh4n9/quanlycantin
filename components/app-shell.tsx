@@ -8,13 +8,14 @@ import { ManBanHang } from "./man-ban-hang";
 import { ManBaoCao } from "./man-bao-cao";
 import { ManCaiDat } from "./man-cai-dat";
 import { ManDangNhap } from "./man-dang-nhap";
+import { ManKiemPhieu } from "./man-kiem-phieu";
 import { ManMatHang } from "./man-mat-hang";
 import { HopDoiMatKhau, ManTaiKhoan } from "./man-tai-khoan";
 import { HopXemTruocPhieu, ManPhieuBan } from "./man-phieu-ban";
 import { PhieuInProvider, useInPhieu } from "./print";
 import { bao, BieuTuong, HopThongBao, Nut, Trong } from "./ui";
 
-type Khoa = "ban" | "phieu" | "mathang" | "baocao" | "taikhoan" | "cai";
+type Khoa = "ban" | "phieu" | "kiem" | "mathang" | "baocao" | "taikhoan" | "cai";
 
 type Muc = {
   khoa: Khoa;
@@ -28,6 +29,13 @@ type Muc = {
 const MUC: Muc[] = [
   { khoa: "ban", nhan: "Bán hàng", icon: "ban", moTa: "Lập phiếu bán: nhập can phạm và số lượng hàng", quyen: "ban_hang" },
   { khoa: "phieu", nhan: "Phiếu bán", icon: "phieu", moTa: "Tra cứu, xem lại và in phiếu đã lập", quyen: "xem_phieu" },
+  {
+    khoa: "kiem",
+    nhan: "Kiểm phiếu",
+    icon: "check",
+    moTa: "Rà soát lại số lượng từng phiếu, đánh dấu đã kiểm",
+    quyen: "kiem_phieu",
+  },
   { khoa: "mathang", nhan: "Mặt hàng", icon: "kho", moTa: "Danh mục mặt hàng, giá bán, tắt/bật bán", quyen: "quan_ly_mat_hang" },
   { khoa: "baocao", nhan: "Báo cáo", icon: "bieu", moTa: "Số phiếu, mặt hàng và can phạm mua nhiều", quyen: "xem_bao_cao" },
   { khoa: "taikhoan", nhan: "Tài khoản", icon: "nguoi", moTa: "Tạo tài khoản, phân quyền, đặt lại mật khẩu", quyen: "quan_ly_tai_khoan" },
@@ -217,6 +225,7 @@ function Khung() {
               <>
                 {muc === "ban" && coQuyen("ban_hang") && <ManBanHang />}
                 {muc === "phieu" && coQuyen("xem_phieu") && <ManPhieuBan onSangBanHang={() => chonMuc("ban")} />}
+                {muc === "kiem" && coQuyen("kiem_phieu") && <ManKiemPhieu />}
                 {muc === "mathang" && coQuyen("quan_ly_mat_hang") && <ManMatHang />}
                 {muc === "baocao" && coQuyen("xem_bao_cao") && <ManBaoCao />}
                 {muc === "taikhoan" && coQuyen("quan_ly_tai_khoan") && <ManTaiKhoan />}

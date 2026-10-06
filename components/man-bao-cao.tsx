@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient, type BaoCao } from "@/lib/client";
-import { taiCsv } from "@/lib/csv";
+import { taiExcel } from "@/lib/excel";
 import { homNay, ngayVN, so, tien } from "@/lib/format";
 import { baoLoi, BieuTuong, Nut, Trong } from "./ui";
 
@@ -61,29 +61,57 @@ export function ManBaoCao() {
     }
   };
 
-  const xuatCsv = () => {
+  const xuatExcel = () => {
     if (!du) return;
-    const dong: (string | number)[][] = [];
-    dong.push(["TỔNG QUAN"]);
-    dong.push(["Số phiếu bán", du.tongQuan.soPhieu]);
-    dong.push(["Số lượng hàng đã bán", du.tongQuan.soLuongHang]);
-    dong.push(["Số mặt hàng", du.tongQuan.soMatHang]);
-    if (du.tongQuan.coDungTien) dong.push(["Doanh thu", du.tongQuan.doanhThu]);
-    dong.push([]);
-    dong.push(["THEO NGÀY"]);
-    dong.push(["Ngày", "Số phiếu", "Doanh thu"]);
-    for (const n of du.theoNgay) dong.push([ngayVN(n.ngay), n.soPhieu, n.doanhThu]);
-    dong.push([]);
-    dong.push(["MẶT HÀNG ĐÃ BÁN"]);
-    dong.push(["Mã", "Tên mặt hàng", "ĐVT", "Số lượng", "Doanh thu"]);
-    for (const h of du.theoHang) dong.push([h.ma, h.ten, h.donViTinh, h.soLuong, h.doanhThu]);
-    dong.push([]);
-    dong.push(["CAN PHẠM MUA HÀNG"]);
-    dong.push(["Họ tên", "Năm sinh", "Buồng giam", "Số phiếu", "Số lượng hàng", "Doanh thu"]);
-    for (const p of du.theoCanPham) {
-      dong.push([p.hoTen, p.namSinh, p.buongGiam, p.soPhieu, p.soLuongHang, p.doanhThu]);
-    }
-    taiCsv(`bao-cao_${tu}_${den}`, ["Báo cáo bán hàng căn tin", `${ngayVN(tu)} - ${ngayVN(den)}`], dong);
+    const khoang = `${ngayVN(tu)} – ${ngayVN(den)}`;
+    const tq = du.tongQuan;
+
+    const tongQuan: (string | number | null)[][] = [
+      ["Số phiếu bán", tq.soPhieu],
+      ["Số lượng hàng đã bán", tq.soLuongHang],
+      ["Số mặt hàng khác nhau", tq.soMatHang],
+      ["Số can phạm đã mua", tq.soCanPham],
+    ];
+    if (tq.coDungTien) tongQuan.push(["Doanh thu", tq.doanhThu]);
+
+    void taiExcel(`bao-cao_${tu}_${den}`, [
+      {
+        ten: "Tổng quan",
+        tieuDe: `Báo cáo bán hàng căn tin — ${khoang}`,
+        tieuDeCot: ["Chỉ tiêu", "Giá trị"],
+        dong: tongQuan,
+        cotTien: [1],
+        doRong: [28, 18],
+      },
+      {
+        ten: "Theo ngày",
+        tieuDeCot: ["Ngày", "Số phiếu", "Doanh thu"],
+        dong: du.theoNgay.map((n) => [ngayVN(n.ngay), n.soPhieu, n.doanhThu]),
+        cotTien: [2],
+        doRong: [14, 12, 18],
+      },
+      {
+        ten: "Mặt hàng",
+        tieuDeCot: ["Mã", "Tên mặt hàng", "ĐVT", "Số lượng đã bán", "Doanh thu"],
+        dong: du.theoHang.map((h) => [h.ma, h.ten, h.donViTinh, h.soLuong, h.doanhThu]),
+        cotTien: [4],
+        doRong: [14, 32, 10, 18, 18],
+      },
+      {
+        ten: "Can phạm",
+        tieuDeCot: ["Họ tên", "Năm sinh", "Buồng giam", "Số phiếu", "Số lượng hàng", "Doanh thu"],
+        dong: du.theoCanPham.map((p) => [
+          p.hoTen,
+          p.namSinh || null,
+          p.buongGiam,
+          p.soPhieu,
+          p.soLuongHang,
+          p.doanhThu,
+        ]),
+        cotTien: [5],
+        doRong: [26, 10, 12, 10, 16, 18],
+      },
+    ]).catch((e) => baoLoi((e as Error).message));
   };
 
   return (
@@ -118,7 +146,7 @@ export function ManBaoCao() {
             className="h-8 rounded-md border border-slate-300 bg-white px-2 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
           />
         </div>
-        <Nut onClick={xuatCsv} disabled={!du} className="ml-auto">
+        <Nut onClick={xuatExcel} disabled={!du} className="ml-auto">
           <BieuTuong ten="tai" /> Xuất Excel
         </Nut>
       </div>

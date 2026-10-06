@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "@/lib/client";
-import { taiCsv } from "@/lib/csv";
+import { taiExcel } from "@/lib/excel";
 import { khop, so } from "@/lib/format";
 import type { Product } from "@/lib/types";
 import { bao, baoLoi, BieuTuong, HopThoai, Nut, OChon, ONhan, OText, Trong } from "./ui";
@@ -133,12 +133,22 @@ export function ManMatHang() {
     }
   };
 
-  const xuatCsv = () => {
-    taiCsv(
-      "danh-muc-mat-hang",
-      ["Mã", "Tên mặt hàng", "Nhóm", "ĐVT", "Giá bán", "Ghi chú"],
-      danhSach.map((p) => [p.ma, p.ten, p.nhom, p.donViTinh, p.giaBan, p.ghiChu]),
-    );
+  const xuatExcel = () => {
+    void taiExcel("danh-muc-mat-hang", {
+      ten: "Mặt hàng",
+      tieuDeCot: ["Mã", "Tên mặt hàng", "Nhóm hàng", "ĐVT", "Giá bán", "Trạng thái", "Ghi chú"],
+      dong: danhSach.map((p) => [
+        p.ma,
+        p.ten,
+        p.nhom,
+        p.donViTinh,
+        p.giaBan,
+        p.dangDung ? "Đang bán" : "Tạm dừng bán",
+        p.ghiChu,
+      ]),
+      cotTien: [4],
+      doRong: [14, 32, 16, 10, 14, 16, 26],
+    }).catch((e) => baoLoi((e as Error).message));
   };
 
   return (
@@ -172,7 +182,7 @@ export function ManMatHang() {
           <option value="dang_ban">Đang bán</option>
           <option value="tam_dung">Tạm dừng bán{soTamDung ? ` (${soTamDung})` : ""}</option>
         </OChon>
-        <Nut onClick={xuatCsv} disabled={danhSach.length === 0}>
+        <Nut onClick={xuatExcel} disabled={danhSach.length === 0}>
           <BieuTuong ten="tai" /> Excel
         </Nut>
         <Nut kieu="chinh" onClick={() => setForm({ ...formTrong })}>

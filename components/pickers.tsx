@@ -18,14 +18,27 @@ export function tachSoLuong(chuoi: string): { soLuong: number | null; tuKhoa: st
   return { soLuong: null, tuKhoa: chuoi.trim() };
 }
 
+/**
+ * Phím tắt dùng chung cho các ô tìm kiếm có danh sách gợi ý.
+ *
+ * `choPhepChon` quyết định Enter có thêm mục đang chọn hay không. Phải kiểm tra
+ * cả điều kiện này lẫn bỏ qua tổ hợp Ctrl/Alt, nếu không thì:
+ *  - ô tìm kiếm trống vẫn "chọn" mục đầu danh sách dù người dùng không chọn gì;
+ *  - Ctrl+Enter (phím lưu phiếu của form) bị ô tìm kiếm hiểu thành Enter và
+ *    tự thêm một mặt hàng vào phiếu.
+ */
 function dungO(
   viTri: number,
   setViTri: (n: number) => void,
   soKetQua: number,
   chon: (i: number) => void,
   dong: () => void,
+  choPhepChon: boolean,
 ) {
   return (e: PhimReact) => {
+    // Nhường các tổ hợp có phím điều khiển cho phím tắt của form
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setViTri(Math.min(viTri + 1, soKetQua - 1));
@@ -34,7 +47,8 @@ function dungO(
       setViTri(Math.max(viTri - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (soKetQua > 0) chon(viTri);
+      if (choPhepChon && soKetQua > 0) chon(viTri);
+      else dong();
     } else if (e.key === "Escape") {
       e.preventDefault();
       dong();
@@ -92,10 +106,18 @@ export function ChonHang({
     ref.current?.focus();
   };
 
-  const onKey = dungO(viTri, setViTri, ketQua.length, chon, () => {
-    setMo(false);
-    setQ("");
-  });
+  // Chỉ cho Enter thêm hàng khi danh sách gợi ý đang mở và người dùng đã gõ từ khoá
+  const onKey = dungO(
+    viTri,
+    setViTri,
+    ketQua.length,
+    chon,
+    () => {
+      setMo(false);
+      setQ("");
+    },
+    mo && tuKhoa.length > 0,
+  );
 
   return (
     <div className="relative">
@@ -200,6 +222,9 @@ export function OTenCanPham({
   };
 
   const onKey = (e: PhimReact) => {
+    // Nhường tổ hợp có phím điều khiển cho phím tắt của form (Ctrl+Enter lưu phiếu)
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+
     if (e.key === "ArrowDown" && ketQua.length > 0) {
       e.preventDefault();
       setMo(true);
@@ -209,7 +234,12 @@ export function OTenCanPham({
       setViTri(Math.max(viTri - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (mo && ketQua.length > 0 && ketQua[viTri] && ketQua[viTri].hoTen !== giaTri.trim()) chon(viTri);
+      // Chỉ điền khi đang mở gợi ý, đã gõ tên, và mục đang chọn khác tên vừa gõ.
+      // Không kiểm tra "đã gõ tên" thì bấm Enter ở ô trống sẽ tự điền tên người
+      // mua trước đó.
+      const chonDuoc =
+        mo && giaTri.trim().length > 0 && ketQua[viTri] && ketQua[viTri].hoTen !== giaTri.trim();
+      if (chonDuoc) chon(viTri);
       else {
         setMo(false);
         onEnter?.();

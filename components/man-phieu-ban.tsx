@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient, type DuLieuPhieu } from "@/lib/client";
-import { taiCsv } from "@/lib/csv";
+import { taiExcel } from "@/lib/excel";
 import { homNay, khop, ngayVN, so, tien } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import type { CanPhamGoiY, Order, Product } from "@/lib/types";
@@ -90,29 +90,36 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
     }
   };
 
-  const xuatCsv = () => {
-    const dong: (string | number)[][] = [];
-    for (const o of hienThi) {
-      for (const i of o.items) {
-        dong.push([
-          o.soPhieu,
-          ngayVN(o.ngay),
-          o.hoTen,
-          o.namSinh,
-          o.buongGiam,
-          i.ten,
-          i.donViTinh,
-          i.soLuong,
-          i.donGia,
-          i.thanhTien,
-        ]);
-      }
-    }
-    taiCsv(
-      `phieu-ban_${tu}_${den}`,
-      ["Số phiếu", "Ngày", "Họ tên", "Năm sinh", "Buồng giam", "Mặt hàng", "ĐVT", "Số lượng", "Đơn giá", "Thành tiền"],
-      dong,
+  const xuatExcel = () => {
+    // Mỗi dòng hàng của phiếu là một dòng trong file để lọc và tổng hợp được
+    const dong = hienThi.flatMap((o) =>
+      o.items.map((i) => [
+        o.soPhieu,
+        ngayVN(o.ngay),
+        o.hoTen,
+        o.namSinh || null,
+        o.buongGiam,
+        i.ten,
+        i.donViTinh,
+        i.soLuong,
+        i.donGia,
+        i.thanhTien,
+        o.kiemLuc ? (o.kiemGhiChu ? "Đã kiểm — có sai sót" : "Đã kiểm") : "Chưa kiểm",
+        o.kiemGhiChu,
+      ]),
     );
+    void taiExcel(`phieu-ban_${tu}_${den}`, {
+      ten: "Phiếu bán",
+      tieuDe: `Danh sách phiếu bán từ ${ngayVN(tu)} đến ${ngayVN(den)}`,
+      tieuDeCot: [
+        "Số phiếu", "Ngày", "Họ tên", "Năm sinh", "Buồng giam",
+        "Mặt hàng", "ĐVT", "Số lượng", "Đơn giá", "Thành tiền",
+        "Trạng thái kiểm", "Ghi chú kiểm",
+      ],
+      dong,
+      cotTien: [8, 9],
+      doRong: [16, 12, 26, 10, 12, 26, 8, 10, 12, 14, 20, 26],
+    }).catch((e) => baoLoi((e as Error).message));
   };
 
   return (
@@ -139,7 +146,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
             className="pl-8"
           />
         </div>
-        <Nut onClick={xuatCsv} disabled={hienThi.length === 0}>
+        <Nut onClick={xuatExcel} disabled={hienThi.length === 0}>
           <BieuTuong ten="tai" /> Excel
         </Nut>
         {duocBan && (
@@ -264,6 +271,19 @@ export function HopXemTruocPhieu() {
   const { dangXem, dongXemTruoc, inPhieu } = useInPhieu();
   const { settings } = useStore();
 
+  // Ctrl+Enter để đóng nhanh, khỏi phải với chuột
+  useEffect(() => {
+    if (!dangXem) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        dongXemTruoc();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [dangXem, dongXemTruoc]);
+
   return (
     <HopThoai
       mo={dangXem !== null}
@@ -272,7 +292,12 @@ export function HopXemTruocPhieu() {
       rong="max-w-3xl"
       chanTrang={
         <>
-          <Nut onClick={dongXemTruoc}>Đóng</Nut>
+          <Nut onClick={dongXemTruoc}>
+            Đóng
+            <span className="ml-1 rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-normal text-slate-600">
+              Ctrl+↵
+            </span>
+          </Nut>
           <Nut
             kieu="chinh"
             onClick={() => {
