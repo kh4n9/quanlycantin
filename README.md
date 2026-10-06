@@ -37,7 +37,7 @@ npm start
 | Màn hình | Việc dùng |
 |---|---|
 | **Bán hàng** | Nhập thông tin can phạm → nhập số lượng từng mặt hàng → lưu phiếu và in |
-| **Phiếu bán** | Tra cứu theo ngày, **sửa** lại, xem và in lại phiếu đã lập |
+| **Phiếu bán** | Tra cứu theo ngày, **sửa** lại, xem và in lại phiếu đã lập; **thùng rác** |
 | **Mặt hàng** | Danh mục mặt hàng, đơn vị tính, giá bán, **tắt/bật bán** |
 | **Báo cáo** | Số phiếu, số lượng hàng, mặt hàng và can phạm mua nhiều; xuất Excel |
 | **Tài khoản** | Tạo tài khoản, bật/tắt từng quyền, đặt lại mật khẩu |
@@ -132,6 +132,20 @@ Thanh công cụ cũng có bộ lọc *Tất cả trạng thái / Đang bán / T
 - Sửa danh sách mặt hàng thì tiền được **tính lại** theo giá hiện tại của mặt hàng.
 - Không đụng tới danh sách hàng thì các dòng hàng giữ nguyên.
 - Phiếu sửa xong vẫn in ra bình thường.
+
+## Thùng rác phiếu bán
+
+Xoá một phiếu bán **không làm mất dữ liệu** — phiếu được chuyển vào thùng rác.
+
+- Nút **Thùng rác (số lượng)** nằm trên thanh công cụ màn hình *Phiếu bán*.
+- Phiếu trong thùng rác **biến khỏi danh sách, báo cáo và ô gợi ý can phạm**, nhưng
+  vẫn nằm nguyên trong cơ sở dữ liệu.
+- Bấm **Phục hồi** để đưa phiếu trở lại đúng chỗ cũ.
+- Chỉ **xoá vĩnh viễn** mới không lấy lại được, và chỉ áp dụng được với phiếu
+  đang ở trong thùng rác.
+- Mỗi phiếu ghi lại **ai xoá và xoá lúc nào**.
+
+Cần quyền *Xoá phiếu bán* mới xem và thao tác được trong thùng rác.
 
 ## Dữ liệu và sao lưu
 

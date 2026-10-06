@@ -50,6 +50,10 @@ export type Order = {
   kiemBoi: string;
   /** Ghi chú khi kiểm, thường dùng để ghi lại sai sót đã phát hiện. */
   kiemGhiChu: string;
+  /** Thời điểm chuyển vào thùng rác, rỗng nghĩa là phiếu còn dùng bình thường. */
+  xoaLuc: string;
+  /** Họ tên người đã chuyển phiếu vào thùng rác. */
+  xoaBoi: string;
 };
 
 /** Can phạm suy ra từ các phiếu bán cũ, dùng cho ô gợi ý khi lập phiếu. */

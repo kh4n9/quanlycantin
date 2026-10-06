@@ -420,21 +420,39 @@ export function ManTaiKhoan() {
   );
 }
 
-/** Hộp thoại đổi mật khẩu của chính người đang đăng nhập. */
+/**
+ * Hộp thoại đổi mật khẩu của chính người đang đăng nhập.
+ *
+ * Hộp thoại này luôn được gắn trong khung ứng dụng nên state không tự mất khi
+ * đóng. Phải xoá nội dung mỗi lần mở, nếu không lần sau mở lại ô "mật khẩu hiện
+ * tại" vẫn còn chữ gõ dở từ lần trước — mà ô mật khẩu hiện dấu chấm nên người
+ * dùng không nhìn ra, dẫn tới báo sai mật khẩu một cách vô cớ.
+ */
 export function HopDoiMatKhau({ mo, dong }: { mo: boolean; dong: () => void }) {
-  const { napLai } = useStore();
+  const { napLai, nguoiDung } = useStore();
   const [matKhauCu, setMatKhauCu] = useState("");
   const [matKhauMoi, setMatKhauMoi] = useState("");
   const [nhapLai, setNhapLai] = useState("");
   const [dangLuu, setDangLuu] = useState(false);
+  const [loi, setLoi] = useState("");
+
+  useEffect(() => {
+    if (mo) {
+      setMatKhauCu("");
+      setMatKhauMoi("");
+      setNhapLai("");
+      setLoi("");
+    }
+  }, [mo]);
 
   const doi = async () => {
+    setLoi("");
     if (matKhauMoi.length < 6) {
-      baoLoi("Mật khẩu mới phải có ít nhất 6 ký tự");
+      setLoi("Mật khẩu mới phải có ít nhất 6 ký tự");
       return;
     }
     if (matKhauMoi !== nhapLai) {
-      baoLoi("Nhập lại mật khẩu mới không khớp");
+      setLoi("Nhập lại mật khẩu mới không khớp");
       return;
     }
     setDangLuu(true);
@@ -447,7 +465,10 @@ export function HopDoiMatKhau({ mo, dong }: { mo: boolean; dong: () => void }) {
       await napLai();
       dong();
     } catch (e) {
-      baoLoi((e as Error).message);
+      const msg = (e as Error).message;
+      setLoi(msg);
+      // Sai mật khẩu hiện tại thì xoá ô đó, buộc gõ lại từ đầu cho chắc
+      if (msg.includes("hiện tại")) setMatKhauCu("");
     } finally {
       setDangLuu(false);
     }
@@ -470,6 +491,14 @@ export function HopDoiMatKhau({ mo, dong }: { mo: boolean; dong: () => void }) {
       }
     >
       <div className="flex flex-col gap-3">
+        {nguoiDung && (
+          <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[13px] text-slate-600">
+            Đang đổi mật khẩu cho tài khoản{" "}
+            <b className="font-mono text-slate-900">{nguoiDung.tenDangNhap}</b>
+            {nguoiDung.hoTen ? ` — ${nguoiDung.hoTen}` : ""}
+          </div>
+        )}
+
         <div>
           <ONhan>Mật khẩu hiện tại</ONhan>
           <OText
@@ -477,7 +506,9 @@ export function HopDoiMatKhau({ mo, dong }: { mo: boolean; dong: () => void }) {
             type="password"
             value={matKhauCu}
             onChange={(e) => setMatKhauCu(e.target.value)}
-            autoComplete="current-password"
+            // Đây là ô đổi mật khẩu, không phải ô đăng nhập: tắt tự động điền để
+            // trình duyệt không chèn mật khẩu cũ đã lưu vào.
+            autoComplete="off"
           />
         </div>
         <div>
@@ -498,6 +529,18 @@ export function HopDoiMatKhau({ mo, dong }: { mo: boolean; dong: () => void }) {
             autoComplete="new-password"
           />
         </div>
+
+        {loi && (
+          <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-[13px] text-rose-700">
+            {loi}
+            {loi.includes("hiện tại") && (
+              <span className="mt-1 block text-rose-600/90">
+                Ô mật khẩu hiện tại đã được xoá. Gõ lại thật chậm, chú ý không để dấu cách ở đầu
+                hoặc cuối.
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </HopThoai>
   );

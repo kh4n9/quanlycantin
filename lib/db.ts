@@ -182,15 +182,26 @@ export async function soPhieuMoi(ngay: string): Promise<string> {
 
 export type LocPhieu = { tu?: string; den?: string; hoTen?: string };
 
-/** Bù các trường kiểm phiếu cho những phiếu lập trước khi có tính năng này. */
+/** Bù các trường thêm sau cho những phiếu lập trước khi có tính năng đó. */
 function chuanHoaPhieu(doc: Record<string, unknown>): Order {
   return {
     ...(doc as unknown as Order),
     kiemLuc: String(doc.kiemLuc ?? ""),
     kiemBoi: String(doc.kiemBoi ?? ""),
     kiemGhiChu: String(doc.kiemGhiChu ?? ""),
+    xoaLuc: String(doc.xoaLuc ?? ""),
+    xoaBoi: String(doc.xoaBoi ?? ""),
   };
 }
+
+/**
+ * Điều kiện lọc phiếu còn dùng và phiếu trong thùng rác.
+ * Phải kể cả trường hợp trường chưa tồn tại, vì phiếu lập trước khi có thùng rác
+ * không có trường xoaLuc — nếu chỉ so với chuỗi rỗng thì chúng sẽ biến mất khỏi
+ * mọi danh sách.
+ */
+const CHUA_XOA = { $or: [{ xoaLuc: { $exists: false } }, { xoaLuc: "" }, { xoaLuc: null }] };
+const DA_XOA = { xoaLuc: { $nin: ["", null] } };
 
 export async function layPhieuBan(loc: LocPhieu = {}): Promise<Order[]> {
   const db = await getDb();
@@ -204,10 +215,22 @@ export async function layPhieuBan(loc: LocPhieu = {}): Promise<Order[]> {
   if (loc.hoTen) {
     dieuKien.hoTen = new RegExp(`^${loc.hoTen.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
   }
+  // Phiếu trong thùng rác không bao giờ lọt vào danh sách đang dùng
   const ds = await db
     .collection(COL.phieuBan)
-    .find(dieuKien, KHONG_LAY_ID)
+    .find({ $and: [dieuKien, CHUA_XOA] }, KHONG_LAY_ID)
     .sort({ ngay: -1, createdAt: -1 })
+    .toArray();
+  return (ds as Record<string, unknown>[]).map(chuanHoaPhieu);
+}
+
+/** Danh sách phiếu đang nằm trong thùng rác, mới xoá lên đầu. */
+export async function layThungRac(): Promise<Order[]> {
+  const db = await getDb();
+  const ds = await db
+    .collection(COL.phieuBan)
+    .find(DA_XOA, KHONG_LAY_ID)
+    .sort({ xoaLuc: -1 })
     .toArray();
   return (ds as Record<string, unknown>[]).map(chuanHoaPhieu);
 }
@@ -247,7 +270,26 @@ export async function suaPhieuBan(id: string, patch: Partial<Order>): Promise<Or
   return timPhieuBan(id);
 }
 
-export async function xoaPhieuBan(id: string): Promise<Order | null> {
+/** Chuyển phiếu vào thùng rác. Dữ liệu vẫn còn, phục hồi được. */
+export async function xoaPhieuBan(id: string, nguoiXoa: string): Promise<Order | null> {
+  const db = await getDb();
+  if (!(await timPhieuBan(id))) return null;
+  await db.collection(COL.phieuBan).updateOne(
+    { id },
+    { $set: { xoaLuc: new Date().toISOString(), xoaBoi: nguoiXoa } },
+  );
+  return timPhieuBan(id);
+}
+
+/** Lấy phiếu ra khỏi thùng rác. */
+export async function phucHoiPhieuBan(id: string): Promise<Order | null> {
+  const db = await getDb();
+  await db.collection(COL.phieuBan).updateOne({ id }, { $set: { xoaLuc: "", xoaBoi: "" } });
+  return timPhieuBan(id);
+}
+
+/** Xoá hẳn khỏi cơ sở dữ liệu. Không hoàn tác được. */
+export async function xoaVinhVienPhieuBan(id: string): Promise<Order | null> {
   const db = await getDb();
   const phieu = await timPhieuBan(id);
   if (!phieu) return null;
@@ -264,6 +306,7 @@ export async function danhSachCanPham(): Promise<CanPhamGoiY[]> {
   const ds = await db
     .collection(COL.phieuBan)
     .aggregate([
+      { $match: CHUA_XOA },
       { $sort: { ngay: 1, createdAt: 1 } },
       {
         $group: {

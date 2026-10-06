@@ -74,6 +74,8 @@ export async function POST(req: Request) {
       kiemLuc: "",
       kiemBoi: "",
       kiemGhiChu: "",
+      xoaLuc: "",
+      xoaBoi: "",
     };
     await themPhieuBan(moi);
     return NextResponse.json({ order: moi }, { status: 201 });

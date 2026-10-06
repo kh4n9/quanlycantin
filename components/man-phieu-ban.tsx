@@ -6,6 +6,7 @@ import { taiExcel } from "@/lib/excel";
 import { homNay, khop, ngayVN, so, tien } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import type { CanPhamGoiY, Order, Product } from "@/lib/types";
+import { HopThungRac } from "./hop-thung-rac";
 import { PhieuBanForm } from "./phieu-ban-form";
 import { MauPhieuBan, useInPhieu } from "./print";
 import { bao, baoLoi, BieuTuong, HopThoai, Nut, OText, Trong } from "./ui";
@@ -27,6 +28,8 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
   const [q, setQ] = useState("");
   const [dangTai, setDangTai] = useState(true);
   const [dangSua, setDangSua] = useState<Order | null>(null);
+  const [moThungRac, setMoThungRac] = useState(false);
+  const [soThungRac, setSoThungRac] = useState(0);
 
   // Dữ liệu cho form sửa phiếu
   const [sanPham, setSanPham] = useState<Product[]>([]);
@@ -49,6 +52,20 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
   useEffect(() => {
     void nap();
   }, [nap]);
+
+  /** Chỉ lấy số lượng để hiện trên nút, không cần nội dung */
+  const demThungRac = useCallback(async () => {
+    if (!duocXoa) return;
+    try {
+      setSoThungRac((await apiClient.thungRac()).orders.length);
+    } catch {
+      /* chỉ là con số hiển thị, lỗi ở đây không chặn màn hình */
+    }
+  }, [duocXoa]);
+
+  useEffect(() => {
+    void demThungRac();
+  }, [demThungRac]);
 
   useEffect(() => {
     Promise.all([apiClient.products(), apiClient.canPham()])
@@ -80,11 +97,18 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
   );
 
   const xoa = async (o: Order) => {
-    if (!window.confirm(`Xoá phiếu ${o.soPhieu} của ${o.hoTen}?`)) return;
+    if (
+      !window.confirm(
+        `Chuyển phiếu ${o.soPhieu} của ${o.hoTen} vào thùng rác?\n\nPhiếu sẽ biến khỏi danh sách và báo cáo, nhưng vẫn phục hồi được.`,
+      )
+    ) {
+      return;
+    }
     try {
       await apiClient.xoaPhieuBan(o.id);
-      bao(`Đã xoá phiếu ${o.soPhieu}`);
+      bao(`Đã chuyển phiếu ${o.soPhieu} vào thùng rác`);
       await nap();
+      void demThungRac();
     } catch (e) {
       baoLoi((e as Error).message);
     }
@@ -149,6 +173,11 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
         <Nut onClick={xuatExcel} disabled={hienThi.length === 0}>
           <BieuTuong ten="tai" /> Excel
         </Nut>
+        {duocXoa && (
+          <Nut onClick={() => setMoThungRac(true)} title="Phiếu đã xoá — vẫn phục hồi được">
+            <BieuTuong ten="xoa" /> Thùng rác{soThungRac > 0 ? ` (${so(soThungRac)})` : ""}
+          </Nut>
+        )}
         {duocBan && (
           <Nut kieu="chinh" onClick={onSangBanHang}>
             <BieuTuong ten="them" /> Lập phiếu bán
@@ -214,7 +243,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
                         kieu="mo"
                         co="sm"
                         onClick={() => void xoa(o)}
-                        title="Xoá phiếu"
+                        title="Chuyển vào thùng rác"
                         className="hover:text-rose-600"
                       >
                         <BieuTuong ten="xoa" className="h-4 w-4" />
@@ -261,6 +290,16 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
           />
         )}
       </HopThoai>
+
+      {/* --- Thùng rác --- */}
+      <HopThungRac
+        mo={moThungRac}
+        dong={() => setMoThungRac(false)}
+        onThayDoi={() => {
+          void nap();
+          void demThungRac();
+        }}
+      />
     </>
   );
 }
