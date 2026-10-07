@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { yeuCau } from "@/lib/auth";
 import { khoiTao, layCaiDat, luuCaiDat } from "@/lib/db";
+import { chuanHoaMauIn } from "@/lib/mau-in";
+import type { Settings } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +24,14 @@ export async function PATCH(req: Request) {
     if ("res" in kq) return kq.res;
 
     const body = await req.json();
-    const patch: Record<string, string> = {};
+    const patch: Partial<Settings> = {};
     if (body.tenDonVi !== undefined) patch.tenDonVi = String(body.tenDonVi);
     if (body.diaChi !== undefined) patch.diaChi = String(body.diaChi);
     if (body.nguoiLapPhieu !== undefined) patch.nguoiLapPhieu = String(body.nguoiLapPhieu);
+    if (body.soNgayGiuThungRac !== undefined) {
+      patch.soNgayGiuThungRac = Math.max(0, Math.round(Number(body.soNgayGiuThungRac) || 0));
+    }
+    if (body.mauIn !== undefined) patch.mauIn = chuanHoaMauIn(body.mauIn);
 
     return NextResponse.json({ settings: await luuCaiDat(patch) });
   } catch (e) {

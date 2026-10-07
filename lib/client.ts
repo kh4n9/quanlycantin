@@ -36,6 +36,18 @@ export type BaoCao = {
     tongLuongThieu: number;
     coDungTien: boolean;
   };
+  /** Hàng còn thiếu đã sắp theo buồng rồi tới phiếu — dùng để in đi phát */
+  thieuTheoPhieu: {
+    buongGiam: string;
+    soPhieu: string;
+    ngay: string;
+    hoTen: string;
+    ma: string;
+    ten: string;
+    donViTinh: string;
+    conThieu: number;
+    ghiChu: string;
+  }[];
   /** Hàng còn thiếu, gom theo mặt hàng kèm danh sách phiếu liên quan */
   hangThieu: {
     productId: string;
@@ -133,7 +145,8 @@ export const apiClient = {
       method: "DELETE",
       body: JSON.stringify({ lyDo }),
     }),
-  thungRac: () => api<{ orders: Order[] }>("/api/thung-rac"),
+  thungRac: () =>
+    api<{ orders: Order[]; soNgayGiuThungRac: number; daXoaTuDong: number }>("/api/thung-rac"),
   phucHoiPhieuBan: (id: string) =>
     api<{ order: Order }>(`/api/orders/${id}/phuc-hoi`, { method: "POST" }),
   xoaVinhVienPhieuBan: (id: string) =>

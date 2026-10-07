@@ -82,10 +82,61 @@ export type CanPhamGoiY = {
   lanCuoi: string;
 };
 
+/** Một ô chữ ký ở cuối phiếu in. */
+export type OChuKy = {
+  nhan: string;
+  ghiChu: string;
+};
+
+/** Nhãn chữ hiện trên phiếu in — sửa được để hợp với từng đơn vị. */
+export type NhanPhieu = {
+  hoTen: string;
+  namSinh: string;
+  buongGiam: string;
+  ghiChu: string;
+  stt: string;
+  tenHang: string;
+  donViTinh: string;
+  soLuong: string;
+  donGia: string;
+  thanhTien: string;
+  tongCong: string;
+};
+
+/** Bật/tắt từng phần của phiếu in. */
+export type HienPhieu = {
+  soPhieu: boolean;
+  ngay: boolean;
+  namSinh: boolean;
+  buongGiam: boolean;
+  ghiChu: boolean;
+  cotDonViTinh: boolean;
+  cotDonGia: boolean;
+  cotThanhTien: boolean;
+  dongTongCong: boolean;
+  bangChu: boolean;
+};
+
+/** Mẫu phiếu in, đơn vị tự chỉnh trong phần Cài đặt. */
+export type MauInPhieu = {
+  tieuDe: string;
+  nhan: NhanPhieu;
+  hien: HienPhieu;
+  chuKy: OChuKy[];
+  /** Số ô chữ ký trên mỗi hàng của phần ký */
+  soCotChuKy: number;
+};
+
 export type Settings = {
   tenDonVi: string;
   diaChi: string;
   nguoiLapPhieu: string;
+  mauIn: MauInPhieu;
+  /**
+   * Số ngày giữ phiếu trong thùng rác trước khi xoá vĩnh viễn.
+   * 0 nghĩa là giữ mãi, không tự xoá.
+   */
+  soNgayGiuThungRac: number;
 };
 
 /** Tài khoản đăng nhập. Mật khẩu chỉ lưu dạng đã băm, không bao giờ trả về client. */

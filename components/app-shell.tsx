@@ -39,7 +39,13 @@ const MUC: Muc[] = [
   { khoa: "mathang", nhan: "Mặt hàng", icon: "kho", moTa: "Danh mục mặt hàng, giá bán, tắt/bật bán", quyen: "quan_ly_mat_hang" },
   { khoa: "baocao", nhan: "Báo cáo", icon: "bieu", moTa: "Số phiếu, mặt hàng và can phạm mua nhiều", quyen: "xem_bao_cao" },
   { khoa: "taikhoan", nhan: "Tài khoản", icon: "nguoi", moTa: "Tạo tài khoản, phân quyền, đặt lại mật khẩu", quyen: "quan_ly_tai_khoan" },
-  { khoa: "cai", nhan: "Cài đặt", icon: "cai", moTa: "Thông tin đơn vị, sao lưu và dữ liệu" },
+  {
+    khoa: "cai",
+    nhan: "Cài đặt",
+    icon: "cai",
+    moTa: "Thông tin đơn vị, sao lưu, thùng rác và dữ liệu",
+    quyen: "sua_cai_dat",
+  },
 ];
 
 function Khung() {
@@ -184,7 +190,9 @@ function Khung() {
               onClick={() => setDoiMatKhau(true)}
               className="flex items-center gap-2 rounded-md px-3 py-1.5 text-left text-[13px] text-slate-400 transition hover:bg-slate-800 hover:text-white"
             >
-              <BieuTuong ten="cai" className="h-4 w-4" /> Đổi mật khẩu
+              {/* Cố tình dùng icon ổ khoá, KHÔNG dùng bánh răng — bánh răng là của
+                  mục "Cài đặt" nên trước đây hai thứ trông giống nhau. */}
+              <BieuTuong ten="khoa" className="h-4 w-4" /> Đổi mật khẩu
             </button>
             <button
               onClick={() => void dangXuat()}

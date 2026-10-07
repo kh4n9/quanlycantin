@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { COL, KHONG_LAY_ID, getDb } from "./mongo";
 import { QUYEN_DAY_DU } from "./quyen";
+import { MAU_IN_MAC_DINH, chuanHoaMauIn } from "./mau-in";
 import { bamMatKhau } from "./auth";
 import type { CanPhamGoiY, LineItem, LineInput, Order, Product, Settings } from "./types";
 
@@ -35,6 +36,9 @@ async function chayKhoiTao(): Promise<void> {
   await taoQuanTriDauTien();
   await capNhatQuyenMoi();
   await chuyenDuLieuTuFileJson();
+
+  const daDon = await donThungRacQuaHan();
+  if (daDon > 0) console.log(`[db] Đã tự xoá ${daDon} phiếu quá hạn lưu trong thùng rác`);
 }
 
 /**
@@ -415,25 +419,57 @@ export async function xoaHetDuLieu(): Promise<{ soHang: number; soPhieu: number 
   return { soHang, soPhieu };
 }
 
-const CAI_DAT_MAC_DINH: Settings = { tenDonVi: "", diaChi: "", nguoiLapPhieu: "" };
+/** Mặc định không tự xoá — chỉ xoá khi người dùng đặt số ngày cụ thể. */
+const CAI_DAT_MAC_DINH: Settings = {
+  tenDonVi: "",
+  diaChi: "",
+  nguoiLapPhieu: "",
+  soNgayGiuThungRac: 0,
+  mauIn: MAU_IN_MAC_DINH,
+};
 
 export async function layCaiDat(): Promise<Settings> {
   const db = await getDb();
   const doc = await db.collection(COL.cauHinh).findOne({ khoa: "don_vi" }, { projection: { _id: 0 } });
-  if (!doc) return { ...CAI_DAT_MAC_DINH };
+  if (!doc) return { ...CAI_DAT_MAC_DINH, mauIn: chuanHoaMauIn(null) };
   return {
     tenDonVi: String(doc.tenDonVi ?? ""),
     diaChi: String(doc.diaChi ?? ""),
     nguoiLapPhieu: String(doc.nguoiLapPhieu ?? ""),
+    soNgayGiuThungRac: Math.max(0, Math.round(Number(doc.soNgayGiuThungRac) || 0)),
+    mauIn: chuanHoaMauIn(doc.mauIn),
   };
 }
 
 export async function luuCaiDat(patch: Partial<Settings>): Promise<Settings> {
   const db = await getDb();
-  await db
-    .collection(COL.cauHinh)
-    .updateOne({ khoa: "don_vi" }, { $set: { ...patch, khoa: "don_vi" } }, { upsert: true });
+  const deLuu: Record<string, unknown> = { ...patch, khoa: "don_vi" };
+  if (patch.soNgayGiuThungRac !== undefined) {
+    deLuu.soNgayGiuThungRac = Math.max(0, Math.round(Number(patch.soNgayGiuThungRac) || 0));
+  }
+  // Chuẩn hoá mẫu in trước khi lưu để dữ liệu rác từ giao diện không lọt vào
+  if (patch.mauIn !== undefined) deLuu.mauIn = chuanHoaMauIn(patch.mauIn);
+  await db.collection(COL.cauHinh).updateOne({ khoa: "don_vi" }, { $set: deLuu }, { upsert: true });
   return layCaiDat();
+}
+
+/**
+ * Xoá vĩnh viễn những phiếu đã nằm trong thùng rác quá số ngày cho phép.
+ *
+ * Không có bộ hẹn giờ chạy nền nên việc dọn được kích hoạt khi mở thùng rác và
+ * lúc máy chủ khởi động — đủ để thùng rác không phình ra theo thời gian.
+ */
+export async function donThungRacQuaHan(): Promise<number> {
+  const { soNgayGiuThungRac } = await layCaiDat();
+  if (soNgayGiuThungRac <= 0) return 0;
+
+  const moc = new Date(Date.now() - soNgayGiuThungRac * 24 * 60 * 60 * 1000).toISOString();
+  const db = await getDb();
+  const kq = await db
+    .collection(COL.phieuBan)
+    // $nin loại phiếu chưa xoá, $lt lọc theo mốc thời gian — gộp chung một trường
+    .deleteMany({ xoaLuc: { $nin: ["", null], $lt: moc } });
+  return kq.deletedCount;
 }
 
 /* ============================ Dòng hàng ============================ */

@@ -2,8 +2,9 @@
 
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 import { docSoThanhChu, so } from "@/lib/format";
+import { MAU_IN_MAC_DINH } from "@/lib/mau-in";
 import { useStore } from "@/lib/store";
-import type { LineItem, Order, Settings } from "@/lib/types";
+import type { LineItem, MauInPhieu, Order, Settings } from "@/lib/types";
 
 type PrintValue = {
   /** Mở ngay hộp thoại in của trình duyệt. */
@@ -39,29 +40,43 @@ export function PhieuInProvider({ children }: { children: ReactNode }) {
   return (
     <PrintContext.Provider value={{ inPhieu, xemTruoc, dongXemTruoc, dangXem }}>
       {children}
-      <div id="print-area">{dangIn && <MauPhieuBan order={dangIn} settings={settings} />}</div>
+      <div id="print-area">
+        {dangIn && <MauPhieuBan order={dangIn} settings={settings} />}
+      </div>
     </PrintContext.Provider>
   );
 }
 
 /* ------------------------------ Phiếu bán ------------------------------ */
 
-function BangHang({ items, coTien }: { items: LineItem[]; coTien: boolean }) {
+function BangHang({ items, mau }: { items: LineItem[]; mau: MauInPhieu }) {
+  const { nhan, hien } = mau;
   const oDem = { textAlign: "center" as const };
   const oTien = { textAlign: "right" as const };
+
+  const coDonViTinh = hien.cotDonViTinh;
+  const coDonGia = hien.cotDonGia;
+  // Tắt cột thành tiền thì bỏ luôn tiền ở dòng tổng — không còn gì để cộng
+  const coThanhTien = hien.cotThanhTien;
+  const coTong = hien.dongTongCong;
+
   const tongTien = items.reduce((s, i) => s + i.thanhTien, 0);
+  const tongLuong = items.reduce((s, i) => s + i.soLuong, 0);
+
+  // Số cột của dòng tổng = các cột đứng trước cột cuối cùng
+  const soCotTruoc = 3 + (coDonViTinh ? 1 : 0) + (coDonGia ? 1 : 0);
 
   return (
     <>
       <table>
         <thead>
           <tr>
-            <th style={{ width: "7%" }}>STT</th>
-            <th>Tên mặt hàng</th>
-            <th style={{ width: "12%" }}>ĐVT</th>
-            <th style={{ width: "14%" }}>Số lượng</th>
-            {coTien && <th style={{ width: "16%" }}>Đơn giá</th>}
-            {coTien && <th style={{ width: "18%" }}>Thành tiền</th>}
+            <th style={{ width: "7%" }}>{nhan.stt}</th>
+            <th>{nhan.tenHang}</th>
+            {coDonViTinh && <th style={{ width: "11%" }}>{nhan.donViTinh}</th>}
+            <th style={{ width: "13%" }}>{nhan.soLuong}</th>
+            {coDonGia && <th style={{ width: "16%" }}>{nhan.donGia}</th>}
+            {coThanhTien && <th style={{ width: "18%" }}>{nhan.thanhTien}</th>}
           </tr>
         </thead>
         <tbody>
@@ -69,33 +84,92 @@ function BangHang({ items, coTien }: { items: LineItem[]; coTien: boolean }) {
             <tr key={`${i.productId}-${idx}`}>
               <td style={oDem}>{idx + 1}</td>
               <td>{i.ten}</td>
-              <td style={oDem}>{i.donViTinh}</td>
+              {coDonViTinh && <td style={oDem}>{i.donViTinh}</td>}
               <td style={oDem}>{so(i.soLuong)}</td>
-              {coTien && <td style={oTien}>{so(i.donGia)}</td>}
-              {coTien && <td style={oTien}>{so(i.thanhTien)}</td>}
+              {coDonGia && <td style={oTien}>{so(i.donGia)}</td>}
+              {coThanhTien && <td style={oTien}>{so(i.thanhTien)}</td>}
             </tr>
           ))}
-          {coTien && (
+          {coTong && (
             <tr>
-              <td colSpan={5} style={{ ...oTien, fontWeight: 700 }}>
-                TỔNG CỘNG
+              <td colSpan={soCotTruoc} style={{ ...oTien, fontWeight: 700 }}>
+                {nhan.tongCong}
               </td>
-              <td style={{ ...oTien, fontWeight: 700 }}>{so(tongTien)}</td>
+              {/* Không có cột thành tiền thì tổng là tổng số lượng */}
+              <td style={{ ...oTien, fontWeight: 700 }}>{so(coThanhTien ? tongTien : tongLuong)}</td>
             </tr>
           )}
         </tbody>
       </table>
-      {coTien && (
+      {coThanhTien && hien.bangChu && (
         <div style={{ marginTop: 6, fontStyle: "italic" }}>Bằng chữ: {docSoThanhChu(tongTien)}./.</div>
       )}
     </>
   );
 }
 
-export function MauPhieuBan({ order, settings }: { order: Order; settings: Settings | null }) {
-  const [nam, thang, ngayTrongThang] = [order.ngay.slice(0, 4), order.ngay.slice(5, 7), order.ngay.slice(8, 10)];
-  const coTien = order.items.some((i) => i.donGia > 0);
+function KhoiChuKy({ mau }: { mau: MauInPhieu }) {
+  const { chuKy, soCotChuKy } = mau;
+  if (chuKy.length === 0) return null;
+
   const d = new Date();
+  // Chia chữ ký thành từng hàng, mỗi hàng `soCotChuKy` ô
+  const hang: typeof chuKy[] = [];
+  for (let i = 0; i < chuKy.length; i += soCotChuKy) hang.push(chuKy.slice(i, i + soCotChuKy));
+  const beRong = `${100 / soCotChuKy}%`;
+
+  const oKhongVien = (them: React.CSSProperties = {}): React.CSSProperties => ({
+    border: "none",
+    textAlign: "center",
+    padding: 2,
+    ...them,
+  });
+
+  return (
+    <>
+      <div style={{ textAlign: "right", marginTop: 16, fontStyle: "italic" }}>
+        Ngày {d.getDate()} tháng {d.getMonth() + 1} năm {d.getFullYear()}
+      </div>
+      {hang.map((mot, i) => (
+        <table key={i} style={{ width: "100%", marginTop: i === 0 ? 4 : 0, borderCollapse: "collapse" }}>
+          <tbody>
+            <tr>
+              {mot.map((c) => (
+                <td key={c.nhan} style={oKhongVien({ fontWeight: 700, width: beRong })}>
+                  {c.nhan}
+                </td>
+              ))}
+            </tr>
+            <tr>
+              {mot.map((c) => (
+                <td key={c.nhan} style={oKhongVien({ fontStyle: "italic", fontSize: "11pt" })}>
+                  {c.ghiChu}
+                </td>
+              ))}
+            </tr>
+            <tr>
+              {mot.map((c) => (
+                <td key={c.nhan} style={oKhongVien({ height: 80 })} />
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      ))}
+    </>
+  );
+}
+
+export function MauPhieuBan({
+  order,
+  settings,
+  mau = settings?.mauIn ?? MAU_IN_MAC_DINH,
+}: {
+  order: Order;
+  settings: Settings | null;
+  /** Cho phép truyền mẫu in riêng để xem trước trong phần Cài đặt */
+  mau?: MauInPhieu;
+}) {
+  const [nam, thang, ngayTrongThang] = [order.ngay.slice(0, 4), order.ngay.slice(5, 7), order.ngay.slice(8, 10)];
 
   return (
     <div className="phieu-in">
@@ -110,62 +184,42 @@ export function MauPhieuBan({ order, settings }: { order: Order; settings: Setti
       <h1
         style={{ textAlign: "center", fontSize: "16pt", fontWeight: 700, margin: 0, textTransform: "uppercase" }}
       >
-        Phiếu bán hàng
+        {mau.tieuDe}
       </h1>
-      <div style={{ textAlign: "center", fontSize: "12pt" }}>
-        Số: <b>{order.soPhieu}</b>
-      </div>
-      <div style={{ textAlign: "center", fontSize: "12pt", marginBottom: 14 }}>
-        Ngày {ngayTrongThang} tháng {thang} năm {nam}
-      </div>
+      {mau.hien.soPhieu && (
+        <div style={{ textAlign: "center", fontSize: "12pt" }}>
+          Số: <b>{order.soPhieu}</b>
+        </div>
+      )}
+      {mau.hien.ngay && (
+        <div style={{ textAlign: "center", fontSize: "12pt", marginBottom: 14 }}>
+          Ngày {ngayTrongThang} tháng {thang} năm {nam}
+        </div>
+      )}
 
       <div style={{ marginBottom: 10, lineHeight: 1.6 }}>
         <div>
-          Họ và tên can phạm: <b>{order.hoTen}</b>
+          {mau.nhan.hoTen}: <b>{order.hoTen}</b>
         </div>
-        <div>
-          Năm sinh: <b>{order.namSinh || "…"}</b>
-        </div>
-        <div>
-          Buồng giam: <b>{order.buongGiam || "…"}</b>
-        </div>
-        {order.ghiChu ? <div>Ghi chú: {order.ghiChu}</div> : null}
+        {mau.hien.namSinh && (
+          <div>
+            {mau.nhan.namSinh}: <b>{order.namSinh || "…"}</b>
+          </div>
+        )}
+        {mau.hien.buongGiam && (
+          <div>
+            {mau.nhan.buongGiam}: <b>{order.buongGiam || "…"}</b>
+          </div>
+        )}
+        {mau.hien.ghiChu && order.ghiChu ? (
+          <div>
+            {mau.nhan.ghiChu}: {order.ghiChu}
+          </div>
+        ) : null}
       </div>
 
-      <BangHang items={order.items} coTien={coTien} />
-
-      <div style={{ textAlign: "right", marginTop: 16, fontStyle: "italic" }}>
-        Ngày {d.getDate()} tháng {d.getMonth() + 1} năm {d.getFullYear()}
-      </div>
-      <table style={{ width: "100%", marginTop: 4, borderCollapse: "collapse" }}>
-        <tbody>
-          <tr>
-            {["Người mua hàng", "Người bán hàng"].map((b) => (
-              <td
-                key={b}
-                style={{ border: "none", textAlign: "center", fontWeight: 700, width: "50%", padding: 2 }}
-              >
-                {b}
-              </td>
-            ))}
-          </tr>
-          <tr>
-            {["(Ký, ghi rõ họ tên)", "(Ký, ghi rõ họ tên)"].map((b, i) => (
-              <td
-                key={i}
-                style={{ border: "none", textAlign: "center", fontStyle: "italic", fontSize: "11pt", padding: 2 }}
-              >
-                {b}
-              </td>
-            ))}
-          </tr>
-          <tr>
-            {["", ""].map((_, i) => (
-              <td key={i} style={{ border: "none", height: 80 }} />
-            ))}
-          </tr>
-        </tbody>
-      </table>
+      <BangHang items={order.items} mau={mau} />
+      <KhoiChuKy mau={mau} />
     </div>
   );
 }

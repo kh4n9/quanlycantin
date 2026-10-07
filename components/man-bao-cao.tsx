@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { apiClient, type BaoCao } from "@/lib/client";
-import { taiExcel } from "@/lib/excel";
+import { useStore } from "@/lib/store";
+import { taiExcel, type TrangExcel } from "@/lib/excel";
 import { homNay, ngayVN, so, tien } from "@/lib/format";
 import { baoLoi, BieuTuong, Nut, Trong } from "./ui";
 
@@ -21,10 +23,28 @@ function luiNgay(n: number): string {
 }
 
 export function ManBaoCao() {
+  const { settings } = useStore();
   const [tu, setTu] = useState(dauThang());
   const [den, setDen] = useState(homNay());
   const [du, setDu] = useState<BaoCao | null>(null);
   const [dangTai, setDangTai] = useState(true);
+  // Portal cần document nên chỉ dựng sau khi đã sang phía trình duyệt
+  const [daMount, setDaMount] = useState(false);
+  useEffect(() => setDaMount(true), []);
+
+  /**
+   * In danh sách hàng còn thiếu để đi phát.
+   *
+   * Nội dung in nằm ở #print-thieu bên ngoài khung ứng dụng; thân trang mang
+   * class "in-thieu" để CSS chọn in phần này thay vì in phiếu bán.
+   */
+  const inDanhSachThieu = () => {
+    document.body.classList.add("in-thieu");
+    setTimeout(() => {
+      window.print();
+      document.body.classList.remove("in-thieu");
+    }, 80);
+  };
 
   const nap = useCallback(async () => {
     setDangTai(true);
@@ -74,6 +94,60 @@ export function ManBaoCao() {
     ];
     if (tq.coDungTien) tongQuan.push(["Doanh thu", tq.doanhThu]);
 
+    // Trang hàng thiếu chỉ thêm khi thật sự có, tránh xuất ra bảng trống
+    const trangThieu: TrangExcel[] =
+      du.hangThieu.length > 0
+        ? [
+            {
+              ten: "Tổng hợp hàng thiếu",
+              // Số phiếu ở đây là số phiếu riêng biệt nên không cộng dồn theo cột,
+              // vì một phiếu có thể thiếu nhiều mặt hàng. Ghi rõ ở dòng tiêu đề.
+              tieuDe: `Hàng còn thiếu cần bù — ${du.hangThieu.length} mặt hàng, ${du.tongQuan.soPhieuThieu} phiếu, ${du.tongQuan.tongLuongThieu} đơn vị`,
+              tieuDeCot: ["Mã hàng", "Tên mặt hàng", "ĐVT", "Số phiếu", "Tổng còn thiếu"],
+              dong: [
+                ...du.hangThieu.map((h) => [h.ma, h.ten, h.donViTinh, h.phieu.length, h.conThieu]),
+                // Dòng tổng chỉ cộng cột số lượng; cột số phiếu để trống cho khỏi
+                // thành con số sai (cộng theo cột sẽ đếm trùng phiếu thiếu nhiều món)
+                ["", "TỔNG CỘNG", "", null, du.tongQuan.tongLuongThieu],
+              ],
+              cotTien: [],
+              doRong: [14, 32, 10, 12, 18],
+            },
+            {
+              ten: "Chi tiết theo buồng",
+              tieuDe: `Danh sách phát hàng còn thiếu — ${du.tongQuan.soPhieuThieu} phiếu, ${du.tongQuan.tongLuongThieu} đơn vị`,
+              // Sắp theo buồng rồi tới phiếu để đi phát lần lượt từng buồng
+              tieuDeCot: [
+                "Buồng giam",
+                "Số phiếu",
+                "Ngày bán",
+                "Họ tên",
+                "Mã hàng",
+                "Tên mặt hàng",
+                "ĐVT",
+                "Còn thiếu",
+                "Ghi chú",
+              ],
+              dong: [
+                ...du.thieuTheoPhieu.map((r) => [
+                  r.buongGiam || "—",
+                  r.soPhieu,
+                  ngayVN(r.ngay),
+                  r.hoTen,
+                  r.ma,
+                  r.ten,
+                  r.donViTinh,
+                  r.conThieu,
+                  r.ghiChu,
+                ]),
+                // Cột ghi chú để trống ở dòng tổng vì cộng chữ lại không có nghĩa
+                ["", "TỔNG CỘNG", "", "", "", "", "", du.tongQuan.tongLuongThieu, ""],
+              ],
+              doRong: [12, 16, 12, 26, 14, 26, 9, 11, 30],
+            },
+          ]
+        : [];
+
     void taiExcel(`bao-cao_${tu}_${den}`, [
       {
         ten: "Tổng quan",
@@ -97,23 +171,7 @@ export function ManBaoCao() {
         cotTien: [4],
         doRong: [14, 32, 10, 18, 18],
       },
-      {
-        ten: "Hàng còn thiếu",
-        tieuDeCot: ["Mã hàng", "Tên mặt hàng", "ĐVT", "Số phiếu", "Ngày bán", "Họ tên", "Buồng giam", "Còn thiếu"],
-        dong: du.hangThieu.flatMap((h) =>
-          h.phieu.map((p) => [
-            h.ma,
-            h.ten,
-            h.donViTinh,
-            p.soPhieu,
-            ngayVN(p.ngay),
-            p.hoTen,
-            p.buongGiam,
-            p.conThieu,
-          ]),
-        ),
-        doRong: [14, 30, 10, 16, 12, 26, 12, 12],
-      },
+      ...trangThieu,
       {
         ten: "Can phạm",
         tieuDeCot: ["Họ tên", "Năm sinh", "Buồng giam", "Số phiếu", "Số lượng hàng", "Doanh thu"],
@@ -204,7 +262,12 @@ export function ManBaoCao() {
 
           <BieuDoTheoNgay data={du.theoNgay} dungTien={du.tongQuan.coDungTien} />
 
-          <HangConThieu hang={du.hangThieu} tu={tu} den={den} />
+          <HangConThieu
+            hang={du.hangThieu}
+            tu={tu}
+            den={den}
+            onIn={du.thieuTheoPhieu.length > 0 ? inDanhSachThieu : undefined}
+          />
 
           <BangXepHang
             tieuDe="Mặt hàng đã bán"
@@ -240,6 +303,16 @@ export function ManBaoCao() {
           />
         </>
       )}
+
+      {daMount &&
+        createPortal(
+          <div id="print-thieu">
+            {du && du.thieuTheoPhieu.length > 0 && (
+              <PhieuThieu du={du} settings={settings} tu={tu} den={den} />
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -367,6 +440,97 @@ function BieuDoTheoNgay({ data, dungTien }: { data: DiemNgay[]; dungTien: boolea
   );
 }
 
+/* --------------------- Bản in danh sách hàng còn thiếu --------------------- */
+
+/**
+ * Bản in để đi phát hàng: sắp theo buồng rồi tới phiếu, có ghi chú của phiếu.
+ * Nội dung được đưa ra ngoài khung ứng dụng bằng portal để khi in không bị ẩn.
+ */
+function PhieuThieu({ du, settings, tu, den }: { du: BaoCao; settings: { tenDonVi: string; diaChi: string }; tu: string; den: string }) {
+  const oDem = { textAlign: "center" as const };
+  const oTien = { textAlign: "right" as const };
+
+  return (
+    <div className="phieu-in">
+      <div style={{ textAlign: "center", lineHeight: 1.35 }}>
+        <div style={{ fontWeight: 700, textTransform: "uppercase" }}>
+          {settings.tenDonVi || "CĂN TIN PHẠM NHÂN"}
+        </div>
+        {settings.diaChi ? <div style={{ fontSize: "11pt" }}>{settings.diaChi}</div> : null}
+      </div>
+      <div style={{ height: 14 }} />
+
+      <h1 style={{ textAlign: "center", fontSize: "16pt", fontWeight: 700, margin: 0, textTransform: "uppercase" }}>
+        Danh sách hàng còn thiếu
+      </h1>
+      <div style={{ textAlign: "center", fontSize: "12pt", marginBottom: 4 }}>
+        Từ {ngayVN(tu)} đến {ngayVN(den)}
+      </div>
+      <div style={{ textAlign: "center", fontSize: "11pt", marginBottom: 12 }}>
+        {so(du.tongQuan.soPhieuThieu)} phiếu · {so(du.tongQuan.tongLuongThieu)} đơn vị chưa giao
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style={{ width: "10%" }}>Buồng giam</th>
+            <th style={{ width: "14%" }}>Số phiếu</th>
+            <th>Họ và tên</th>
+            <th>Tên mặt hàng</th>
+            <th style={{ width: "8%" }}>ĐVT</th>
+            <th style={{ width: "10%" }}>Còn thiếu</th>
+            <th style={{ width: "18%" }}>Ghi chú</th>
+          </tr>
+        </thead>
+        <tbody>
+          {du.thieuTheoPhieu.map((r, i) => (
+            <tr key={`${r.soPhieu}-${r.ma}-${i}`}>
+              <td style={oDem}>{r.buongGiam || "—"}</td>
+              <td style={{ ...oDem, fontFamily: "monospace", fontSize: "11pt" }}>{r.soPhieu}</td>
+              <td>{r.hoTen}</td>
+              <td>{r.ten}</td>
+              <td style={oDem}>{r.donViTinh}</td>
+              <td style={oTien}>{so(r.conThieu)}</td>
+              <td style={{ fontSize: "11pt" }}>{r.ghiChu}</td>
+            </tr>
+          ))}
+          <tr>
+            <td colSpan={5} style={{ ...oTien, fontWeight: 700 }}>
+              TỔNG CỘNG
+            </td>
+            <td style={{ ...oTien, fontWeight: 700 }}>{so(du.tongQuan.tongLuongThieu)}</td>
+            <td />
+          </tr>
+        </tbody>
+      </table>
+
+      <table style={{ width: "100%", marginTop: 18, borderCollapse: "collapse" }}>
+        <tbody>
+          <tr>
+            {["Người lập danh sách", "Người phát hàng", "Người nhận hàng"].map((b) => (
+              <td key={b} style={{ border: "none", textAlign: "center", fontWeight: 700, width: "33.33%", padding: 2 }}>
+                {b}
+              </td>
+            ))}
+          </tr>
+          <tr>
+            {["", "", ""].map((_, i) => (
+              <td key={i} style={{ border: "none", textAlign: "center", fontStyle: "italic", fontSize: "11pt" }}>
+                (Ký, ghi rõ họ tên)
+              </td>
+            ))}
+          </tr>
+          <tr>
+            {["", "", ""].map((_, i) => (
+              <td key={i} style={{ border: "none", height: 75 }} />
+            ))}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /* ------------------------------ Hàng còn thiếu ------------------------------ */
 
 type DongThieu = BaoCao["hangThieu"][number];
@@ -375,7 +539,17 @@ type DongThieu = BaoCao["hangThieu"][number];
  * Danh sách hàng còn nợ can phạm, gom theo mặt hàng.
  * Dùng để khi hàng về thì biết ngay cần bù cho phiếu nào, bao nhiêu.
  */
-function HangConThieu({ hang, tu, den }: { hang: DongThieu[]; tu: string; den: string }) {
+function HangConThieu({
+  hang,
+  tu,
+  den,
+  onIn,
+}: {
+  hang: DongThieu[];
+  tu: string;
+  den: string;
+  onIn?: () => void;
+}) {
   if (hang.length === 0) {
     return (
       <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -404,9 +578,16 @@ function HangConThieu({ hang, tu, den }: { hang: DongThieu[]; tu: string; den: s
             Khi hàng về, đối chiếu mục này để biết cần bù cho phiếu nào
           </p>
         </div>
-        <span className="text-[12px] font-medium text-amber-800">
-          {so(hang.length)} mặt hàng · tổng {so(tongThieu)} đơn vị
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-[12px] font-medium text-amber-800">
+            {so(hang.length)} mặt hàng · tổng {so(tongThieu)} đơn vị
+          </span>
+          {onIn && (
+            <Nut co="sm" onClick={onIn} title="In danh sách sắp theo buồng để đi phát hàng">
+              <BieuTuong ten="in" className="h-4 w-4" /> In danh sách phát
+            </Nut>
+          )}
+        </div>
       </header>
 
       <div className="divide-y divide-slate-100">

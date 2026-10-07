@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiClient } from "@/lib/client";
 import { useStore } from "@/lib/store";
+import { ManMauIn } from "./man-mau-in";
 import { bao, baoLoi, BieuTuong, Nut, ONhan, OText, The } from "./ui";
 
 export function ManCaiDat() {
@@ -14,6 +15,7 @@ export function ManCaiDat() {
   const [tenDonVi, setTenDonVi] = useState(settings.tenDonVi);
   const [diaChi, setDiaChi] = useState(settings.diaChi);
   const [nguoiLapPhieu, setNguoiLapPhieu] = useState(settings.nguoiLapPhieu);
+  const [soNgayGiuThungRac, setSoNgayGiuThungRac] = useState(String(settings.soNgayGiuThungRac || 0));
   const [dangLuu, setDangLuu] = useState(false);
   const [dangNap, setDangNap] = useState(false);
 
@@ -21,6 +23,7 @@ export function ManCaiDat() {
     setTenDonVi(settings.tenDonVi);
     setDiaChi(settings.diaChi);
     setNguoiLapPhieu(settings.nguoiLapPhieu);
+    setSoNgayGiuThungRac(String(settings.soNgayGiuThungRac || 0));
   }, [settings]);
 
   const demDuLieu = useCallback(async () => {
@@ -42,6 +45,23 @@ export function ManCaiDat() {
     try {
       await capNhatSettings({ tenDonVi, diaChi, nguoiLapPhieu });
       bao("Đã lưu thông tin đơn vị");
+    } catch (e) {
+      baoLoi((e as Error).message);
+    } finally {
+      setDangLuu(false);
+    }
+  };
+
+  const luuThungRac = async () => {
+    const soNgay = Math.max(0, Math.round(Number(soNgayGiuThungRac) || 0));
+    setDangLuu(true);
+    try {
+      await capNhatSettings({ soNgayGiuThungRac: soNgay });
+      bao(
+        soNgay > 0
+          ? `Đã đặt: phiếu trong thùng rác quá ${soNgay} ngày sẽ bị xoá vĩnh viễn`
+          : "Đã tắt tự xoá — phiếu trong thùng rác được giữ mãi",
+      );
     } catch (e) {
       baoLoi((e as Error).message);
     } finally {
@@ -145,6 +165,36 @@ export function ManCaiDat() {
                 Tài khoản của bạn không có quyền sửa cài đặt.
               </span>
             )}
+          </div>
+        </div>
+      </The>
+
+      <ManMauIn />
+
+      <The tieuDe="Thùng rác" phuDe="Phiếu bị xoá vẫn phục hồi được cho tới khi quá hạn này">
+        <div className="grid gap-3 p-4">
+          <div className="max-w-xs">
+            <ONhan>Số ngày giữ phiếu trong thùng rác</ONhan>
+            <OText
+              type="number"
+              min={0}
+              value={soNgayGiuThungRac}
+              onChange={(e) => setSoNgayGiuThungRac(e.target.value)}
+              disabled={!duocSua}
+              placeholder="0"
+            />
+          </div>
+          <p className="text-[12px] text-slate-500">
+            Để <b>0</b> nghĩa là giữ mãi, không tự xoá. Đặt số ngày cụ thể thì phiếu nằm trong thùng rác quá số
+            ngày đó sẽ bị <b>xoá vĩnh viễn, không lấy lại được</b>.
+          </p>
+          <p className="text-[12px] text-slate-500">
+            Việc dọn dẹp chạy khi mở thùng rác hoặc khi khởi động lại máy chủ — không cần hẹn giờ riêng.
+          </p>
+          <div>
+            <Nut kieu="chinh" onClick={() => void luuThungRac()} disabled={dangLuu || !duocSua}>
+              {dangLuu ? "Đang lưu…" : "Lưu thiết lập thùng rác"}
+            </Nut>
           </div>
         </div>
       </The>

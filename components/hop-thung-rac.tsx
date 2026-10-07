@@ -24,17 +24,30 @@ export function HopThungRac({
   const [dangTai, setDangTai] = useState(false);
   const [dangChay, setDangChay] = useState<string | null>(null);
   const [q, setQ] = useState("");
+  const [soNgayGiu, setSoNgayGiu] = useState(0);
 
   const nap = useCallback(async () => {
     setDangTai(true);
     try {
-      setDs((await apiClient.thungRac()).orders);
+      const kq = await apiClient.thungRac();
+      setDs(kq.orders);
+      setSoNgayGiu(kq.soNgayGiuThungRac);
+      if (kq.daXoaTuDong > 0) {
+        bao(`Đã tự xoá vĩnh viễn ${so(kq.daXoaTuDong)} phiếu quá hạn lưu trong thùng rác`);
+      }
     } catch (e) {
       baoLoi((e as Error).message);
     } finally {
       setDangTai(false);
     }
   }, []);
+
+  /** Số ngày còn lại trước khi phiếu bị tự xoá. null nếu không bật tự xoá. */
+  const conLaiBaoNhieuNgay = (o: Order): number | null => {
+    if (soNgayGiu <= 0 || !o.xoaLuc) return null;
+    const daQua = Math.floor((Date.now() - new Date(o.xoaLuc).getTime()) / 86_400_000);
+    return Math.max(0, soNgayGiu - daQua);
+  };
 
   // Mở lại thì bắt đầu với ô tìm kiếm trống
   useEffect(() => {
@@ -101,6 +114,12 @@ export function HopThungRac({
         <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] text-slate-600">
           Phiếu ở đây đã bị bỏ khỏi danh sách và mọi báo cáo, nhưng dữ liệu vẫn còn nguyên. Phục hồi được bất cứ
           lúc nào. Chỉ <b>xoá vĩnh viễn</b> mới không lấy lại được.
+          {soNgayGiu > 0 && (
+            <>
+              {" "}
+              Phiếu nằm đây quá <b>{so(soNgayGiu)} ngày</b> sẽ tự bị xoá vĩnh viễn (đặt lại ở mục Cài đặt).
+            </>
+          )}
         </p>
 
         {ds.length > 0 && (
@@ -178,6 +197,15 @@ export function HopThungRac({
                         ? new Date(o.xoaLuc).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })
                         : "—"}
                       {o.xoaBoi ? <div className="text-[11px] text-slate-400">bởi {o.xoaBoi}</div> : null}
+                      {(() => {
+                        const con = conLaiBaoNhieuNgay(o);
+                        if (con === null) return null;
+                        return (
+                          <div className={`text-[11px] ${con <= 3 ? "font-medium text-rose-600" : "text-slate-400"}`}>
+                            {con === 0 ? "sắp bị xoá" : `còn ${con} ngày`}
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td>
                       <div className="flex items-center justify-end gap-1.5">

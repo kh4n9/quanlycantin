@@ -46,6 +46,22 @@ export async function GET(req: Request) {
         phieu: { id: string; soPhieu: string; ngay: string; hoTen: string; buongGiam: string; conThieu: number }[];
       }
     >();
+    /**
+     * Danh sách hàng thiếu đã trải phẳng, sắp theo buồng rồi tới phiếu.
+     * Dùng để in ra đi phát hàng: đi lần lượt từng buồng, trong buồng xử lý
+     * từng phiếu một.
+     */
+    const thieuTheoPhieu: {
+      buongGiam: string;
+      soPhieu: string;
+      ngay: string;
+      hoTen: string;
+      ma: string;
+      ten: string;
+      donViTinh: string;
+      conThieu: number;
+      ghiChu: string;
+    }[] = [];
     let soPhieuThieu = 0;
     let tongLuongThieu = 0;
 
@@ -79,6 +95,18 @@ export async function GET(req: Request) {
           conThieu: thieu,
         });
         theoThieu.set(item.productId, t);
+
+        thieuTheoPhieu.push({
+          buongGiam: o.buongGiam || "",
+          soPhieu: o.soPhieu,
+          ngay: o.ngay,
+          hoTen: o.hoTen,
+          ma: item.ma,
+          ten: item.ten,
+          donViTinh: item.donViTinh,
+          conThieu: thieu,
+          ghiChu: o.ghiChu || "",
+        });
       }
       if (phieuCoThieu) soPhieuThieu += 1;
 
@@ -145,6 +173,14 @@ export async function GET(req: Request) {
       hangThieu: [...theoThieu.values()]
         .map((t) => ({ ...t, phieu: t.phieu.sort((a, b) => a.ngay.localeCompare(b.ngay)) }))
         .sort((a, b) => b.conThieu - a.conThieu),
+      // Buồng để trống xếp cuối; so sánh kiểu số để B2 đứng trước B12
+      thieuTheoPhieu: thieuTheoPhieu.sort((a, b) => {
+        if (!a.buongGiam && b.buongGiam) return 1;
+        if (a.buongGiam && !b.buongGiam) return -1;
+        const theoBuong = a.buongGiam.localeCompare(b.buongGiam, "vi", { numeric: true });
+        if (theoBuong !== 0) return theoBuong;
+        return a.soPhieu.localeCompare(b.soPhieu, "vi", { numeric: true });
+      }),
       theoNgay: [...theoNgay.values()].sort((a, b) => a.ngay.localeCompare(b.ngay)),
       theoHang: [...theoHang.values()].sort((a, b) =>
         coDungTien ? b.doanhThu - a.doanhThu : b.soLuong - a.soLuong,

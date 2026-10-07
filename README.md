@@ -98,7 +98,7 @@ Mỗi tài khoản được **bật/tắt từng quyền riêng**, không theo n
 | Xoá phiếu bán | Xoá phiếu khỏi hệ thống |
 | Quản lý mặt hàng | Thêm, sửa, xoá, tắt/bật bán mặt hàng |
 | Xem báo cáo | Xem báo cáo và xuất Excel |
-| Sửa cài đặt và dữ liệu | Sửa thông tin đơn vị, nạp/xoá dữ liệu |
+| Sửa cài đặt và dữ liệu | Vào màn Cài đặt, sửa thông tin đơn vị, thiết lập thùng rác, nạp/xoá dữ liệu |
 | Quản lý tài khoản | Tạo tài khoản, phân quyền, đặt lại mật khẩu |
 
 Mục nào không có quyền thì **không hiện** trên thanh điều hướng, và API cũng chặn
@@ -133,6 +133,27 @@ Thanh công cụ cũng có bộ lọc *Tất cả trạng thái / Đang bán / T
 - Không đụng tới danh sách hàng thì các dòng hàng giữ nguyên.
 - Phiếu sửa xong vẫn in ra bình thường.
 
+## Mẫu phiếu in
+
+Vào *Cài đặt* → thẻ **Mẫu phiếu in**. Sửa tới đâu thấy ngay trong khung **Xem trước**
+bên phải, ưng thì bấm *Lưu mẫu in*. Nút *Khôi phục mặc định* trả về bản gốc.
+
+**Bật/tắt từng phần:** số phiếu, ngày bán, năm sinh, buồng giam, ghi chú, cột ĐVT,
+cột đơn giá, cột thành tiền, dòng tổng cộng, đọc tiền bằng chữ.
+
+- Muốn phiếu **chỉ ghi số lượng** thì tắt *Cột đơn giá* và *Cột thành tiền*.
+- Tắt cột thành tiền thì dòng *TỔNG CỘNG* tự đổi thành **tổng số lượng**, và ô
+  *Đọc tiền bằng chữ* tự mờ đi vì không còn gì để đọc.
+
+**Sửa chữ hiện trên phiếu:** tiêu đề phiếu, nhãn họ tên, năm sinh, buồng giam,
+ghi chú, tiêu đề các cột, chữ ở dòng tổng cộng.
+
+**Chữ ký:** thêm/bớt tuỳ ý, mỗi ô sửa được tên và dòng phụ bên dưới
+(`(Ký, ghi rõ họ tên)`). Chọn **số chữ ký mỗi hàng** từ 1 đến 4 — ví dụ 4 chữ ký với
+2 cột mỗi hàng sẽ in thành 2 hàng, mỗi hàng 2 ô.
+
+Mẫu in áp dụng cho cả phiếu in ra lẫn cửa sổ xem trước ở màn hình Phiếu bán.
+
 ## Hàng thiếu và bù hàng
 
 Khi bán mà căn tin chưa có đủ hàng, ghi lại phần còn nợ can phạm để sau này bù.
@@ -149,9 +170,18 @@ Khi bán mà căn tin chưa có đủ hàng, ghi lại phần còn nợ can ph�
 - Sửa phiếu bán **không làm mất** công nợ hàng thiếu; giảm số lượng trên phiếu thì
   số thiếu cũng tự kẹp theo.
 
-Trong **Báo cáo** có mục **Hàng còn thiếu**: gom theo mặt hàng, kèm danh sách phiếu
-nào còn thiếu bao nhiêu — khi hàng về thì đối chiếu mục này để biết cần bù cho ai.
-Mục này cũng được xuất thành một trang tính riêng trong file Excel.
+Trong **Báo cáo** có mục **Hàng còn thiếu**, hai cách xem cho hai việc khác nhau:
+
+- **Trên màn hình** — gom theo **mặt hàng**, để biết cần mua/bù tổng bao nhiêu mỗi món.
+- **Nút “In danh sách phát”** — in ra bản sắp theo **buồng giam rồi tới phiếu**, kèm
+  ghi chú của từng phiếu và ô ký nhận. Cầm tờ này đi phát hàng cho can phạm.
+
+File Excel xuất ra cũng tách làm hai trang tính tương ứng:
+
+| Trang tính | Dùng để |
+|---|---|
+| **Tổng hợp hàng thiếu** | Mỗi mặt hàng một dòng kèm tổng còn thiếu — để đi mua hàng |
+| **Chi tiết theo buồng** | Sắp theo buồng, trong buồng sắp theo số phiếu, có cột ghi chú — để in đi phát |
 
 ## Thùng rác phiếu bán
 
@@ -169,6 +199,17 @@ Xoá một phiếu bán **không làm mất dữ liệu** — phiếu được c
 - Mỗi phiếu ghi lại **ai xoá, xoá lúc nào và vì sao**.
 
 Cần quyền *Xoá phiếu bán* mới xem và thao tác được trong thùng rác.
+
+### Tự xoá phiếu cũ trong thùng rác
+
+Vào *Cài đặt* → thẻ **Thùng rác**, đặt **số ngày giữ phiếu**:
+
+- Để **0** (mặc định) là giữ mãi, không tự xoá.
+- Đặt số ngày cụ thể thì phiếu nằm trong thùng rác quá số ngày đó sẽ bị **xoá vĩnh
+  viễn, không lấy lại được**.
+- Trong thùng rác, mỗi phiếu hiện **còn bao nhiêu ngày**; còn ≤ 3 ngày thì hiện màu đỏ.
+- Việc dọn chạy khi mở thùng rác hoặc khi khởi động lại máy chủ — không cần hẹn giờ riêng.
+- Khi có phiếu bị xoá tự động, ứng dụng báo ngay một dòng thông báo.
 
 ## Dữ liệu và sao lưu
 

@@ -43,8 +43,11 @@ input[type="number"] {
   background-clip: content-box;
 }
 
-/* ---------- In phiếu ---------- */
-#print-area {
+/* ---------- In ấn ----------
+   Có hai thứ in được: phiếu bán (#print-area) và danh sách hàng còn thiếu
+   (#print-thieu). Khi in, thân trang mang class "in-thieu" để chọn in cái nào. */
+#print-area,
+#print-thieu {
   display: none;
 }
 
@@ -55,7 +58,10 @@ input[type="number"] {
   body {
     background: #fff;
   }
-  #print-area {
+  body:not(.in-thieu) #print-area {
+    display: block !important;
+  }
+  body.in-thieu #print-thieu {
     display: block !important;
   }
   @page {
