@@ -98,6 +98,23 @@ export function ManBaoCao() {
         doRong: [14, 32, 10, 18, 18],
       },
       {
+        ten: "Hàng còn thiếu",
+        tieuDeCot: ["Mã hàng", "Tên mặt hàng", "ĐVT", "Số phiếu", "Ngày bán", "Họ tên", "Buồng giam", "Còn thiếu"],
+        dong: du.hangThieu.flatMap((h) =>
+          h.phieu.map((p) => [
+            h.ma,
+            h.ten,
+            h.donViTinh,
+            p.soPhieu,
+            ngayVN(p.ngay),
+            p.hoTen,
+            p.buongGiam,
+            p.conThieu,
+          ]),
+        ),
+        doRong: [14, 30, 10, 16, 12, 26, 12, 12],
+      },
+      {
         ten: "Can phạm",
         tieuDeCot: ["Họ tên", "Năm sinh", "Buồng giam", "Số phiếu", "Số lượng hàng", "Doanh thu"],
         dong: du.theoCanPham.map((p) => [
@@ -164,6 +181,16 @@ export function ManBaoCao() {
         </div>
       ) : (
         <>
+          {du.tongQuan.soPhieuThieu > 0 && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-[13px] text-amber-800">
+              <BieuTuong ten="canh" className="h-4 w-4 shrink-0" />
+              <span>
+                Đang có <b>{so(du.tongQuan.soPhieuThieu)}</b> phiếu còn nợ hàng can phạm, tổng cộng{" "}
+                <b>{so(du.tongQuan.tongLuongThieu)}</b> đơn vị chưa giao. Chi tiết ở mục “Hàng còn thiếu” bên dưới.
+              </span>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Tile nhan="Số phiếu bán" giaTri={so(du.tongQuan.soPhieu)} chinh />
             <Tile nhan="Số lượng hàng đã bán" giaTri={so(du.tongQuan.soLuongHang)} phu="tổng số đơn vị hàng" />
@@ -176,6 +203,8 @@ export function ManBaoCao() {
           </div>
 
           <BieuDoTheoNgay data={du.theoNgay} dungTien={du.tongQuan.coDungTien} />
+
+          <HangConThieu hang={du.hangThieu} tu={tu} den={den} />
 
           <BangXepHang
             tieuDe="Mặt hàng đã bán"
@@ -333,6 +362,82 @@ function BieuDoTheoNgay({ data, dungTien }: { data: DiemNgay[]; dungTien: boolea
             ))}
           </div>
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------ Hàng còn thiếu ------------------------------ */
+
+type DongThieu = BaoCao["hangThieu"][number];
+
+/**
+ * Danh sách hàng còn nợ can phạm, gom theo mặt hàng.
+ * Dùng để khi hàng về thì biết ngay cần bù cho phiếu nào, bao nhiêu.
+ */
+function HangConThieu({ hang, tu, den }: { hang: DongThieu[]; tu: string; den: string }) {
+  if (hang.length === 0) {
+    return (
+      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <header className="border-b border-slate-200 bg-slate-50/70 px-4 py-2.5">
+          <h2 className="text-sm font-semibold text-slate-800">Hàng còn thiếu</h2>
+          <p className="text-[11px] text-slate-500">
+            Khoảng {ngayVN(tu)} – {ngayVN(den)}
+          </p>
+        </header>
+        <div className="flex items-center gap-2 px-4 py-4 text-[13px] text-emerald-700">
+          <BieuTuong ten="check" className="h-4 w-4" />
+          Không có phiếu nào còn nợ hàng can phạm trong khoảng này.
+        </div>
+      </section>
+    );
+  }
+
+  const tongThieu = hang.reduce((s, h) => s + h.conThieu, 0);
+
+  return (
+    <section className="overflow-hidden rounded-lg border border-amber-200 bg-white shadow-sm">
+      <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-amber-200 bg-amber-50/70 px-4 py-2.5">
+        <div>
+          <h2 className="text-sm font-semibold text-amber-900">Hàng còn thiếu</h2>
+          <p className="text-[11px] text-amber-700">
+            Khi hàng về, đối chiếu mục này để biết cần bù cho phiếu nào
+          </p>
+        </div>
+        <span className="text-[12px] font-medium text-amber-800">
+          {so(hang.length)} mặt hàng · tổng {so(tongThieu)} đơn vị
+        </span>
+      </header>
+
+      <div className="divide-y divide-slate-100">
+        {hang.map((h) => (
+          <div key={h.productId} className="px-4 py-3">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="font-mono text-[11px] text-slate-400">{h.ma}</span>
+              <span className="font-medium text-slate-900">{h.ten}</span>
+              <span className="text-[12px] text-slate-500">{h.donViTinh}</span>
+              <span className="ml-auto rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[12px] font-semibold text-amber-800">
+                còn thiếu {so(h.conThieu)}
+              </span>
+            </div>
+
+            <table className="mt-1.5 w-full border-collapse text-[13px]">
+              <tbody>
+                {h.phieu.map((p) => (
+                  <tr key={`${h.productId}-${p.id}`} className="[&>td]:py-1">
+                    <td className="w-32 font-mono text-[12px] text-blue-700">{p.soPhieu}</td>
+                    <td className="w-24 text-slate-500">{ngayVN(p.ngay)}</td>
+                    <td className="text-slate-700">{p.hoTen}</td>
+                    <td className="w-24 text-slate-500">{p.buongGiam || "—"}</td>
+                    <td className="w-24 text-right font-semibold text-amber-700 tabular-nums">
+                      thiếu {so(p.conThieu)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
       </div>
     </section>
   );

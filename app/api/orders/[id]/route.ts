@@ -23,7 +23,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if ("res" in kq) return kq.res;
 
     const { id } = await params;
-    if (!(await timPhieuBan(id))) {
+    const truoc = await timPhieuBan(id);
+    if (!truoc) {
       return NextResponse.json({ error: "Không tìm thấy phiếu bán" }, { status: 404 });
     }
 
@@ -49,7 +50,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     // Có gửi danh sách hàng thì tính lại toàn bộ tiền theo giá hiện hành
     if (body.items !== undefined) {
-      const { items, tongTien } = await dungDongHang(body.items);
+      // Giữ lại số lượng thiếu và lịch sử bù hàng của các dòng cũ
+      const { items, tongTien } = await dungDongHang(body.items, truoc.items);
       patch.items = items;
       patch.tongTien = tongTien;
     }

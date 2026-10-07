@@ -15,6 +15,14 @@ export type Product = {
   createdAt: string;
 };
 
+/** Một lần bù hàng cho phần còn thiếu của một dòng hàng. */
+export type BuHang = {
+  soLuong: number;
+  ngay: string;
+  ghiChu: string;
+  boi: string;
+};
+
 /** Một dòng hàng trên phiếu bán. */
 export type LineItem = {
   productId: string;
@@ -24,6 +32,13 @@ export type LineItem = {
   soLuong: number;
   donGia: number;
   thanhTien: number;
+  /**
+   * Số lượng còn nợ can phạm vì lúc bán chưa có đủ hàng.
+   * 0 nghĩa là đã giao đủ.
+   */
+  thieu: number;
+  /** Các lần bù hàng, cộng dồn lại thành số đã bù. */
+  bu: BuHang[];
 };
 
 /**

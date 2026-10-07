@@ -73,6 +73,8 @@ export function PhieuBanForm({
           soLuong,
           donGia: p.giaBan,
           thanhTien: soLuong * p.giaBan,
+          thieu: 0,
+          bu: [],
         },
       ];
     });

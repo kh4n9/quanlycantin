@@ -6,8 +6,10 @@ import { taiExcel } from "@/lib/excel";
 import { homNay, khop, ngayVN, so, tien } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import type { CanPhamGoiY, Order, Product } from "@/lib/types";
+import { HopThieuHang } from "./hop-thieu-hang";
 import { HopThungRac } from "./hop-thung-rac";
 import { PhieuBanForm } from "./phieu-ban-form";
+import { conThieu, daBu, phieuConThieu } from "@/lib/thieu-hang";
 import { MauPhieuBan, useInPhieu } from "./print";
 import { bao, baoLoi, BieuTuong, HopThoai, Nut, ONhan, OText, OVung, Trong } from "./ui";
 
@@ -33,6 +35,8 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
   const [dangXoa, setDangXoa] = useState<Order | null>(null);
   const [lyDoXoa, setLyDoXoa] = useState("");
   const [dangXoaLuu, setDangXoaLuu] = useState(false);
+  const [phieuThieu, setPhieuThieu] = useState<Order | null>(null);
+  const [chiThieuHang, setChiThieuHang] = useState(false);
 
   // Dữ liệu cho form sửa phiếu
   const [sanPham, setSanPham] = useState<Product[]>([]);
@@ -81,10 +85,14 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
       });
   }, []);
 
-  const hienThi = useMemo(
-    () => (q ? ds.filter((o) => khop(o.soPhieu, q) || khop(o.hoTen, q) || khop(o.buongGiam, q)) : ds),
-    [ds, q],
-  );
+  const soPhieuThieu = useMemo(() => ds.filter((o) => phieuConThieu(o) > 0).length, [ds]);
+
+  const hienThi = useMemo(() => {
+    let d = ds;
+    if (chiThieuHang) d = d.filter((o) => phieuConThieu(o) > 0);
+    if (q) d = d.filter((o) => khop(o.soPhieu, q) || khop(o.hoTen, q) || khop(o.buongGiam, q));
+    return d;
+  }, [ds, q, chiThieuHang]);
   const tongTien = hienThi.reduce((s, o) => s + o.tongTien, 0);
   const coTien = hienThi.some((o) => o.tongTien > 0);
 
@@ -132,6 +140,8 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
         i.ten,
         i.donViTinh,
         i.soLuong,
+        conThieu(i),
+        daBu(i),
         i.donGia,
         i.thanhTien,
         o.kiemLuc ? (o.kiemGhiChu ? "Đã kiểm — có sai sót" : "Đã kiểm") : "Chưa kiểm",
@@ -143,12 +153,12 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
       tieuDe: `Danh sách phiếu bán từ ${ngayVN(tu)} đến ${ngayVN(den)}`,
       tieuDeCot: [
         "Số phiếu", "Ngày", "Họ tên", "Năm sinh", "Buồng giam",
-        "Mặt hàng", "ĐVT", "Số lượng", "Đơn giá", "Thành tiền",
+        "Mặt hàng", "ĐVT", "Số lượng", "Còn thiếu", "Đã bù", "Đơn giá", "Thành tiền",
         "Trạng thái kiểm", "Ghi chú kiểm",
       ],
       dong,
-      cotTien: [8, 9],
-      doRong: [16, 12, 26, 10, 12, 26, 8, 10, 12, 14, 20, 26],
+      cotTien: [10, 11],
+      doRong: [16, 12, 26, 10, 12, 26, 8, 10, 11, 10, 12, 14, 20, 26],
     }).catch((e) => baoLoi((e as Error).message));
   };
 
@@ -176,6 +186,22 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
             className="pl-8"
           />
         </div>
+        <label
+          className={`flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm transition ${
+            chiThieuHang
+              ? "border-amber-300 bg-amber-50 text-amber-800"
+              : "border-slate-300 bg-white text-slate-700"
+          }`}
+          title="Chỉ hiện những phiếu còn nợ hàng can phạm"
+        >
+          <input
+            type="checkbox"
+            checked={chiThieuHang}
+            onChange={(e) => setChiThieuHang(e.target.checked)}
+            className="h-4 w-4 accent-amber-600"
+          />
+          Còn thiếu hàng{soPhieuThieu > 0 ? ` (${so(soPhieuThieu)})` : ""}
+        </label>
         <Nut onClick={xuatExcel} disabled={hienThi.length === 0}>
           <BieuTuong ten="tai" /> Excel
         </Nut>
@@ -201,7 +227,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
               <th className="w-32">Buồng giam</th>
               <th className="w-24 text-center">Mặt hàng</th>
               <th className="w-32 text-right">Tổng tiền</th>
-              <th className="w-32" />
+              <th className="w-44" />
             </tr>
           </thead>
           <tbody>
@@ -230,12 +256,42 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
                   </div>
                 </td>
                 <td className="text-slate-600">{o.buongGiam || "—"}</td>
-                <td className="text-center text-slate-600">{o.items.length}</td>
+                <td className="text-center">
+                  <span className="text-slate-600">{o.items.length}</span>
+                  {phieuConThieu(o) > 0 && (
+                    <span
+                      className="mt-0.5 ml-1.5 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700"
+                      title="Số lượng hàng còn nợ can phạm"
+                    >
+                      <BieuTuong ten="canh" className="h-3 w-3" />
+                      thiếu {so(phieuConThieu(o))}
+                    </span>
+                  )}
+                </td>
                 <td className="text-right font-semibold text-slate-800">
                   {o.tongTien > 0 ? so(o.tongTien) : "—"}
                 </td>
                 <td onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-1">
+                    {duocSua && (
+                      <Nut
+                        kieu="mo"
+                        co="sm"
+                        onClick={() => setPhieuThieu(o)}
+                        title={
+                          phieuConThieu(o) > 0
+                            ? `Còn thiếu ${so(phieuConThieu(o))} đơn vị — bấm để ghi bù`
+                            : "Ghi hàng thiếu"
+                        }
+                      >
+                        {/* Bọc trong span để tô màu cảnh báo: đặt thẳng class lên Nut
+                            sẽ tranh chấp với màu chữ mặc định của nút, mà thứ tự
+                            trong file CSS mới quyết định nên không chắc ăn. */}
+                        <span className={phieuConThieu(o) > 0 ? "text-amber-600" : ""}>
+                          <BieuTuong ten="canh" className="h-4 w-4" />
+                        </span>
+                      </Nut>
+                    )}
                     {duocSua && (
                       <Nut kieu="mo" co="sm" onClick={() => setDangSua(o)} title="Sửa phiếu">
                         <BieuTuong ten="sua" className="h-4 w-4" />
@@ -340,6 +396,16 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
           </div>
         )}
       </HopThoai>
+
+      {/* --- Ghi hàng thiếu / bù hàng --- */}
+      <HopThieuHang
+        phieu={phieuThieu}
+        dong={() => setPhieuThieu(null)}
+        onLuu={(o) => {
+          setDs((cu) => cu.map((x) => (x.id === o.id ? o : x)));
+          setPhieuThieu(o);
+        }}
+      />
 
       {/* --- Thùng rác --- */}
       <HopThungRac

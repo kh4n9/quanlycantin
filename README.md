@@ -133,6 +133,26 @@ Thanh công cụ cũng có bộ lọc *Tất cả trạng thái / Đang bán / T
 - Không đụng tới danh sách hàng thì các dòng hàng giữ nguyên.
 - Phiếu sửa xong vẫn in ra bình thường.
 
+## Hàng thiếu và bù hàng
+
+Khi bán mà căn tin chưa có đủ hàng, ghi lại phần còn nợ can phạm để sau này bù.
+
+- Ở màn hình **Phiếu bán**, mỗi dòng có nút tam giác để mở hộp thoại **Hàng thiếu**.
+  Dòng nào đang nợ hàng thì có nhãn vàng `thiếu N` và biểu tượng màu cam.
+- Hộp thoại có hai chế độ:
+  - **Ghi hàng thiếu** — nhập số lượng chưa giao được cho từng mặt hàng.
+  - **Bù hàng** — nhập số lượng bù cho lần giao này (tối đa bằng số còn thiếu),
+    kèm ngày và ghi chú. Bấm *Điền bù hết phần còn thiếu* để điền nhanh.
+- Mỗi lần bù đều được lưu lại: **bù bao nhiêu, ngày nào, ghi chú gì, ai bù** — hiện
+  ở mục *Đã bù những gì* trong hộp thoại.
+- Ô lọc **Còn thiếu hàng (N)** trên thanh công cụ chỉ hiện những phiếu đang nợ hàng.
+- Sửa phiếu bán **không làm mất** công nợ hàng thiếu; giảm số lượng trên phiếu thì
+  số thiếu cũng tự kẹp theo.
+
+Trong **Báo cáo** có mục **Hàng còn thiếu**: gom theo mặt hàng, kèm danh sách phiếu
+nào còn thiếu bao nhiêu — khi hàng về thì đối chiếu mục này để biết cần bù cho ai.
+Mục này cũng được xuất thành một trang tính riêng trong file Excel.
+
 ## Thùng rác phiếu bán
 
 Xoá một phiếu bán **không làm mất dữ liệu** — phiếu được chuyển vào thùng rác.

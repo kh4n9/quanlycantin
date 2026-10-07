@@ -184,8 +184,14 @@ export type LocPhieu = { tu?: string; den?: string; hoTen?: string };
 
 /** Bù các trường thêm sau cho những phiếu lập trước khi có tính năng đó. */
 function chuanHoaPhieu(doc: Record<string, unknown>): Order {
+  const items = ((doc.items as LineItem[] | undefined) ?? []).map((i) => ({
+    ...i,
+    thieu: Math.max(0, Math.round(Number(i.thieu) || 0)),
+    bu: Array.isArray(i.bu) ? i.bu : [],
+  }));
   return {
     ...(doc as unknown as Order),
+    items,
     kiemLuc: String(doc.kiemLuc ?? ""),
     kiemBoi: String(doc.kiemBoi ?? ""),
     kiemGhiChu: String(doc.kiemGhiChu ?? ""),
@@ -291,6 +297,64 @@ export async function phucHoiPhieuBan(id: string): Promise<Order | null> {
   return timPhieuBan(id);
 }
 
+/**
+ * Ghi nhận số lượng còn thiếu của từng dòng hàng trên phiếu.
+ * Không cho đặt số thiếu nhỏ hơn số đã bù, nếu không công nợ sẽ thành số âm.
+ */
+export async function ghiThieuHang(id: string, dsThieu: Record<string, number>): Promise<Order | null> {
+  const db = await getDb();
+  const phieu = await timPhieuBan(id);
+  if (!phieu) return null;
+
+  const items = phieu.items.map((i) => {
+    if (!(i.productId in dsThieu)) return i;
+    const soLuong = Math.max(0, Math.round(Number(dsThieu[i.productId]) || 0));
+    if (soLuong > i.soLuong) {
+      throw new Error(`"${i.ten}" chỉ có ${i.soLuong} ${i.donViTinh} trên phiếu, không thể thiếu ${soLuong}`);
+    }
+    const daBuRoi = (i.bu ?? []).reduce((s, b) => s + (Number(b.soLuong) || 0), 0);
+    if (soLuong < daBuRoi) {
+      throw new Error(`"${i.ten}" đã bù ${daBuRoi} ${i.donViTinh}, không thể đặt thiếu ít hơn`);
+    }
+    return { ...i, thieu: soLuong };
+  });
+
+  await db.collection(COL.phieuBan).updateOne({ id }, { $set: { items } });
+  return timPhieuBan(id);
+}
+
+/** Ghi một lần bù hàng cho phần còn thiếu. */
+export async function ghiBuHang(
+  id: string,
+  dsBu: Record<string, number>,
+  ngay: string,
+  ghiChu: string,
+  nguoiBu: string,
+): Promise<Order | null> {
+  const db = await getDb();
+  const phieu = await timPhieuBan(id);
+  if (!phieu) return null;
+
+  const items = phieu.items.map((i) => {
+    if (!(i.productId in dsBu)) return i;
+    const soLuong = Math.round(Number(dsBu[i.productId]) || 0);
+    if (soLuong <= 0) return i;
+
+    const daBuRoi = (i.bu ?? []).reduce((s, b) => s + (Number(b.soLuong) || 0), 0);
+    const conLai = Math.max(0, i.thieu - daBuRoi);
+    if (soLuong > conLai) {
+      throw new Error(`"${i.ten}" chỉ còn thiếu ${conLai} ${i.donViTinh}, không thể bù ${soLuong}`);
+    }
+    return {
+      ...i,
+      bu: [...(i.bu ?? []), { soLuong, ngay, ghiChu, boi: nguoiBu }],
+    };
+  });
+
+  await db.collection(COL.phieuBan).updateOne({ id }, { $set: { items } });
+  return timPhieuBan(id);
+}
+
 /** Xoá hẳn khỏi cơ sở dữ liệu. Không hoàn tác được. */
 export async function xoaVinhVienPhieuBan(id: string): Promise<Order | null> {
   const db = await getDb();
@@ -378,7 +442,15 @@ export async function luuCaiDat(patch: Partial<Settings>): Promise<Settings> {
  * Dựng danh sách dòng hàng từ dữ liệu người dùng gửi lên, kiểm tra mặt hàng có
  * tồn tại và tính lại thành tiền ở phía máy chủ.
  */
-export async function dungDongHang(inputs: LineInput[]): Promise<{ items: LineItem[]; tongTien: number }> {
+export async function dungDongHang(
+  inputs: LineInput[],
+  /**
+   * Các dòng hàng cũ của phiếu (khi sửa phiếu). Số lượng thiếu và lịch sử bù
+   * hàng được giữ lại theo mặt hàng — nếu không thì chỉ cần sửa một chi tiết nhỏ
+   * là mất hết công nợ hàng thiếu của phiếu đó.
+   */
+  giuLai: LineItem[] = [],
+): Promise<{ items: LineItem[]; tongTien: number }> {
   const items: LineItem[] = [];
   for (const input of inputs) {
     const p = await timSanPham(String(input.productId || ""));
@@ -387,6 +459,8 @@ export async function dungDongHang(inputs: LineInput[]): Promise<{ items: LineIt
     if (soLuong <= 0) throw new Error(`Số lượng không hợp lệ cho "${p.ten}"`);
     const coGia = input.donGia !== undefined && input.donGia !== null && !Number.isNaN(Number(input.donGia));
     const donGia = coGia ? Math.max(0, Math.round(Number(input.donGia))) : p.giaBan;
+
+    const cu = giuLai.find((x) => x.productId === p.id);
     items.push({
       productId: p.id,
       ma: p.ma,
@@ -395,6 +469,9 @@ export async function dungDongHang(inputs: LineInput[]): Promise<{ items: LineIt
       soLuong,
       donGia,
       thanhTien: soLuong * donGia,
+      // Giảm số lượng trên phiếu thì phần thiếu cũng không thể vượt quá số mới
+      thieu: Math.min(Math.max(0, Math.round(Number(cu?.thieu) || 0)), soLuong),
+      bu: Array.isArray(cu?.bu) ? cu.bu : [],
     });
   }
   if (items.length === 0) throw new Error("Phiếu phải có ít nhất một mặt hàng");

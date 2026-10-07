@@ -30,8 +30,21 @@ export type BaoCao = {
     soMatHang: number;
     soLuongHang: number;
     soCanPham: number;
+    /** Số phiếu đang còn nợ hàng can phạm */
+    soPhieuThieu: number;
+    /** Tổng số lượng hàng còn thiếu chưa bù */
+    tongLuongThieu: number;
     coDungTien: boolean;
   };
+  /** Hàng còn thiếu, gom theo mặt hàng kèm danh sách phiếu liên quan */
+  hangThieu: {
+    productId: string;
+    ma: string;
+    ten: string;
+    donViTinh: string;
+    conThieu: number;
+    phieu: { id: string; soPhieu: string; ngay: string; hoTen: string; buongGiam: string; conThieu: number }[];
+  }[];
   theoNgay: { ngay: string; soPhieu: number; doanhThu: number }[];
   theoHang: {
     productId: string;
@@ -125,6 +138,19 @@ export const apiClient = {
     api<{ order: Order }>(`/api/orders/${id}/phuc-hoi`, { method: "POST" }),
   xoaVinhVienPhieuBan: (id: string) =>
     api<{ ok: boolean; soPhieu: string }>(`/api/orders/${id}/xoa-vinh-vien`, { method: "DELETE" }),
+  /** Ghi số lượng còn thiếu của từng mặt hàng: { [productId]: số lượng } */
+  ghiThieuHang: (id: string, thieu: Record<string, number>) =>
+    api<{ order: Order }>(`/api/orders/${id}/thieu-hang`, {
+      method: "POST",
+      body: JSON.stringify({ thieu }),
+    }),
+  /** Ghi một lần bù hàng: { [productId]: số lượng bù } */
+  ghiBuHang: (id: string, bu: Record<string, number>, ngay: string, ghiChu: string) =>
+    api<{ order: Order }>(`/api/orders/${id}/bu-hang`, {
+      method: "POST",
+      body: JSON.stringify({ bu, ngay, ghiChu }),
+    }),
+
   danhDauDaKiem: (id: string, ghiChu: string) =>
     api<{ order: Order }>(`/api/orders/${id}/kiem`, { method: "POST", body: JSON.stringify({ ghiChu }) }),
   boDanhDauKiem: (id: string) =>
