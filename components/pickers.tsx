@@ -183,6 +183,132 @@ export function ChonHang({
   );
 }
 
+/* ============================ Lọc theo món ============================ */
+
+/**
+ * Ô chọn một mặt hàng để lọc danh sách phiếu.
+ * Khác `ChonHang` ở chỗ không quan tâm số lượng — chỉ chọn đúng một món.
+ */
+export function ChonMonLoc({
+  products,
+  daChon,
+  onChon,
+  onBo,
+}: {
+  products: Product[];
+  daChon: Product | null;
+  onChon: (p: Product) => void;
+  onBo: () => void;
+}) {
+  const [q, setQ] = useState("");
+  const [mo, setMo] = useState(false);
+  const [viTri, setViTri] = useState(0);
+  const ref = useRef<HTMLInputElement>(null);
+
+  const ketQua = useMemo(
+    () => products.filter((p) => khop(p.ma, q) || khop(p.ten, q)).slice(0, 30),
+    [products, q],
+  );
+
+  useEffect(() => setViTri(0), [q]);
+
+  const chon = (i: number) => {
+    const p = ketQua[i];
+    if (!p) return;
+    onChon(p);
+    setQ("");
+    setMo(false);
+  };
+
+  const onKey = (e: PhimReact) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setViTri(Math.min(viTri + 1, ketQua.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setViTri(Math.max(viTri - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (mo && q.length > 0 && ketQua.length > 0) chon(viTri);
+      else setMo(false);
+    } else if (e.key === "Escape") {
+      setMo(false);
+      setQ("");
+    }
+  };
+
+  // Đã chọn món rồi thì hiện chip, bấm × để bỏ lọc
+  if (daChon) {
+    return (
+      <div className="flex h-9 items-center gap-1.5 rounded-md border border-blue-300 bg-blue-50 px-2 text-[13px]">
+        <span className="text-slate-500">Món:</span>
+        <span className="max-w-52 truncate font-medium text-blue-800">{daChon.ten}</span>
+        <button
+          onClick={onBo}
+          className="rounded p-0.5 text-blue-600 transition hover:bg-blue-100"
+          title="Bỏ lọc theo món này"
+        >
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400">
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
+      <input
+        ref={ref}
+        value={q}
+        onChange={(e) => {
+          setQ(e.target.value);
+          setMo(true);
+        }}
+        onFocus={() => setMo(true)}
+        onBlur={() => setTimeout(() => setMo(false), 150)}
+        onKeyDown={onKey}
+        placeholder="Lọc theo món hàng…"
+        className="h-9 w-52 rounded-md border border-slate-300 bg-white pr-2 pl-8 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+      />
+
+      {mo && ketQua.length > 0 && (
+        <ul className="mem-cuon absolute z-30 mt-1 max-h-72 w-72 overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-xl">
+          {ketQua.map((p, i) => (
+            <li key={p.id}>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => chon(i)}
+                onMouseEnter={() => setViTri(i)}
+                className={`flex w-full items-center gap-2 px-3 py-2 text-left transition ${
+                  i === viTri ? "bg-blue-50" : "hover:bg-slate-50"
+                }`}
+              >
+                <span className="w-16 shrink-0 truncate font-mono text-[11px] text-slate-500">{p.ma}</span>
+                <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-slate-800">{p.ten}</span>
+                {!p.dangDung && <span className="shrink-0 text-[10px] text-slate-400">ngừng bán</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {mo && q.length > 0 && ketQua.length === 0 && (
+        <div className="absolute z-30 mt-1 w-72 rounded-md border border-slate-200 bg-white px-3 py-3 text-sm text-slate-500 shadow-xl">
+          Không có món nào khớp “{q}”.
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* =========================== Họ tên can phạm =========================== */
 
 /**

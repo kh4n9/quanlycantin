@@ -187,6 +187,17 @@ File Excel xuất ra cũng tách làm hai trang tính tương ứng:
 
 Xoá một phiếu bán **không làm mất dữ liệu** — phiếu được chuyển vào thùng rác.
 
+### Lọc theo món hàng
+
+Trên thanh công cụ màn hình *Phiếu bán* có ô **Lọc theo món hàng**: gõ tên hoặc mã
+món rồi `Enter` để chọn. Danh sách chỉ còn những phiếu có món đó.
+
+- Cột **SL món lọc** hiện số lượng món đó trong từng phiếu.
+- Dòng tóm tắt cho biết **bao nhiêu phiếu** và **tổng bao nhiêu đơn vị**.
+- Bấm **×** trên chip để bỏ lọc.
+- Lọc theo món kết hợp được với khoảng ngày, ô tìm kiếm và mục *Còn thiếu hàng*.
+- File Excel xuất ra cũng theo đúng bộ lọc đang xem, có ghi rõ trong dòng tiêu đề.
+
 - Nút **Thùng rác (số lượng)** nằm trên thanh công cụ màn hình *Phiếu bán*.
 - Phiếu trong thùng rác **biến khỏi danh sách, báo cáo và ô gợi ý can phạm**, nhưng
   vẫn nằm nguyên trong cơ sở dữ liệu.

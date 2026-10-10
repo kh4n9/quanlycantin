@@ -7,6 +7,7 @@ import { homNay, khop, ngayVN, so, tien } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import type { CanPhamGoiY, Order, Product } from "@/lib/types";
 import { HopThieuHang } from "./hop-thieu-hang";
+import { ChonMonLoc } from "./pickers";
 import { HopThungRac } from "./hop-thung-rac";
 import { PhieuBanForm } from "./phieu-ban-form";
 import { conThieu, daBu, phieuConThieu } from "@/lib/thieu-hang";
@@ -37,6 +38,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
   const [dangXoaLuu, setDangXoaLuu] = useState(false);
   const [phieuThieu, setPhieuThieu] = useState<Order | null>(null);
   const [chiThieuHang, setChiThieuHang] = useState(false);
+  const [monLoc, setMonLoc] = useState<Product | null>(null);
 
   // Dữ liệu cho form sửa phiếu
   const [sanPham, setSanPham] = useState<Product[]>([]);
@@ -90,9 +92,21 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
   const hienThi = useMemo(() => {
     let d = ds;
     if (chiThieuHang) d = d.filter((o) => phieuConThieu(o) > 0);
+    // Phiếu có chứa món đang lọc
+    if (monLoc) d = d.filter((o) => o.items.some((i) => i.productId === monLoc.id));
     if (q) d = d.filter((o) => khop(o.soPhieu, q) || khop(o.hoTen, q) || khop(o.buongGiam, q));
     return d;
-  }, [ds, q, chiThieuHang]);
+  }, [ds, q, chiThieuHang, monLoc]);
+
+  /** Số lượng của món đang lọc trong một phiếu */
+  const luongMonTrong = (o: Order): number =>
+    monLoc ? o.items.filter((i) => i.productId === monLoc.id).reduce((s, i) => s + i.soLuong, 0) : 0;
+
+  const tongLuongMon = useMemo(
+    () => (monLoc ? hienThi.reduce((s, o) => s + luongMonTrong(o), 0) : 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [hienThi, monLoc],
+  );
   const tongTien = hienThi.reduce((s, o) => s + o.tongTien, 0);
   const coTien = hienThi.some((o) => o.tongTien > 0);
 
@@ -107,10 +121,18 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
     [dangSua, nap],
   );
 
-  const moXoa = (o: Order) => {
-    setDangXoa(o);
+  /**
+   * Mỗi hộp thoại đều có phím tắt Ctrl+Enter riêng, nên chỉ mở một cái tại một
+   * thời điểm — nếu không thì một lần bấm sẽ kích hoạt cả hai.
+   */
+  const chiMoMot = (mo: "sua" | "thieu" | "xoa", o: Order | null) => {
+    setDangSua(mo === "sua" ? o : null);
+    setPhieuThieu(mo === "thieu" ? o : null);
+    setDangXoa(mo === "xoa" ? o : null);
     setLyDoXoa("");
   };
+
+  const moXoa = (o: Order) => chiMoMot("xoa", o);
 
   const xacNhanXoa = async () => {
     if (!dangXoa) return;
@@ -150,7 +172,10 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
     );
     void taiExcel(`phieu-ban_${tu}_${den}`, {
       ten: "Phiếu bán",
-      tieuDe: `Danh sách phiếu bán từ ${ngayVN(tu)} đến ${ngayVN(den)}`,
+      tieuDe:
+        `Danh sách phiếu bán từ ${ngayVN(tu)} đến ${ngayVN(den)}` +
+        (monLoc ? ` — chỉ phiếu có món "${monLoc.ten}"` : "") +
+        (chiThieuHang ? " — chỉ phiếu còn thiếu hàng" : ""),
       tieuDeCot: [
         "Số phiếu", "Ngày", "Họ tên", "Năm sinh", "Buồng giam",
         "Mặt hàng", "ĐVT", "Số lượng", "Còn thiếu", "Đã bù", "Đơn giá", "Thành tiền",
@@ -186,6 +211,12 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
             className="pl-8"
           />
         </div>
+        <ChonMonLoc
+          products={sanPham}
+          daChon={monLoc}
+          onChon={setMonLoc}
+          onBo={() => setMonLoc(null)}
+        />
         <label
           className={`flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm transition ${
             chiThieuHang
@@ -217,6 +248,16 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
         )}
       </div>
 
+      {monLoc && (
+        <div className="border-b border-blue-200 bg-blue-50/70 px-3 py-1.5 text-[12px] text-blue-800">
+          Đang lọc theo món <b>{monLoc.ten}</b> — {so(hienThi.length)} phiếu · tổng{" "}
+          <b>
+            {so(tongLuongMon)} {monLoc.donViTinh}
+          </b>
+          . Cột “SL món lọc” là số lượng món này trong từng phiếu.
+        </div>
+      )}
+
       <div className="mem-cuon max-h-[64vh] overflow-auto">
         <table className="w-full border-collapse text-sm">
           <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
@@ -225,7 +266,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
               <th className="w-28">Ngày</th>
               <th>Can phạm</th>
               <th className="w-32">Buồng giam</th>
-              <th className="w-24 text-center">Mặt hàng</th>
+              <th className="w-24 text-center">{monLoc ? "SL món lọc" : "Mặt hàng"}</th>
               <th className="w-32 text-right">Tổng tiền</th>
               <th className="w-44" />
             </tr>
@@ -257,7 +298,11 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
                 </td>
                 <td className="text-slate-600">{o.buongGiam || "—"}</td>
                 <td className="text-center">
-                  <span className="text-slate-600">{o.items.length}</span>
+                  {monLoc ? (
+                    <div className="font-semibold text-blue-700">{so(luongMonTrong(o))}</div>
+                  ) : (
+                    <span className="text-slate-600">{o.items.length}</span>
+                  )}
                   {phieuConThieu(o) > 0 && (
                     <span
                       className="mt-0.5 ml-1.5 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700"
@@ -277,7 +322,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
                       <Nut
                         kieu="mo"
                         co="sm"
-                        onClick={() => setPhieuThieu(o)}
+                        onClick={() => chiMoMot("thieu", o)}
                         title={
                           phieuConThieu(o) > 0
                             ? `Còn thiếu ${so(phieuConThieu(o))} đơn vị — bấm để ghi bù`
@@ -293,7 +338,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
                       </Nut>
                     )}
                     {duocSua && (
-                      <Nut kieu="mo" co="sm" onClick={() => setDangSua(o)} title="Sửa phiếu">
+                      <Nut kieu="mo" co="sm" onClick={() => chiMoMot("sua", o)} title="Sửa phiếu">
                         <BieuTuong ten="sua" className="h-4 w-4" />
                       </Nut>
                     )}

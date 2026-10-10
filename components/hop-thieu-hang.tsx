@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "@/lib/client";
 import { homNay, ngayVN, so } from "@/lib/format";
 import { conThieu, daBu } from "@/lib/thieu-hang";
@@ -45,9 +45,11 @@ export function HopThieuHang({
     [phieu],
   );
 
-  if (!phieu) return null;
-
-  const luuThieu = async () => {
+  // Mọi hook phải nằm TRÊN dòng thoát sớm bên dưới. Đặt hook sau `if (!phieu)
+  // return null` thì lúc hộp thoại đóng sẽ chạy ít hook hơn lúc mở, React báo
+  // "Rendered more hooks than during the previous render" và màn hình trắng.
+  const luuThieu = useCallback(async () => {
+    if (!phieu) return;
     setDangLuu(true);
     try {
       const thieu: Record<string, number> = {};
@@ -60,14 +62,17 @@ export function HopThieuHang({
           : `Phiếu ${kq.order.soPhieu} đã giao đủ`,
       );
       onLuu(kq.order);
+      // Lưu xong là xong việc với phiếu này — đóng luôn cho đỡ phải bấm thêm
+      dong();
     } catch (e) {
       baoLoi((e as Error).message);
     } finally {
       setDangLuu(false);
     }
-  };
+  }, [phieu, dsThieu, onLuu, dong]);
 
-  const luuBu = async () => {
+  const luuBu = useCallback(async () => {
+    if (!phieu) return;
     const bu: Record<string, number> = {};
     for (const i of phieu.items) {
       const n = Number(dsBu[i.productId]) || 0;
@@ -89,12 +94,30 @@ export function HopThieuHang({
       onLuu(kq.order);
       setDsBu({});
       setGhiChuBu("");
+      dong();
     } catch (e) {
       baoLoi((e as Error).message);
     } finally {
       setDangLuu(false);
     }
-  };
+  }, [phieu, dsBu, ngayBu, ghiChuBu, onLuu, dong]);
+
+  // Ctrl+Enter lưu theo đúng thao tác của tab đang mở
+  useEffect(() => {
+    if (!phieu) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        if (dangLuu) return;
+        if (cheDo === "thieu") void luuThieu();
+        else void luuBu();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [phieu, cheDo, dangLuu, luuThieu, luuBu]);
+
+  if (!phieu) return null;
 
   const coGiDeBu = phieu.items.some((i) => conThieu(i) > 0);
 
@@ -113,11 +136,13 @@ export function HopThieuHang({
             <Nut kieu="chinh" onClick={() => void luuThieu()} disabled={dangLuu}>
               <BieuTuong ten="check" className="h-4 w-4" />
               {dangLuu ? "Đang lưu…" : "Lưu số lượng thiếu"}
+              <span className="ml-1 rounded bg-blue-600/60 px-1.5 py-0.5 text-[10px] font-normal">Ctrl+↵</span>
             </Nut>
           ) : (
             <Nut kieu="chinh" onClick={() => void luuBu()} disabled={dangLuu || !coGiDeBu}>
               <BieuTuong ten="check" className="h-4 w-4" />
               {dangLuu ? "Đang lưu…" : "Xác nhận bù hàng"}
+              <span className="ml-1 rounded bg-blue-600/60 px-1.5 py-0.5 text-[10px] font-normal">Ctrl+↵</span>
             </Nut>
           )}
         </>
@@ -163,7 +188,8 @@ export function HopThieuHang({
 
         {cheDo === "thieu" && (
           <p className="text-[12px] text-slate-500">
-            Ghi số lượng chưa giao được cho can phạm vì chưa có hàng. Để 0 nếu đã giao đủ.
+            Ghi số lượng chưa giao được cho can phạm vì chưa có hàng. Để 0 nếu đã giao đủ. Lưu xong hộp thoại
+            tự đóng.
           </p>
         )}
         {cheDo === "bu" && (
