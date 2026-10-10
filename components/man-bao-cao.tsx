@@ -5,6 +5,9 @@ import { createPortal } from "react-dom";
 import { apiClient, type BaoCao } from "@/lib/client";
 import { useStore } from "@/lib/store";
 import { taiExcel, type TrangExcel } from "@/lib/excel";
+import { DS_KIEU_IN } from "@/lib/mau-in";
+import type { KieuInThieu } from "@/lib/types";
+import { PhieuThieu } from "./in-thieu";
 import { homNay, ngayVN, so, tien } from "@/lib/format";
 import { baoLoi, BieuTuong, Nut, Trong } from "./ui";
 
@@ -31,6 +34,13 @@ export function ManBaoCao() {
   // Portal cần document nên chỉ dựng sau khi đã sang phía trình duyệt
   const [daMount, setDaMount] = useState(false);
   useEffect(() => setDaMount(true), []);
+
+  // Kiểu sắp danh sách khi in, lấy mặc định từ mẫu đã lưu trong Cài đặt
+  const [kieuIn, setKieuIn] = useState<KieuInThieu>("theo_buong");
+  useEffect(() => {
+    setKieuIn(settings.mauInThieu.kieuIn);
+  }, [settings.mauInThieu.kieuIn]);
+  const [xemTruocThieu, setXemTruocThieu] = useState(false);
 
   /**
    * In danh sách hàng còn thiếu để đi phát.
@@ -266,7 +276,10 @@ export function ManBaoCao() {
             hang={du.hangThieu}
             tu={tu}
             den={den}
+            kieuIn={kieuIn}
+            setKieuIn={setKieuIn}
             onIn={du.thieuTheoPhieu.length > 0 ? inDanhSachThieu : undefined}
+            onXemTruoc={du.thieuTheoPhieu.length > 0 ? () => setXemTruocThieu(true) : undefined}
           />
 
           <BangXepHang
@@ -308,11 +321,45 @@ export function ManBaoCao() {
         createPortal(
           <div id="print-thieu">
             {du && du.thieuTheoPhieu.length > 0 && (
-              <PhieuThieu du={du} settings={settings} tu={tu} den={den} />
+              <PhieuThieu du={du} settings={settings} tu={tu} den={den} kieuIn={kieuIn} />
             )}
           </div>,
           document.body,
         )}
+
+      {/* Xem trước danh sách phát trước khi in */}
+      {xemTruocThieu && du && (
+        <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-10">
+          <div className="w-full max-w-4xl rounded-lg border border-slate-200 bg-white shadow-xl">
+            <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-800">Xem trước danh sách phát</h3>
+                <p className="text-[11px] text-slate-500">
+                  {DS_KIEU_IN.find((k) => k.khoa === kieuIn)?.nhan} — mẫu in sửa trong Cài đặt
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Nut co="sm" onClick={() => setXemTruocThieu(false)}>
+                  Đóng
+                </Nut>
+                <Nut
+                  co="sm"
+                  kieu="chinh"
+                  onClick={() => {
+                    setXemTruocThieu(false);
+                    inDanhSachThieu();
+                  }}
+                >
+                  <BieuTuong ten="in" className="h-4 w-4" /> In
+                </Nut>
+              </div>
+            </header>
+            <div className="mem-cuon max-h-[76vh] overflow-auto p-6">
+              <PhieuThieu du={du} settings={settings} tu={tu} den={den} kieuIn={kieuIn} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -440,97 +487,6 @@ function BieuDoTheoNgay({ data, dungTien }: { data: DiemNgay[]; dungTien: boolea
   );
 }
 
-/* --------------------- Bản in danh sách hàng còn thiếu --------------------- */
-
-/**
- * Bản in để đi phát hàng: sắp theo buồng rồi tới phiếu, có ghi chú của phiếu.
- * Nội dung được đưa ra ngoài khung ứng dụng bằng portal để khi in không bị ẩn.
- */
-function PhieuThieu({ du, settings, tu, den }: { du: BaoCao; settings: { tenDonVi: string; diaChi: string }; tu: string; den: string }) {
-  const oDem = { textAlign: "center" as const };
-  const oTien = { textAlign: "right" as const };
-
-  return (
-    <div className="phieu-in">
-      <div style={{ textAlign: "center", lineHeight: 1.35 }}>
-        <div style={{ fontWeight: 700, textTransform: "uppercase" }}>
-          {settings.tenDonVi || "CĂN TIN PHẠM NHÂN"}
-        </div>
-        {settings.diaChi ? <div style={{ fontSize: "11pt" }}>{settings.diaChi}</div> : null}
-      </div>
-      <div style={{ height: 14 }} />
-
-      <h1 style={{ textAlign: "center", fontSize: "16pt", fontWeight: 700, margin: 0, textTransform: "uppercase" }}>
-        Danh sách hàng còn thiếu
-      </h1>
-      <div style={{ textAlign: "center", fontSize: "12pt", marginBottom: 4 }}>
-        Từ {ngayVN(tu)} đến {ngayVN(den)}
-      </div>
-      <div style={{ textAlign: "center", fontSize: "11pt", marginBottom: 12 }}>
-        {so(du.tongQuan.soPhieuThieu)} phiếu · {so(du.tongQuan.tongLuongThieu)} đơn vị chưa giao
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th style={{ width: "10%" }}>Buồng giam</th>
-            <th style={{ width: "14%" }}>Số phiếu</th>
-            <th>Họ và tên</th>
-            <th>Tên mặt hàng</th>
-            <th style={{ width: "8%" }}>ĐVT</th>
-            <th style={{ width: "10%" }}>Còn thiếu</th>
-            <th style={{ width: "18%" }}>Ghi chú</th>
-          </tr>
-        </thead>
-        <tbody>
-          {du.thieuTheoPhieu.map((r, i) => (
-            <tr key={`${r.soPhieu}-${r.ma}-${i}`}>
-              <td style={oDem}>{r.buongGiam || "—"}</td>
-              <td style={{ ...oDem, fontFamily: "monospace", fontSize: "11pt" }}>{r.soPhieu}</td>
-              <td>{r.hoTen}</td>
-              <td>{r.ten}</td>
-              <td style={oDem}>{r.donViTinh}</td>
-              <td style={oTien}>{so(r.conThieu)}</td>
-              <td style={{ fontSize: "11pt" }}>{r.ghiChu}</td>
-            </tr>
-          ))}
-          <tr>
-            <td colSpan={5} style={{ ...oTien, fontWeight: 700 }}>
-              TỔNG CỘNG
-            </td>
-            <td style={{ ...oTien, fontWeight: 700 }}>{so(du.tongQuan.tongLuongThieu)}</td>
-            <td />
-          </tr>
-        </tbody>
-      </table>
-
-      <table style={{ width: "100%", marginTop: 18, borderCollapse: "collapse" }}>
-        <tbody>
-          <tr>
-            {["Người lập danh sách", "Người phát hàng", "Người nhận hàng"].map((b) => (
-              <td key={b} style={{ border: "none", textAlign: "center", fontWeight: 700, width: "33.33%", padding: 2 }}>
-                {b}
-              </td>
-            ))}
-          </tr>
-          <tr>
-            {["", "", ""].map((_, i) => (
-              <td key={i} style={{ border: "none", textAlign: "center", fontStyle: "italic", fontSize: "11pt" }}>
-                (Ký, ghi rõ họ tên)
-              </td>
-            ))}
-          </tr>
-          <tr>
-            {["", "", ""].map((_, i) => (
-              <td key={i} style={{ border: "none", height: 75 }} />
-            ))}
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 /* ------------------------------ Hàng còn thiếu ------------------------------ */
 
 type DongThieu = BaoCao["hangThieu"][number];
@@ -543,12 +499,18 @@ function HangConThieu({
   hang,
   tu,
   den,
+  kieuIn,
+  setKieuIn,
   onIn,
+  onXemTruoc,
 }: {
   hang: DongThieu[];
   tu: string;
   den: string;
+  kieuIn: KieuInThieu;
+  setKieuIn: (k: KieuInThieu) => void;
   onIn?: () => void;
+  onXemTruoc?: () => void;
 }) {
   if (hang.length === 0) {
     return (
@@ -578,17 +540,41 @@ function HangConThieu({
             Khi hàng về, đối chiếu mục này để biết cần bù cho phiếu nào
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-[12px] font-medium text-amber-800">
             {so(hang.length)} mặt hàng · tổng {so(tongThieu)} đơn vị
           </span>
           {onIn && (
-            <Nut co="sm" onClick={onIn} title="In danh sách sắp theo buồng để đi phát hàng">
-              <BieuTuong ten="in" className="h-4 w-4" /> In danh sách phát
-            </Nut>
+            <>
+              <label className="text-[12px] text-slate-600">Kiểu in</label>
+              <select
+                value={kieuIn}
+                onChange={(e) => setKieuIn(e.target.value as KieuInThieu)}
+                title={DS_KIEU_IN.find((k) => k.khoa === kieuIn)?.moTa}
+                className="h-8 rounded-md border border-slate-300 bg-white px-2 text-[13px] outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              >
+                {DS_KIEU_IN.map((k) => (
+                  <option key={k.khoa} value={k.khoa}>
+                    {k.nhan}
+                  </option>
+                ))}
+              </select>
+              <Nut co="sm" onClick={onXemTruoc} title="Xem trước rồi mới in">
+                Xem trước
+              </Nut>
+              <Nut co="sm" kieu="chinh" onClick={onIn} title="In danh sách để đi phát hàng">
+                <BieuTuong ten="in" className="h-4 w-4" /> In danh sách phát
+              </Nut>
+            </>
           )}
         </div>
       </header>
+
+      {onIn && (
+        <div className="border-b border-amber-100 bg-amber-50/50 px-4 py-1.5 text-[12px] text-amber-800">
+          {DS_KIEU_IN.find((k) => k.khoa === kieuIn)?.moTa}
+        </div>
+      )}
 
       <div className="divide-y divide-slate-100">
         {hang.map((h) => (

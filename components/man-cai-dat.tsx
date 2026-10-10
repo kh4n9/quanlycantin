@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiClient } from "@/lib/client";
 import { useStore } from "@/lib/store";
 import { ManMauIn } from "./man-mau-in";
+import { ManMauInThieu } from "./man-mau-in-thieu";
 import { bao, baoLoi, BieuTuong, Nut, ONhan, OText, The } from "./ui";
 
 export function ManCaiDat() {
@@ -170,6 +171,8 @@ export function ManCaiDat() {
       </The>
 
       <ManMauIn />
+
+      <ManMauInThieu />
 
       <The tieuDe="Thùng rác" phuDe="Phiếu bị xoá vẫn phục hồi được cho tới khi quá hạn này">
         <div className="grid gap-3 p-4">

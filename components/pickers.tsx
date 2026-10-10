@@ -133,6 +133,9 @@ export function ChonHang({
             setMo(true);
           }}
           onFocus={() => setMo(true)}
+          // Bấm lại vào ô đang focus không phát sinh sự kiện focus — xem chú thích
+          // ở ô lọc theo món.
+          onClick={() => setMo(true)}
           onBlur={() => setTimeout(() => setMo(false), 150)}
           onKeyDown={onKey}
           placeholder={placeholder}
@@ -272,9 +275,14 @@ export function ChonMonLoc({
           setMo(true);
         }}
         onFocus={() => setMo(true)}
+        // Bấm lại vào ô đang được focus thì trình duyệt không phát sự kiện focus
+        // nữa, nên sau khi Esc đóng danh sách sẽ không mở lại được nếu chỉ dựa
+        // vào onFocus. Mở luôn khi bấm chuột.
+        onClick={() => setMo(true)}
         onBlur={() => setTimeout(() => setMo(false), 150)}
         onKeyDown={onKey}
         placeholder="Lọc theo món hàng…"
+        title="Chỉ liệt kê những món có bán trong khoảng ngày đang xem"
         className="h-9 w-52 rounded-md border border-slate-300 bg-white pr-2 pl-8 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
       />
 
@@ -392,6 +400,9 @@ export function OTenCanPham({
           setMo(true);
         }}
         onFocus={() => setMo(true)}
+        // Bấm lại vào ô đang focus không phát sinh sự kiện focus — xem chú thích
+        // ở ô lọc theo món.
+        onClick={() => setMo(true)}
         onBlur={() => setTimeout(() => setMo(false), 150)}
         onKeyDown={onKey}
         placeholder="Gõ họ tên can phạm…"

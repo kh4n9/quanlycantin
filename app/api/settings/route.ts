@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { yeuCau } from "@/lib/auth";
 import { khoiTao, layCaiDat, luuCaiDat } from "@/lib/db";
-import { chuanHoaMauIn } from "@/lib/mau-in";
+import { chuanHoaMauIn, chuanHoaMauInThieu } from "@/lib/mau-in";
 import type { Settings } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +32,7 @@ export async function PATCH(req: Request) {
       patch.soNgayGiuThungRac = Math.max(0, Math.round(Number(body.soNgayGiuThungRac) || 0));
     }
     if (body.mauIn !== undefined) patch.mauIn = chuanHoaMauIn(body.mauIn);
+    if (body.mauInThieu !== undefined) patch.mauInThieu = chuanHoaMauInThieu(body.mauInThieu);
 
     return NextResponse.json({ settings: await luuCaiDat(patch) });
   } catch (e) {

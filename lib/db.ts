@@ -2,7 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { COL, KHONG_LAY_ID, getDb } from "./mongo";
 import { QUYEN_DAY_DU } from "./quyen";
-import { MAU_IN_MAC_DINH, chuanHoaMauIn } from "./mau-in";
+import {
+  MAU_IN_MAC_DINH,
+  MAU_IN_THIEU_MAC_DINH,
+  chuanHoaMauIn,
+  chuanHoaMauInThieu,
+} from "./mau-in";
 import { bamMatKhau } from "./auth";
 import type { CanPhamGoiY, LineItem, LineInput, Order, Product, Settings } from "./types";
 
@@ -426,18 +431,22 @@ const CAI_DAT_MAC_DINH: Settings = {
   nguoiLapPhieu: "",
   soNgayGiuThungRac: 0,
   mauIn: MAU_IN_MAC_DINH,
+  mauInThieu: MAU_IN_THIEU_MAC_DINH,
 };
 
 export async function layCaiDat(): Promise<Settings> {
   const db = await getDb();
   const doc = await db.collection(COL.cauHinh).findOne({ khoa: "don_vi" }, { projection: { _id: 0 } });
-  if (!doc) return { ...CAI_DAT_MAC_DINH, mauIn: chuanHoaMauIn(null) };
+  if (!doc) {
+    return { ...CAI_DAT_MAC_DINH, mauIn: chuanHoaMauIn(null), mauInThieu: chuanHoaMauInThieu(null) };
+  }
   return {
     tenDonVi: String(doc.tenDonVi ?? ""),
     diaChi: String(doc.diaChi ?? ""),
     nguoiLapPhieu: String(doc.nguoiLapPhieu ?? ""),
     soNgayGiuThungRac: Math.max(0, Math.round(Number(doc.soNgayGiuThungRac) || 0)),
     mauIn: chuanHoaMauIn(doc.mauIn),
+    mauInThieu: chuanHoaMauInThieu(doc.mauInThieu),
   };
 }
 
@@ -449,6 +458,7 @@ export async function luuCaiDat(patch: Partial<Settings>): Promise<Settings> {
   }
   // Chuẩn hoá mẫu in trước khi lưu để dữ liệu rác từ giao diện không lọt vào
   if (patch.mauIn !== undefined) deLuu.mauIn = chuanHoaMauIn(patch.mauIn);
+  if (patch.mauInThieu !== undefined) deLuu.mauInThieu = chuanHoaMauInThieu(patch.mauInThieu);
   await db.collection(COL.cauHinh).updateOne({ khoa: "don_vi" }, { $set: deLuu }, { upsert: true });
   return layCaiDat();
 }

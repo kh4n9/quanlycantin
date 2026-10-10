@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { apiClient, LoiApi } from "./client";
-import { MAU_IN_MAC_DINH } from "./mau-in";
+import { MAU_IN_MAC_DINH, MAU_IN_THIEU_MAC_DINH } from "./mau-in";
 import type { Quyen } from "./quyen";
 import type { NguoiDungCongKhai, Settings } from "./types";
 
@@ -38,6 +38,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     nguoiLapPhieu: "",
     soNgayGiuThungRac: 0,
     mauIn: MAU_IN_MAC_DINH,
+    mauInThieu: MAU_IN_THIEU_MAC_DINH,
   });
   const [dangKhoiDong, setDangKhoiDong] = useState(true);
   const [loi, setLoi] = useState("");

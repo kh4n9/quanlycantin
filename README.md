@@ -154,6 +154,26 @@ ghi chú, tiêu đề các cột, chữ ở dòng tổng cộng.
 
 Mẫu in áp dụng cho cả phiếu in ra lẫn cửa sổ xem trước ở màn hình Phiếu bán.
 
+### Mẫu phiếu trả đồ thiếu
+
+Thẻ **Mẫu phiếu trả đồ thiếu** trong *Cài đặt* chỉnh bản in danh sách hàng còn thiếu:
+tiêu đề, kiểu sắp mặc định, 7 mục bật/tắt (buồng giam, số phiếu, ngày bán, ghi chú,
+ĐVT, dòng tổng, cột “Ký nhận”), 11 nhãn chữ và phần chữ ký (thêm/bớt, chọn số chữ ký
+mỗi hàng). Có xem trước ngay bên cạnh.
+
+### Chọn kiểu in danh sách phát
+
+Ở màn *Báo cáo* → mục **Hàng còn thiếu**, ô **Kiểu in** cho chọn 3 cách sắp:
+
+| Kiểu | Dùng khi |
+|---|---|
+| **Theo buồng giam** | Đi lần lượt từng buồng, trong buồng xử lý từng phiếu |
+| **Theo món hàng** | Hàng về đợt nào thì biết ngay cần phát cho ai; mỗi món có dòng cộng riêng |
+| **Gộp mỗi người một hàng** | Mỗi can phạm một dòng, ghi hết các món còn thiếu — dễ tích khi phát |
+
+Bấm **Xem trước** để xem đúng cỡ A4 rồi mới **In danh sách phát**. Bật cột
+*“Ký nhận”* trong mẫu in nếu muốn có ô trống cho can phạm ký khi nhận hàng.
+
 ## Hàng thiếu và bù hàng
 
 Khi bán mà căn tin chưa có đủ hàng, ghi lại phần còn nợ can phạm để sau này bù.
@@ -191,6 +211,9 @@ Xoá một phiếu bán **không làm mất dữ liệu** — phiếu được c
 
 Trên thanh công cụ màn hình *Phiếu bán* có ô **Lọc theo món hàng**: gõ tên hoặc mã
 món rồi `Enter` để chọn. Danh sách chỉ còn những phiếu có món đó.
+
+Ô chọn món **chỉ liệt kê những món thật sự có bán trong khoảng ngày đang xem** — đổi
+khoảng ngày thì danh sách món cũng đổi theo, tránh chọn nhầm món không bán trong kỳ.
 
 - Cột **SL món lọc** hiện số lượng món đó trong từng phiếu.
 - Dòng tóm tắt cho biết **bao nhiêu phiếu** và **tổng bao nhiêu đơn vị**.

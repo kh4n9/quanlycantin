@@ -127,11 +127,53 @@ export type MauInPhieu = {
   soCotChuKy: number;
 };
 
+/** Cách sắp danh sách hàng còn thiếu khi in. */
+export type KieuInThieu = "theo_buong" | "theo_mon" | "gop_nguoi";
+
+/** Nhãn chữ trên bản in danh sách hàng thiếu. */
+export type NhanThieu = {
+  buongGiam: string;
+  soPhieu: string;
+  ngayBan: string;
+  hoTen: string;
+  matHang: string;
+  /** Tiêu đề cột gộp nhiều món của kiểu in "mỗi người một hàng" */
+  cacMon: string;
+  donViTinh: string;
+  conThieu: string;
+  ghiChu: string;
+  tongCong: string;
+  kyNhan: string;
+};
+
+/** Bật/tắt từng phần của bản in hàng thiếu. */
+export type HienThieu = {
+  buongGiam: boolean;
+  soPhieu: boolean;
+  ngayBan: boolean;
+  ghiChu: boolean;
+  donViTinh: boolean;
+  dongTong: boolean;
+  /** Cột trống để can phạm ký khi nhận hàng */
+  cotKyNhan: boolean;
+};
+
+export type MauInThieu = {
+  tieuDe: string;
+  /** Kiểu sắp mặc định khi bấm in */
+  kieuIn: KieuInThieu;
+  nhan: NhanThieu;
+  hien: HienThieu;
+  chuKy: OChuKy[];
+  soCotChuKy: number;
+};
+
 export type Settings = {
   tenDonVi: string;
   diaChi: string;
   nguoiLapPhieu: string;
   mauIn: MauInPhieu;
+  mauInThieu: MauInThieu;
   /**
    * Số ngày giữ phiếu trong thùng rác trước khi xoá vĩnh viễn.
    * 0 nghĩa là giữ mãi, không tự xoá.

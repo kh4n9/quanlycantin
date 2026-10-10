@@ -98,6 +98,16 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
     return d;
   }, [ds, q, chiThieuHang, monLoc]);
 
+  /**
+   * Ô lọc món chỉ liệt kê những món thật sự có bán trong khoảng ngày đang xem.
+   * Nếu để tất cả thì chọn phải món không bán trong kỳ sẽ luôn ra danh sách rỗng.
+   */
+  const sanPhamTrongKy = useMemo(() => {
+    const coBan = new Set<string>();
+    for (const o of ds) for (const i of o.items) coBan.add(i.productId);
+    return sanPham.filter((p) => coBan.has(p.id));
+  }, [ds, sanPham]);
+
   /** Số lượng của món đang lọc trong một phiếu */
   const luongMonTrong = (o: Order): number =>
     monLoc ? o.items.filter((i) => i.productId === monLoc.id).reduce((s, i) => s + i.soLuong, 0) : 0;
@@ -212,7 +222,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
           />
         </div>
         <ChonMonLoc
-          products={sanPham}
+          products={sanPhamTrongKy}
           daChon={monLoc}
           onChon={setMonLoc}
           onBo={() => setMonLoc(null)}
@@ -276,8 +286,20 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
               <tr>
                 <td colSpan={7}>
                   <Trong
-                    tieuDe={dangTai ? "Đang tải…" : "Không có phiếu nào trong khoảng ngày này"}
-                    moTa={dangTai ? undefined : "Đổi khoảng ngày hoặc từ khoá tìm kiếm để xem phiếu khác."}
+                    tieuDe={
+                      dangTai
+                        ? "Đang tải…"
+                        : monLoc
+                          ? `Không có phiếu nào chứa món “${monLoc.ten}” trong khoảng này`
+                          : "Không có phiếu nào trong khoảng ngày này"
+                    }
+                    moTa={
+                      dangTai
+                        ? undefined
+                        : monLoc
+                          ? "Món này không bán trong khoảng ngày đang xem. Đổi khoảng ngày, hoặc bấm × để bỏ lọc món."
+                          : "Đổi khoảng ngày hoặc từ khoá tìm kiếm để xem phiếu khác."
+                    }
                   />
                 </td>
               </tr>
