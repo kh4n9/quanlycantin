@@ -321,7 +321,14 @@ export function ManBaoCao() {
         createPortal(
           <div id="print-thieu">
             {du && du.thieuTheoPhieu.length > 0 && (
-              <PhieuThieu du={du} settings={settings} tu={tu} den={den} kieuIn={kieuIn} />
+              <PhieuThieu
+                du={du}
+                settings={settings}
+                tu={tu}
+                den={den}
+                kieuIn={kieuIn}
+                mau={settings.mauInThieu}
+              />
             )}
           </div>,
           document.body,
@@ -355,7 +362,14 @@ export function ManBaoCao() {
               </div>
             </header>
             <div className="mem-cuon max-h-[76vh] overflow-auto p-6">
-              <PhieuThieu du={du} settings={settings} tu={tu} den={den} kieuIn={kieuIn} />
+              <PhieuThieu
+                du={du}
+                settings={settings}
+                tu={tu}
+                den={den}
+                kieuIn={kieuIn}
+                mau={settings.mauInThieu}
+              />
             </div>
           </div>
         </div>
