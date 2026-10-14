@@ -26,6 +26,9 @@ type StoreValue = {
   coQuyen: (q: Quyen) => boolean;
   /** Ghi đè người dùng sau khi tự đổi hồ sơ (ví dụ đổi mật khẩu xong) */
   datNguoiDung: (nd: NguoiDungCongKhai | null) => void;
+  /** Trạng thái có dữ liệu form đang nhập dở chưa lưu */
+  coDuLieuChuaLuu: boolean;
+  datCoDuLieuChuaLuu: (dirty: boolean) => void;
 };
 
 const StoreContext = createContext<StoreValue | null>(null);
@@ -73,6 +76,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const coQuyen = useCallback((q: Quyen) => Boolean(nguoiDung?.quyen.includes(q)), [nguoiDung]);
 
+  const [coDuLieuChuaLuu, setCoDuLieuChuaLuu] = useState(false);
+  const datCoDuLieuChuaLuu = useCallback((dirty: boolean) => {
+    setCoDuLieuChuaLuu(dirty);
+  }, []);
+
   useEffect(() => {
     void napLai();
   }, [napLai]);
@@ -87,8 +95,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       capNhatSettings,
       coQuyen,
       datNguoiDung,
+      coDuLieuChuaLuu,
+      datCoDuLieuChuaLuu,
     }),
-    [nguoiDung, settings, dangKhoiDong, loi, napLai, capNhatSettings, coQuyen, datNguoiDung],
+    [
+      nguoiDung,
+      settings,
+      dangKhoiDong,
+      loi,
+      napLai,
+      capNhatSettings,
+      coQuyen,
+      datNguoiDung,
+      coDuLieuChuaLuu,
+      datCoDuLieuChuaLuu,
+    ],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

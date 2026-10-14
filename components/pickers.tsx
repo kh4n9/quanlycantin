@@ -415,7 +415,7 @@ export function OTenCanPham({
             Đã mua trước đây — chọn để điền luôn năm sinh, buồng giam
           </li>
           {ketQua.map((c, i) => (
-            <li key={c.hoTen}>
+            <li key={`${c.hoTen}-${c.buongGiam}-${c.namSinh}-${i}`}>
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}

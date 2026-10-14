@@ -268,7 +268,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
         </div>
       )}
 
-      <div className="mem-cuon max-h-[64vh] overflow-auto">
+      <div className="mem-cuon max-h-[calc(100vh-210px)] min-h-[320px] overflow-auto">
         <table className="w-full border-collapse text-sm">
           <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
             <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:text-left [&>th]:font-semibold">

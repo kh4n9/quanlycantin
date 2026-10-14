@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DuLieuPhieu } from "@/lib/client";
 import { homNay, so, tien } from "@/lib/format";
+import { useStore } from "@/lib/store";
 import type { CanPhamGoiY, LineItem, Order, Product } from "@/lib/types";
 import { ChonHang, OTenCanPham } from "./pickers";
 import { useInPhieu } from "./print";
@@ -33,6 +34,7 @@ export function PhieuBanForm({
 }) {
   const suaDoi = Boolean(banDau);
   const { dangXem } = useInPhieu();
+  const { datCoDuLieuChuaLuu } = useStore();
 
   const [hoTen, setHoTen] = useState(banDau?.hoTen ?? "");
   const [namSinh, setNamSinh] = useState(banDau?.namSinh ? String(banDau.namSinh) : "");
@@ -50,6 +52,35 @@ export function PhieuBanForm({
   useEffect(() => {
     if (!suaDoi) setTimeout(() => oHoTen.current?.focus(), 80);
   }, [suaDoi]);
+
+  const isDirty = useMemo(() => {
+    if (suaDoi) {
+      if (!banDau) return false;
+      const hoTenKhac = hoTen.trim() !== (banDau.hoTen || "");
+      const namSinhKhac = (namSinh ? String(namSinh) : "") !== (banDau.namSinh ? String(banDau.namSinh) : "");
+      const buongKhac = buongGiam.trim() !== (banDau.buongGiam || "");
+      const ghiChuKhac = ghiChu.trim() !== (banDau.ghiChu || "");
+      const ngayKhac = ngay !== banDau.ngay;
+      if (hoTenKhac || namSinhKhac || buongKhac || ghiChuKhac || ngayKhac) return true;
+      if (dsDong.length !== banDau.items.length) return true;
+      return dsDong.some((d, idx) => {
+        const goc = banDau.items[idx];
+        return !goc || d.productId !== goc.productId || d.soLuong !== goc.soLuong || d.donGia !== goc.donGia;
+      });
+    }
+    return (
+      hoTen.trim() !== "" ||
+      namSinh.trim() !== "" ||
+      buongGiam.trim() !== "" ||
+      ghiChu.trim() !== "" ||
+      dsDong.length > 0
+    );
+  }, [suaDoi, banDau, hoTen, namSinh, buongGiam, ghiChu, ngay, dsDong]);
+
+  useEffect(() => {
+    datCoDuLieuChuaLuu(isDirty);
+    return () => datCoDuLieuChuaLuu(false);
+  }, [isDirty, datCoDuLieuChuaLuu]);
 
   const tongTien = dsDong.reduce((s, d) => s + d.thanhTien, 0);
   const tongDonVi = dsDong.reduce((s, d) => s + d.soLuong, 0);
@@ -92,7 +123,12 @@ export function PhieuBanForm({
     });
   };
 
-  const lamMoi = useCallback(() => {
+  const lamMoi = useCallback((boQuaXacNhan = false) => {
+    if (!boQuaXacNhan && isDirty) {
+      if (!window.confirm("Bạn có dữ liệu phiếu bán đang nhập chưa lưu. Bạn có chắc muốn xoá để làm mới không?")) {
+        return;
+      }
+    }
     setHoTen("");
     setNamSinh("");
     setBuongGiam("");
@@ -100,7 +136,16 @@ export function PhieuBanForm({
     setGhiChu("");
     setNgay(homNay());
     setTimeout(() => oHoTen.current?.focus(), 50);
-  }, []);
+  }, [isDirty]);
+
+  const xuLyHuy = useCallback(() => {
+    if (isDirty) {
+      if (!window.confirm("Bạn có thay đổi chưa lưu. Bạn có chắc muốn huỷ không?")) {
+        return;
+      }
+    }
+    onHuy?.();
+  }, [isDirty, onHuy]);
 
   const luu = useCallback(async () => {
     if (!hoTen.trim()) {
@@ -122,7 +167,7 @@ export function PhieuBanForm({
         ghiChu,
         items: dsDong.map((d) => ({ productId: d.productId, soLuong: d.soLuong, donGia: d.donGia })),
       });
-      if (!suaDoi) lamMoi();
+      if (!suaDoi) lamMoi(true);
     } catch (e) {
       baoLoi((e as Error).message);
     } finally {
@@ -220,14 +265,14 @@ export function PhieuBanForm({
 
       {/* --- Danh sách mặt hàng đã chọn --- */}
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <div className="mem-cuon max-h-[42vh] overflow-auto">
+        <div className="mem-cuon max-h-[50vh] min-h-[180px] overflow-auto">
           <table className="w-full border-collapse text-sm">
             <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
               <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-2 [&>th]:py-2 [&>th]:font-semibold">
                 <th className="w-10">#</th>
                 <th className="text-left">Tên mặt hàng</th>
                 <th className="w-16">ĐVT</th>
-                <th className="w-24">Số lượng</th>
+                <th className="w-28 text-center">Số lượng</th>
                 <th className="w-28 text-right">Đơn giá</th>
                 <th className="w-32 text-right">Thành tiền</th>
                 <th className="w-10" />
@@ -255,21 +300,46 @@ export function PhieuBanForm({
                     <div className="font-mono text-[11px] text-slate-400">{d.ma}</div>
                   </td>
                   <td className="text-center text-slate-600">{d.donViTinh}</td>
-                  <td>
-                    <input
-                      type="number"
-                      min={0}
-                      value={d.soLuong}
-                      onChange={(e) => suaDong(i, { soLuong: Number(e.target.value) })}
-                      onFocus={(e) => e.target.select()}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          oTimHang.current?.focus();
-                        }
-                      }}
-                      className="h-8 w-20 rounded border border-slate-300 px-2 text-center text-sm outline-none focus:ring-2 focus:ring-blue-100"
-                    />
+                  <td className="text-center">
+                    <div className="inline-flex items-center rounded border border-slate-300 bg-white shadow-xs">
+                      <button
+                        type="button"
+                        onClick={() => suaDong(i, { soLuong: Math.max(0, d.soLuong - 1) })}
+                        disabled={d.soLuong <= 0}
+                        className="flex h-8 w-7 items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-30"
+                        title="Giảm 1"
+                      >
+                        <span className="text-base font-semibold leading-none">−</span>
+                      </button>
+                      <input
+                        type="number"
+                        min={0}
+                        value={d.soLuong}
+                        onChange={(e) => suaDong(i, { soLuong: Number(e.target.value) })}
+                        onFocus={(e) => e.target.select()}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            oTimHang.current?.focus();
+                          } else if (e.key === "+" || e.key === "=") {
+                            e.preventDefault();
+                            suaDong(i, { soLuong: d.soLuong + 1 });
+                          } else if (e.key === "-") {
+                            e.preventDefault();
+                            suaDong(i, { soLuong: Math.max(0, d.soLuong - 1) });
+                          }
+                        }}
+                        className="h-8 w-12 border-x border-slate-200 px-1 text-center text-sm font-medium outline-none focus:bg-blue-50/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => suaDong(i, { soLuong: d.soLuong + 1 })}
+                        className="flex h-8 w-7 items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                        title="Tăng 1"
+                      >
+                        <span className="text-base font-semibold leading-none">+</span>
+                      </button>
+                    </div>
                   </td>
                   <td>
                     <input
@@ -329,11 +399,11 @@ export function PhieuBanForm({
 
           <div className="flex gap-2">
             {onHuy ? (
-              <Nut co="lg" onClick={onHuy} disabled={dangLuu}>
+              <Nut co="lg" onClick={xuLyHuy} disabled={dangLuu}>
                 Huỷ
               </Nut>
             ) : (
-              <Nut co="lg" onClick={lamMoi} disabled={dangLuu}>
+              <Nut co="lg" onClick={() => lamMoi(false)} disabled={dangLuu}>
                 Làm mới
               </Nut>
             )}

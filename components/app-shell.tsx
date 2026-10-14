@@ -49,22 +49,29 @@ const MUC: Muc[] = [
 ];
 
 function Khung() {
-  const { nguoiDung, dangKhoiDong, loi, coQuyen } = useStore();
+  const { nguoiDung, dangKhoiDong, loi, coQuyen, coDuLieuChuaLuu } = useStore();
   const [muc, setMuc] = useState<Khoa>("ban");
   const [doiMatKhau, setDoiMatKhau] = useState(false);
+  const [thuGonSidebar, setThuGonSidebar] = useState(false);
   const { dangXem, dongXemTruoc } = useInPhieu();
 
   const mucChoPhep = useMemo(() => MUC.filter((m) => !m.quyen || coQuyen(m.quyen)), [coQuyen]);
 
   const chonMuc = useCallback(
     (k: Khoa) => {
+      if (k !== muc && coDuLieuChuaLuu) {
+        const ok = window.confirm(
+          "Bạn có dữ liệu phiếu bán đang nhập dở chưa lưu. Bạn có chắc muốn chuyển sang màn hình khác không?",
+        );
+        if (!ok) return;
+      }
       setMuc(k);
       dongXemTruoc();
       if (window.location.hash.slice(1) !== k) {
         window.history.replaceState(null, "", `#${k}`);
       }
     },
-    [dongXemTruoc],
+    [muc, coDuLieuChuaLuu, dongXemTruoc],
   );
 
   // Mở trang thì đọc mục từ hash; chỉ ghi hash khi người dùng bấm chuyển mục.
@@ -74,6 +81,15 @@ function Khung() {
     const doc = () => {
       const h = window.location.hash.slice(1) as Khoa;
       if (MUC.some((m) => m.khoa === h)) {
+        if (h !== muc && coDuLieuChuaLuu) {
+          const ok = window.confirm(
+            "Bạn có dữ liệu phiếu bán đang nhập dở chưa lưu. Bạn có chắc muốn chuyển màn hình không?",
+          );
+          if (!ok) {
+            window.history.replaceState(null, "", `#${muc}`);
+            return;
+          }
+        }
         setMuc(h);
         dongXemTruoc();
       }
@@ -81,7 +97,18 @@ function Khung() {
     doc();
     window.addEventListener("hashchange", doc);
     return () => window.removeEventListener("hashchange", doc);
-  }, [dongXemTruoc]);
+  }, [muc, coDuLieuChuaLuu, dongXemTruoc]);
+
+  // Nhắc nhở người dùng khi cố tải lại trang hoặc đóng tab lúc có dữ liệu chưa lưu
+  useEffect(() => {
+    if (!coDuLieuChuaLuu) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [coDuLieuChuaLuu]);
 
   // Mục đang mở bị mất quyền (đổi quyền, hoặc mở bằng hash không hợp lệ) thì nhảy về mục đầu tiên được phép
   useEffect(() => {
@@ -150,14 +177,56 @@ function Khung() {
   return (
     <>
       <div className="khong-in flex h-screen flex-col bg-[#eef2f6] lg:flex-row">
-        <aside className="flex shrink-0 flex-col border-slate-200 bg-slate-900 text-slate-300 lg:w-60 lg:border-r">
-          <div className="flex items-center gap-2.5 px-4 py-3.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-blue-600 text-white">
-              <BieuTuong ten="phieu" className="h-5 w-5" />
+        <aside
+          className={`flex shrink-0 flex-col border-slate-200 bg-slate-900 text-slate-300 transition-all duration-200 lg:border-r ${
+            thuGonSidebar ? "lg:w-16" : "lg:w-60"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2 px-3 py-3 lg:px-4 lg:py-3.5">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-blue-600 text-white">
+                <BieuTuong ten="phieu" className="h-5 w-5" />
+              </div>
+              {!thuGonSidebar && (
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold text-white">Quản lý căn tin</div>
+                  <div className="truncate text-[11px] text-slate-400">{nguoiDung.hoTen}</div>
+                </div>
+              )}
             </div>
-            <div className="min-w-0">
-              <div className="truncate text-sm font-semibold text-white">Quản lý căn tin</div>
-              <div className="truncate text-[11px] text-slate-400">{nguoiDung.hoTen}</div>
+
+            {/* Nút thu gọn / mở rộng menu trên desktop */}
+            <button
+              type="button"
+              onClick={() => setThuGonSidebar((v) => !v)}
+              className="hidden rounded p-1 text-slate-400 transition hover:bg-slate-800 hover:text-white lg:flex"
+              title={thuGonSidebar ? "Mở rộng thanh menu" : "Thu gọn thanh menu"}
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                {thuGonSidebar ? (
+                  <path d="M13 5l7 7-7 7M5 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                ) : (
+                  <path d="M11 19l-7-7 7-7M19 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+                )}
+              </svg>
+            </button>
+
+            {/* Thao tác nhanh cho màn hình nhỏ / split view (< lg) */}
+            <div className="flex items-center gap-1 lg:hidden">
+              <button
+                onClick={() => setDoiMatKhau(true)}
+                className="rounded p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                title="Đổi mật khẩu"
+              >
+                <BieuTuong ten="khoa" className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => void dangXuat()}
+                className="rounded p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                title="Đăng xuất"
+              >
+                <BieuTuong ten="xuat" className="h-4 w-4" />
+              </button>
             </div>
           </div>
 
@@ -168,37 +237,47 @@ function Khung() {
                 <button
                   key={m.khoa}
                   onClick={() => chonMuc(m.khoa)}
-                  title={m.moTa}
-                  className={`flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition lg:w-full ${
+                  title={thuGonSidebar ? `${m.nhan}: ${m.moTa}` : m.moTa}
+                  className={`flex shrink-0 items-center gap-2.5 rounded-md text-left text-sm transition lg:w-full ${
+                    thuGonSidebar ? "lg:justify-center lg:px-2 lg:py-2.5" : "px-3 py-2"
+                  } ${
                     chon ? "bg-blue-600 font-medium text-white" : "hover:bg-slate-800 hover:text-white"
                   }`}
                 >
                   <BieuTuong ten={m.icon} className="h-4 w-4 shrink-0" />
-                  <span className="whitespace-nowrap">{m.nhan}</span>
-                  <span
-                    className={`ml-auto hidden text-[10px] lg:inline ${chon ? "text-blue-200" : "text-slate-500"}`}
-                  >
-                    Alt+{i + 1}
-                  </span>
+                  {!thuGonSidebar && <span className="whitespace-nowrap">{m.nhan}</span>}
+                  {!thuGonSidebar && (
+                    <span
+                      className={`ml-auto hidden text-[10px] lg:inline ${chon ? "text-blue-200" : "text-slate-500"}`}
+                    >
+                      Alt+{i + 1}
+                    </span>
+                  )}
                 </button>
               );
             })}
           </nav>
 
-          <div className="flex flex-col gap-1.5 border-t border-slate-800 px-2 py-3">
+          <div className="hidden lg:flex flex-col gap-1.5 border-t border-slate-800 px-2 py-3">
             <button
               onClick={() => setDoiMatKhau(true)}
-              className="flex items-center gap-2 rounded-md px-3 py-1.5 text-left text-[13px] text-slate-400 transition hover:bg-slate-800 hover:text-white"
+              title="Đổi mật khẩu"
+              className={`flex items-center gap-2 rounded-md py-1.5 text-left text-[13px] text-slate-400 transition hover:bg-slate-800 hover:text-white ${
+                thuGonSidebar ? "justify-center px-1" : "px-3"
+              }`}
             >
-              {/* Cố tình dùng icon ổ khoá, KHÔNG dùng bánh răng — bánh răng là của
-                  mục "Cài đặt" nên trước đây hai thứ trông giống nhau. */}
-              <BieuTuong ten="khoa" className="h-4 w-4" /> Đổi mật khẩu
+              <BieuTuong ten="khoa" className="h-4 w-4 shrink-0" />
+              {!thuGonSidebar && <span>Đổi mật khẩu</span>}
             </button>
             <button
               onClick={() => void dangXuat()}
-              className="flex items-center gap-2 rounded-md px-3 py-1.5 text-left text-[13px] text-slate-400 transition hover:bg-slate-800 hover:text-white"
+              title="Đăng xuất"
+              className={`flex items-center gap-2 rounded-md py-1.5 text-left text-[13px] text-slate-400 transition hover:bg-slate-800 hover:text-white ${
+                thuGonSidebar ? "justify-center px-1" : "px-3"
+              }`}
             >
-              <BieuTuong ten="xuat" className="h-4 w-4" /> Đăng xuất
+              <BieuTuong ten="xuat" className="h-4 w-4 shrink-0" />
+              {!thuGonSidebar && <span>Đăng xuất</span>}
             </button>
           </div>
         </aside>

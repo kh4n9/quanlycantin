@@ -263,7 +263,7 @@ export function ManKiemPhieu() {
             <div className="border-b border-slate-200 bg-slate-50/70 px-3 py-2 text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
               Danh sách ({so(hienThi.length)})
             </div>
-            <div className="mem-cuon max-h-[62vh] overflow-y-auto">
+            <div className="mem-cuon max-h-[calc(100vh-230px)] min-h-[350px] overflow-y-auto">
               {hienThi.length === 0 && (
                 <p className="px-3 py-6 text-center text-[13px] text-slate-500">
                   Không còn phiếu nào khớp bộ lọc.
@@ -345,14 +345,14 @@ export function ManKiemPhieu() {
                   )}
                 </div>
 
-                <div className="mem-cuon max-h-[42vh] overflow-auto">
+                <div className="mem-cuon max-h-[calc(100vh-340px)] min-h-[220px] overflow-auto">
                   <table className="w-full border-collapse text-sm">
                     <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
                       <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:font-semibold">
                         <th className="w-10">#</th>
                         <th className="text-left">Tên mặt hàng</th>
                         <th className="w-16">ĐVT</th>
-                        <th className="w-28">Số lượng</th>
+                        <th className="w-28 text-center">Số lượng</th>
                         <th className="w-28 text-right">Đơn giá</th>
                         <th className="w-32 text-right">Thành tiền</th>
                       </tr>
@@ -378,18 +378,46 @@ export function ManKiemPhieu() {
                               )}
                             </td>
                             <td className="text-center text-slate-600">{d.donViTinh}</td>
-                            <td>
+                            <td className="text-center">
                               {duocSua ? (
-                                <input
-                                  type="number"
-                                  min={0}
-                                  value={d.soLuong}
-                                  onChange={(e) => suaDong(i, Number(e.target.value))}
-                                  onFocus={(e) => e.target.select()}
-                                  className={`h-8 w-20 rounded border px-2 text-center text-sm outline-none focus:ring-2 focus:ring-blue-100 ${
-                                    lech ? "border-amber-400 bg-white font-semibold" : "border-slate-300"
-                                  }`}
-                                />
+                                <div className="inline-flex items-center rounded border border-slate-300 bg-white shadow-xs">
+                                  <button
+                                    type="button"
+                                    onClick={() => suaDong(i, Math.max(0, d.soLuong - 1))}
+                                    disabled={d.soLuong <= 0}
+                                    className="flex h-8 w-6 items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-30"
+                                    title="Giảm 1"
+                                  >
+                                    <span className="text-base font-semibold leading-none">−</span>
+                                  </button>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    value={d.soLuong}
+                                    onChange={(e) => suaDong(i, Number(e.target.value))}
+                                    onFocus={(e) => e.target.select()}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "+" || e.key === "=") {
+                                        e.preventDefault();
+                                        suaDong(i, d.soLuong + 1);
+                                      } else if (e.key === "-") {
+                                        e.preventDefault();
+                                        suaDong(i, Math.max(0, d.soLuong - 1));
+                                      }
+                                    }}
+                                    className={`h-8 w-12 border-x border-slate-200 px-1 text-center text-sm font-medium outline-none focus:bg-blue-50/50 ${
+                                      lech ? "border-amber-400 bg-amber-50 font-bold text-amber-800" : ""
+                                    }`}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => suaDong(i, d.soLuong + 1)}
+                                    className="flex h-8 w-6 items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                                    title="Tăng 1"
+                                  >
+                                    <span className="text-base font-semibold leading-none">+</span>
+                                  </button>
+                                </div>
                               ) : (
                                 <span className="block text-center tabular-nums">{so(d.soLuong)}</span>
                               )}
