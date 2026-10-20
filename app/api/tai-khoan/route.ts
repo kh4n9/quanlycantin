@@ -60,6 +60,9 @@ export async function POST(req: Request) {
       phaiDoiMatKhau: true,
       matKhauHash: await bamMatKhau(matKhau),
       lanDangNhapCuoi: "",
+      lanHoatDong: "",
+      trangDangXem: "",
+      thietBi: "",
       createdAt: new Date().toISOString(),
     };
     await db.collection(COL.nguoiDung).insertOne({ ...moi });

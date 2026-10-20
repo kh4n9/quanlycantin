@@ -51,7 +51,11 @@ export async function POST(req: Request) {
     await moPhien(nd.id);
 
     const db = await getDb();
-    await db.collection(COL.nguoiDung).updateOne({ id: nd.id }, { $set: { lanDangNhapCuoi: new Date().toISOString() } });
+    const bayGio = new Date().toISOString();
+    await db.collection(COL.nguoiDung).updateOne(
+      { id: nd.id },
+      { $set: { lanDangNhapCuoi: bayGio, lanHoatDong: bayGio, trangDangXem: "Đang vào hệ thống" } },
+    );
 
     const { matKhauHash: _bo, ...congKhai } = nd;
     return NextResponse.json({ nguoiDung: congKhai });

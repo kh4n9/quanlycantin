@@ -27,6 +27,7 @@ const BAOCAO_MAU: BaoCao = {
     tongLuongThieu: 12,
     coDungTien: false,
   },
+  soSanh: null,
   theoNgay: [],
   theoHang: [],
   theoCanPham: [],

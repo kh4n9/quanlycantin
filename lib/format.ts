@@ -42,6 +42,19 @@ export function khop(target: string, query: string): boolean {
   return boDau(target).includes(boDau(query));
 }
 
+/** ISO time -> "vừa xong", "3 phút trước", "2 ngày trước"… */
+export function thoiGianTruoc(iso: string, now = Date.now()): string {
+  if (!iso) return "";
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return "";
+  const giay = Math.max(0, Math.floor((now - t) / 1000));
+  if (giay < 45) return "vừa xong";
+  if (giay < 3600) return `${Math.floor(giay / 60)} phút trước`;
+  if (giay < 86400) return `${Math.floor(giay / 3600)} giờ trước`;
+  if (giay < 86400 * 7) return `${Math.floor(giay / 86400)} ngày trước`;
+  return new Date(t).toLocaleDateString("vi-VN");
+}
+
 export function docSoThanhChu(n: number): string {
   n = Math.round(n || 0);
   if (n === 0) return "Không đồng";

@@ -7,6 +7,7 @@ import { StoreProvider, useStore } from "@/lib/store";
 import { ManBanHang } from "./man-ban-hang";
 import { ManBaoCao } from "./man-bao-cao";
 import { ManCaiDat } from "./man-cai-dat";
+import { ManCanPham } from "./man-can-pham";
 import { ManDangNhap } from "./man-dang-nhap";
 import { ManKiemPhieu } from "./man-kiem-phieu";
 import { ManMatHang } from "./man-mat-hang";
@@ -14,9 +15,10 @@ import { HopDoiMatKhau, ManTaiKhoan } from "./man-tai-khoan";
 import { HopXemTruocPhieu, ManPhieuBan } from "./man-phieu-ban";
 import { Logo } from "./logo";
 import { PhieuInProvider, useInPhieu } from "./print";
+import { useHienDien } from "@/lib/use-hien-dien";
 import { bao, BieuTuong, HopThongBao, Nut, Trong } from "./ui";
 
-type Khoa = "ban" | "phieu" | "kiem" | "mathang" | "baocao" | "taikhoan" | "cai";
+type Khoa = "ban" | "phieu" | "kiem" | "mathang" | "canpham" | "baocao" | "taikhoan" | "cai";
 
 type Muc = {
   khoa: Khoa;
@@ -38,6 +40,13 @@ const MUC: Muc[] = [
     quyen: "kiem_phieu",
   },
   { khoa: "mathang", nhan: "Mặt hàng", icon: "kho", moTa: "Danh mục mặt hàng, giá bán, tắt/bật bán", quyen: "quan_ly_mat_hang" },
+  {
+    khoa: "canpham",
+    nhan: "Can phạm",
+    icon: "nguoi",
+    moTa: "Tra cứu can phạm đã mua hàng, lịch sử và mặt hàng thường mua",
+    quyen: "xem_bao_cao",
+  },
   { khoa: "baocao", nhan: "Báo cáo", icon: "bieu", moTa: "Số phiếu, mặt hàng và can phạm mua nhiều", quyen: "xem_bao_cao" },
   { khoa: "taikhoan", nhan: "Tài khoản", icon: "nguoi", moTa: "Tạo tài khoản, phân quyền, đặt lại mật khẩu", quyen: "quan_ly_tai_khoan" },
   {
@@ -62,6 +71,9 @@ function Khung() {
   // Suy ra mục hợp lệ ngay khi render thay vì đồng bộ lại bằng effect.
   const mucHienTai =
     mucChoPhep.length === 0 || mucChoPhep.some((m) => m.khoa === muc) ? muc : mucChoPhep[0].khoa;
+
+  // Báo màn hình đang mở để màn Tài khoản biết ai đang truy cập và đang ở đâu.
+  useHienDien(nguoiDung ?? null, MUC.find((m) => m.khoa === mucHienTai)?.nhan ?? "");
 
   const chonMuc = useCallback(
     (k: Khoa) => {
@@ -370,6 +382,7 @@ function Khung() {
                   )}
                   {mucHienTai === "kiem" && coQuyen("kiem_phieu") && <ManKiemPhieu />}
                   {mucHienTai === "mathang" && coQuyen("quan_ly_mat_hang") && <ManMatHang />}
+                  {mucHienTai === "canpham" && coQuyen("xem_bao_cao") && <ManCanPham />}
                   {mucHienTai === "baocao" && coQuyen("xem_bao_cao") && <ManBaoCao />}
                   {mucHienTai === "taikhoan" && coQuyen("quan_ly_tai_khoan") && <ManTaiKhoan />}
                   {mucHienTai === "cai" && <ManCaiDat />}

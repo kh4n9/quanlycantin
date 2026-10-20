@@ -80,6 +80,9 @@ async function taoQuanTriDauTien(): Promise<void> {
     phaiDoiMatKhau: true,
     matKhauHash: await bamMatKhau("admin"),
     lanDangNhapCuoi: "",
+    lanHoatDong: "",
+    trangDangXem: "",
+    thietBi: "",
     createdAt: new Date().toISOString(),
   });
   console.log("[db] Đã tạo tài khoản quản trị mặc định: admin / admin");

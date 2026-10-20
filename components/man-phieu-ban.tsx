@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiClient, type DuLieuPhieu } from "@/lib/client";
 import { taiExcel } from "@/lib/excel";
 import { homNay, khop, ngayVN, so, tien } from "@/lib/format";
@@ -45,17 +45,23 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
   const [sanPham, setSanPham] = useState<Product[]>([]);
   const [goiY, setGoiY] = useState<CanPhamGoiY[]>([]);
 
+  // Bộ lọc ngày có thể đổi liên tiếp (gõ ngày, chọn lịch…). Chỉ áp dụng kết quả
+  // của lần nạp mới nhất, tránh response cũ về sau ghi đè danh sách đã lọc.
+  const lanNap = useRef(0);
   const nap = useCallback(async () => {
+    const lan = ++lanNap.current;
     setDangTai(true);
     try {
       const thamSo = new URLSearchParams();
       if (tu) thamSo.set("tu", tu);
       if (den) thamSo.set("den", den);
-      setDs((await apiClient.orders(thamSo.toString())).orders);
+      const kq = await apiClient.orders(thamSo.toString());
+      if (lan !== lanNap.current) return;
+      setDs(kq.orders);
     } catch (e) {
-      baoLoi((e as Error).message);
+      if (lan === lanNap.current) baoLoi((e as Error).message);
     } finally {
-      setDangTai(false);
+      if (lan === lanNap.current) setDangTai(false);
     }
   }, [tu, den]);
 

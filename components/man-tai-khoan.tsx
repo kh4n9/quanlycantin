@@ -1,12 +1,16 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiClient } from "@/lib/client";
 import { useStore } from "@/lib/store";
 import { MO_TA_QUYEN, NHOM_QUYEN, QUYEN_DAY_DU, TEN_QUYEN, type Quyen } from "@/lib/quyen";
 import type { NguoiDungCongKhai } from "@/lib/types";
+import { thoiGianTruoc } from "@/lib/format";
 import { useNap } from "@/lib/use-nap";
-import { bao, baoLoi, BieuTuong, HopThoai, Nut, ONhan, OText, Trong } from "./ui";
+import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, ONhan, OText, Trong } from "./ui";
+
+/** Tín hiệu cũ hơn khoảng này được coi là đã rời trang. */
+const HAN_HIEN_DIEN_MS = 2 * 60 * 1000;
 
 type FormTK = {
   id?: string;
@@ -33,6 +37,50 @@ export function ManTaiKhoan() {
   const [dangLuu, setDangLuu] = useState(false);
   const [datLai, setDatLai] = useState<NguoiDungCongKhai | null>(null);
   const [matKhauMoi, setMatKhauMoi] = useState("");
+  const [chiTiet, setChiTiet] = useState<NguoiDungCongKhai | null>(null);
+  const [bayGio, setBayGio] = useState(() => Date.now());
+
+  // Cập nhật đồng hồ và làm mới tín hiệu truy cập mà không chớp trạng thái tải.
+  useEffect(() => {
+    let huy = false;
+    const lamMoi = async () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const kq = await apiClient.dsTaiKhoan();
+        if (huy) return;
+        setDs(kq.nguoiDung);
+        setChiTiet((cu) => (cu ? (kq.nguoiDung.find((nd) => nd.id === cu.id) ?? cu) : null));
+      } catch {
+        // Bỏ qua lỗi mạng khi làm mới nền.
+      }
+    };
+    const dongHo = window.setInterval(() => {
+      setBayGio(Date.now());
+      void lamMoi();
+    }, 30_000);
+    return () => {
+      huy = true;
+      window.clearInterval(dongHo);
+    };
+  }, []);
+
+  const dangOnline = (nd: NguoiDungCongKhai) => {
+    if (!nd.lanHoatDong) return false;
+    const luc = Date.parse(nd.lanHoatDong);
+    return Number.isFinite(luc) && bayGio - luc <= HAN_HIEN_DIEN_MS;
+  };
+
+  const moSua = (nd: NguoiDungCongKhai) => {
+    setForm({
+      id: nd.id,
+      tenDangNhap: nd.tenDangNhap,
+      hoTen: nd.hoTen,
+      matKhau: "",
+      quyen: [...nd.quyen],
+      dangHoatDong: nd.dangHoatDong,
+    });
+    setChiTiet(null);
+  };
 
   const nap = useCallback(async () => {
     setDangTai(true);
@@ -125,7 +173,11 @@ export function ManTaiKhoan() {
 
   /** Cụm nút thao tác dùng chung cho bảng trên máy tính và danh sách thẻ trên điện thoại */
   const thaoTacNd = (nd: NguoiDungCongKhai) => (
-    <div className="flex items-center justify-end gap-1">
+    <div
+      className="flex items-center justify-end gap-1"
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
+    >
       <Nut
         kieu="mo"
         co="sm"
@@ -137,21 +189,7 @@ export function ManTaiKhoan() {
       >
         <BieuTuong ten="cai" className="h-4 w-4" />
       </Nut>
-      <Nut
-        kieu="mo"
-        co="sm"
-        title="Sửa họ tên, quyền, trạng thái"
-        onClick={() =>
-          setForm({
-            id: nd.id,
-            tenDangNhap: nd.tenDangNhap,
-            hoTen: nd.hoTen,
-            matKhau: "",
-            quyen: [...nd.quyen],
-            dangHoatDong: nd.dangHoatDong,
-          })
-        }
-      >
+      <Nut kieu="mo" co="sm" title="Sửa họ tên, quyền, trạng thái" onClick={() => moSua(nd)}>
         <BieuTuong ten="sua" className="h-4 w-4" />
       </Nut>
       <Nut
@@ -187,7 +225,21 @@ export function ManTaiKhoan() {
         ) : (
           <div className="divide-y divide-slate-100">
             {ds.map((nd) => (
-              <div key={nd.id} className={`p-3 ${nd.dangHoatDong ? "" : "opacity-60"}`}>
+              <div
+                key={nd.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setChiTiet(nd)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setChiTiet(nd);
+                  }
+                }}
+                className={`cursor-pointer p-3 transition-colors hover:bg-slate-50 ${
+                  nd.dangHoatDong ? "" : "opacity-60"
+                }`}
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
@@ -217,7 +269,22 @@ export function ManTaiKhoan() {
                   </span>
                 </div>
 
-                <div className="mt-1.5 text-[11px] text-slate-500">
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+                  {dangOnline(nd) ? (
+                    <span className="inline-flex items-center gap-1 font-semibold text-emerald-700">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                      Đang truy cập
+                      {nd.trangDangXem && <span className="font-normal text-slate-600">· {nd.trangDangXem}</span>}
+                    </span>
+                  ) : (
+                    <span className="text-slate-500">
+                      {nd.lanHoatDong ? `Truy cập ${thoiGianTruoc(nd.lanHoatDong, bayGio)}` : "Chưa có tín hiệu truy cập"}
+                    </span>
+                  )}
+                  {nd.thietBi && <span className="text-slate-400">· {nd.thietBi}</span>}
+                </div>
+
+                <div className="mt-1 text-[11px] text-slate-500">
                   {nd.lanDangNhapCuoi
                     ? `Đăng nhập cuối ${new Date(nd.lanDangNhapCuoi).toLocaleString("vi-VN")}`
                     : "Chưa đăng nhập"}
@@ -246,13 +313,14 @@ export function ManTaiKhoan() {
       </div>
 
       <div className="mem-cuon hidden max-h-[66vh] overflow-auto sm:block">
-        <table className="w-full min-w-[1080px] border-collapse text-sm">
+        <table className="w-full min-w-[1240px] border-collapse text-sm">
           <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
             <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:text-left [&>th]:font-semibold">
               <th className="w-40">Tên đăng nhập</th>
               <th className="w-48">Họ tên</th>
               <th>Quyền được cấp</th>
               <th className="w-28">Trạng thái</th>
+              <th className="w-64">Đang truy cập</th>
               <th className="w-36">Đăng nhập cuối</th>
               <th className="w-28" />
             </tr>
@@ -260,7 +328,7 @@ export function ManTaiKhoan() {
           <tbody>
             {ds.length === 0 && (
               <tr>
-                <td colSpan={6}>
+                <td colSpan={7}>
                   <Trong tieuDe={dangTai ? "Đang tải…" : "Chưa có tài khoản nào"} />
                 </td>
               </tr>
@@ -268,7 +336,8 @@ export function ManTaiKhoan() {
             {ds.map((nd) => (
               <tr
                 key={nd.id}
-                className={`align-top [&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-2 ${
+                onClick={() => setChiTiet(nd)}
+                className={`cursor-pointer align-top transition-colors hover:bg-slate-50 [&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-2 ${
                   nd.dangHoatDong ? "" : "opacity-55"
                 }`}
               >
@@ -315,6 +384,25 @@ export function ManTaiKhoan() {
                     />
                     {nd.dangHoatDong ? "Hoạt động" : "Đã khoá"}
                   </span>
+                  {dangOnline(nd) && (
+                    <div className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                      Đang truy cập
+                    </div>
+                  )}
+                </td>
+                <td>
+                  {dangOnline(nd) ? (
+                    <div className="text-[12px] font-medium text-slate-800">{nd.trangDangXem || "Đang truy cập"}</div>
+                  ) : (
+                    <div className="text-[12px] text-slate-500">
+                      {nd.trangDangXem ? `Lần cuối: ${nd.trangDangXem}` : "Chưa có tín hiệu"}
+                    </div>
+                  )}
+                  <div className="mt-0.5 text-[11px] text-slate-500">
+                    {nd.lanHoatDong ? thoiGianTruoc(nd.lanHoatDong, bayGio) : "—"}
+                    {nd.thietBi && <span className="text-slate-400"> · {nd.thietBi}</span>}
+                  </div>
                 </td>
                 <td className="text-[12px] text-slate-500">
                   {nd.lanDangNhapCuoi ? new Date(nd.lanDangNhapCuoi).toLocaleString("vi-VN") : "Chưa đăng nhập"}
@@ -480,6 +568,123 @@ export function ManTaiKhoan() {
             <OText autoFocus value={matKhauMoi} onChange={(e) => setMatKhauMoi(e.target.value)} />
           </div>
         </div>
+      </HopThoai>
+
+      {/* --- Chi tiết tài khoản và trạng thái truy cập --- */}
+      <HopThoai
+        mo={chiTiet !== null}
+        dong={() => setChiTiet(null)}
+        tieuDe={chiTiet ? `Tài khoản ${chiTiet.tenDangNhap}` : ""}
+        rong="max-w-2xl"
+        chanTrang={
+          <>
+            <Nut onClick={() => setChiTiet(null)}>Đóng</Nut>
+            {chiTiet && (
+              <Nut kieu="chinh" onClick={() => moSua(chiTiet)}>
+                <BieuTuong ten="sua" className="h-4 w-4" /> Sửa tài khoản
+              </Nut>
+            )}
+          </>
+        }
+      >
+        {chiTiet && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-[16px] font-semibold tracking-tight text-slate-900">{chiTiet.hoTen}</div>
+                <div className="font-mono text-[12px] text-slate-500">{chiTiet.tenDangNhap}</div>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <Nhan sac={chiTiet.dangHoatDong ? "luc" : "xam"}>
+                  {chiTiet.dangHoatDong ? "Được phép đăng nhập" : "Đã khoá"}
+                </Nhan>
+                <Nhan sac={dangOnline(chiTiet) ? "luc" : "xam"}>
+                  {dangOnline(chiTiet) ? "Đang truy cập" : "Không trực tuyến"}
+                </Nhan>
+              </div>
+            </div>
+
+            <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3 sm:grid-cols-2">
+              <div>
+                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Họ tên</div>
+                <div className="mt-0.5 text-[13px] font-medium text-slate-800">{chiTiet.hoTen}</div>
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Tên đăng nhập</div>
+                <div className="mt-0.5 font-mono text-[13px] text-slate-800">{chiTiet.tenDangNhap}</div>
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Đăng nhập cuối</div>
+                <div className="mt-0.5 text-[13px] text-slate-800">
+                  {chiTiet.lanDangNhapCuoi
+                    ? new Date(chiTiet.lanDangNhapCuoi).toLocaleString("vi-VN")
+                    : "Chưa đăng nhập lần nào"}
+                </div>
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Mật khẩu</div>
+                <div className="mt-0.5 text-[13px] text-slate-800">
+                  {chiTiet.phaiDoiMatKhau ? "Đang dùng mật khẩu ban đầu" : "Đã đổi mật khẩu"}
+                </div>
+              </div>
+            </div>
+
+            <div
+              className={`rounded-xl border p-3 ${
+                dangOnline(chiTiet) ? "border-emerald-200 bg-emerald-50/60" : "border-slate-200 bg-white"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    dangOnline(chiTiet) ? "animate-pulse bg-emerald-500" : "bg-slate-300"
+                  }`}
+                />
+                <span className="text-[13px] font-semibold text-slate-800">
+                  {dangOnline(chiTiet) ? "Đang truy cập hệ thống" : "Không có tín hiệu truy cập"}
+                </span>
+              </div>
+              <div className="mt-2 grid gap-2 text-[12px] sm:grid-cols-2">
+                <div>
+                  <span className="text-slate-500">Màn hình: </span>
+                  <span className="font-medium text-slate-800">{chiTiet.trangDangXem || "—"}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500">Thiết bị: </span>
+                  <span className="font-medium text-slate-800">{chiTiet.thietBi || "—"}</span>
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="text-slate-500">Hoạt động gần nhất: </span>
+                  <span className="font-medium text-slate-800">
+                    {chiTiet.lanHoatDong
+                      ? `${thoiGianTruoc(chiTiet.lanHoatDong, bayGio)} · ${new Date(chiTiet.lanHoatDong).toLocaleString("vi-VN")}`
+                      : "Chưa có tín hiệu"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-1.5 text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
+                Quyền được cấp
+              </div>
+              {chiTiet.quyen.length === 0 ? (
+                <span className="text-[12px] text-slate-500">Chưa được cấp quyền nào</span>
+              ) : (
+                <div className="flex flex-wrap gap-1">
+                  {chiTiet.quyen.map((q) => (
+                    <span
+                      key={q}
+                      className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[12px] text-slate-700"
+                    >
+                      {TEN_QUYEN[q]}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </HopThoai>
     </div>
   );

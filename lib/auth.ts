@@ -130,6 +130,9 @@ export function chuanHoaNguoiDung(doc: Record<string, unknown>): NguoiDung {
     phaiDoiMatKhau: doc.phaiDoiMatKhau === true,
     matKhauHash: String(doc.matKhauHash ?? ""),
     lanDangNhapCuoi: String(doc.lanDangNhapCuoi ?? ""),
+    lanHoatDong: String(doc.lanHoatDong ?? ""),
+    trangDangXem: String(doc.trangDangXem ?? ""),
+    thietBi: String(doc.thietBi ?? ""),
     createdAt: String(doc.createdAt ?? ""),
   };
 }

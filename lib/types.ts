@@ -192,6 +192,12 @@ export type NguoiDung = {
   phaiDoiMatKhau: boolean;
   matKhauHash: string;
   lanDangNhapCuoi: string;
+  /** Lần cuối trình duyệt còn gửi tín hiệu đang hoạt động. */
+  lanHoatDong: string;
+  /** Màn hình đang mở, ví dụ "Báo cáo" hoặc "Can phạm". */
+  trangDangXem: string;
+  /** Trình duyệt / hệ điều hành của lần truy cập gần nhất. */
+  thietBi: string;
   createdAt: string;
 };
 

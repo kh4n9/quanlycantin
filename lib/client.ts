@@ -23,6 +23,45 @@ export async function api<T>(url: string, init?: RequestInit): Promise<T> {
   return data as T;
 }
 
+/** Thông tin vắn tắt của một phiếu, dùng trong các hộp chi tiết của báo cáo. */
+export type PhieuTomTat = {
+  id: string;
+  soPhieu: string;
+  ngay: string;
+  hoTen: string;
+  namSinh: number;
+  buongGiam: string;
+  soMatHang: number;
+  soLuong: number;
+  tongTien: number;
+  conThieu: number;
+  kiemLuc: string;
+  kiemGhiChu: string;
+  ghiChu: string;
+};
+
+/** Một dòng của mặt hàng trong một phiếu cụ thể. */
+export type PhieuHangTomTat = {
+  id: string;
+  soPhieu: string;
+  ngay: string;
+  hoTen: string;
+  namSinh: number;
+  buongGiam: string;
+  soLuong: number;
+  thanhTien: number;
+  conThieu: number;
+};
+
+export type MatHangTomTat = {
+  productId: string;
+  ma: string;
+  ten: string;
+  donViTinh: string;
+  soLuong: number;
+  thanhTien: number;
+};
+
 export type BaoCao = {
   tongQuan: {
     doanhThu: number;
@@ -36,6 +75,16 @@ export type BaoCao = {
     tongLuongThieu: number;
     coDungTien: boolean;
   };
+  /** Số liệu của khoảng thời gian ngay trước đó, cùng độ dài. */
+  soSanh: {
+    tu: string;
+    den: string;
+    doanhThu: number;
+    soPhieu: number;
+    soLuongHang: number;
+    soMatHang: number;
+    soCanPham: number;
+  } | null;
   /** Hàng còn thiếu đã sắp theo buồng rồi tới phiếu — dùng để in đi phát */
   thieuTheoPhieu: {
     buongGiam: string;
@@ -57,7 +106,7 @@ export type BaoCao = {
     conThieu: number;
     phieu: { id: string; soPhieu: string; ngay: string; hoTen: string; buongGiam: string; conThieu: number }[];
   }[];
-  theoNgay: { ngay: string; soPhieu: number; doanhThu: number }[];
+  theoNgay: { ngay: string; soPhieu: number; soLuongHang: number; doanhThu: number; phieu: PhieuTomTat[] }[];
   theoHang: {
     productId: string;
     ma: string;
@@ -65,14 +114,23 @@ export type BaoCao = {
     donViTinh: string;
     soLuong: number;
     doanhThu: number;
+    soPhieu: number;
+    soCanPham: number;
+    phieu: PhieuHangTomTat[];
   }[];
   theoCanPham: {
+    id: string;
     hoTen: string;
     namSinh: number;
     buongGiam: string;
     soPhieu: number;
     soLuongHang: number;
     doanhThu: number;
+    lanDau: string;
+    lanCuoi: string;
+    soMatHang: number;
+    hang: MatHangTomTat[];
+    phieu: PhieuTomTat[];
   }[];
 };
 
@@ -103,6 +161,13 @@ export const apiClient = {
       body: JSON.stringify({ tenDangNhap, matKhau }),
     }),
   dangXuat: () => api<{ ok: boolean }>("/api/auth/dang-xuat", { method: "POST" }),
+  /** Báo màn hình đang mở để màn Tài khoản hiển thị trạng thái truy cập. */
+  hienDien: (trang: string, thietBi: string) =>
+    api<{ ok: boolean }>("/api/hien-dien", {
+      method: "POST",
+      body: JSON.stringify({ trang, thietBi }),
+      keepalive: true,
+    }),
   doiMatKhau: (matKhauCu: string, matKhauMoi: string) =>
     api<{ ok: boolean }>("/api/auth/doi-mat-khau", {
       method: "POST",

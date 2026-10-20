@@ -6,7 +6,7 @@ import { taiExcel } from "@/lib/excel";
 import { khop, so } from "@/lib/format";
 import type { Product } from "@/lib/types";
 import { useNap } from "@/lib/use-nap";
-import { bao, baoLoi, BieuTuong, HopThoai, Nut, OChon, ONhan, OText, Trong } from "./ui";
+import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, OChon, ONhan, OText, Trong } from "./ui";
 
 const NHOM_GOI_Y = [
   "Thực phẩm",
@@ -36,6 +36,7 @@ const formTrong: FormHang = { ma: "", ten: "", nhom: "Thực phẩm", donViTinh:
 export function ManMatHang() {
   const [products, setProducts] = useState<Product[]>([]);
   const [dangTai, setDangTai] = useState(true);
+  const [chiTiet, setChiTiet] = useState<Product | null>(null);
   const [q, setQ] = useState("");
   const [nhom, setNhom] = useState("");
   const [trangThai, setTrangThai] = useState<"tat_ca" | "dang_ban" | "tam_dung">("tat_ca");
@@ -135,7 +136,10 @@ export function ManMatHang() {
   /** Nút bật/tạm dừng bán dùng chung cho bảng và thẻ trên điện thoại */
   const nutTrangThai = (p: Product) => (
     <button
-      onClick={() => void doiTrangThai(p)}
+      onClick={(e) => {
+        e.stopPropagation();
+        void doiTrangThai(p);
+      }}
       disabled={dangDoi === p.id}
       title={p.dangDung ? "Bấm để tạm dừng bán" : "Bấm để mở bán lại"}
       className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium transition disabled:opacity-50 ${
@@ -149,24 +153,22 @@ export function ManMatHang() {
     </button>
   );
 
+  const moSua = (p: Product) => {
+    setChiTiet(null);
+    setForm({
+      id: p.id,
+      ma: p.ma,
+      ten: p.ten,
+      nhom: p.nhom,
+      donViTinh: p.donViTinh,
+      giaBan: String(p.giaBan),
+      ghiChu: p.ghiChu,
+    });
+  };
+
   const thaoTacHang = (p: Product) => (
-    <div className="flex items-center justify-end gap-1">
-      <Nut
-        kieu="mo"
-        co="sm"
-        title="Sửa"
-        onClick={() =>
-          setForm({
-            id: p.id,
-            ma: p.ma,
-            ten: p.ten,
-            nhom: p.nhom,
-            donViTinh: p.donViTinh,
-            giaBan: String(p.giaBan),
-            ghiChu: p.ghiChu,
-          })
-        }
-      >
+    <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+      <Nut kieu="mo" co="sm" title="Sửa" onClick={() => moSua(p)}>
         <BieuTuong ten="sua" className="h-4 w-4" />
       </Nut>
       <Nut kieu="mo" co="sm" onClick={() => void xoa(p)} title="Xoá" className="hover:text-rose-600">
@@ -249,7 +251,21 @@ export function ManMatHang() {
         ) : (
           <div className="divide-y divide-slate-100">
             {danhSach.map((p) => (
-              <div key={p.id} className={`p-3 ${!p.dangDung ? "opacity-60" : ""}`}>
+              <div
+                key={p.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setChiTiet(p)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setChiTiet(p);
+                  }
+                }}
+                className={`cursor-pointer p-3 transition-colors hover:bg-slate-50 ${
+                  !p.dangDung ? "opacity-60" : ""
+                }`}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="font-medium text-slate-800">{p.ten}</div>
@@ -308,7 +324,8 @@ export function ManMatHang() {
             {danhSach.map((p) => (
               <tr
                 key={p.id}
-                className={`[&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-2 hover:bg-slate-50/70 ${
+                onClick={() => setChiTiet(p)}
+                className={`cursor-pointer [&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-2 transition-colors hover:bg-slate-50/70 ${
                   !p.dangDung ? "opacity-50" : ""
                 }`}
               >
@@ -329,6 +346,70 @@ export function ManMatHang() {
           </tbody>
         </table>
       </div>
+
+      {/* --- Chi tiết mặt hàng --- */}
+      <HopThoai
+        mo={chiTiet !== null}
+        dong={() => setChiTiet(null)}
+        tieuDe="Chi tiết mặt hàng"
+        rong="max-w-lg"
+        chanTrang={
+          <>
+            <Nut onClick={() => setChiTiet(null)}>Đóng</Nut>
+            {chiTiet && (
+              <Nut kieu="chinh" onClick={() => moSua(chiTiet)}>
+                <BieuTuong ten="sua" className="h-4 w-4" /> Sửa mặt hàng
+              </Nut>
+            )}
+          </>
+        }
+      >
+        {chiTiet && (
+          <div className="space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+                  <BieuTuong ten="kho" />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-[15px] font-semibold tracking-tight text-slate-900">{chiTiet.ten}</div>
+                  <div className="font-mono text-[12px] text-slate-500">{chiTiet.ma}</div>
+                </div>
+              </div>
+              <Nhan sac={chiTiet.dangDung ? "luc" : "xam"}>
+                {chiTiet.dangDung ? "Đang bán" : "Tạm dừng bán"}
+              </Nhan>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50/60 p-3 text-[13px]">
+              <div>
+                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Nhóm hàng</div>
+                <div className="mt-0.5 font-medium text-slate-800">{chiTiet.nhom || "Khác"}</div>
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Đơn vị tính</div>
+                <div className="mt-0.5 font-medium text-slate-800">{chiTiet.donViTinh}</div>
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Giá bán</div>
+                <div className="mt-0.5 font-semibold text-slate-900 tabular-nums">
+                  {chiTiet.giaBan > 0 ? `${so(chiTiet.giaBan)} đ` : "Chưa đặt giá"}
+                </div>
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Ngày tạo</div>
+                <div className="mt-0.5 text-slate-700">
+                  {chiTiet.createdAt ? new Date(chiTiet.createdAt).toLocaleString("vi-VN") : "—"}
+                </div>
+              </div>
+              <div className="col-span-2">
+                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Ghi chú</div>
+                <div className="mt-0.5 whitespace-pre-wrap text-slate-700">{chiTiet.ghiChu || "—"}</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </HopThoai>
 
       <HopThoai
         mo={form !== null}

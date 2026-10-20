@@ -6,6 +6,7 @@ import { khop, ngayVN, so } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { useNap } from "@/lib/use-nap";
 import type { Order } from "@/lib/types";
+import { useInPhieu } from "./print";
 import { bao, baoLoi, BieuTuong, HopThoai, Nut, OText, Trong } from "./ui";
 
 /** Hộp thoại quản lý phiếu bán đã chuyển vào thùng rác. */
@@ -20,6 +21,7 @@ export function HopThungRac({
   onThayDoi: () => void;
 }) {
   const { coQuyen } = useStore();
+  const { xemTruoc } = useInPhieu();
   const duocXoa = coQuyen("xoa_phieu");
   const [ds, setDs] = useState<Order[]>([]);
   const [dangTai, setDangTai] = useState(false);
@@ -169,9 +171,11 @@ export function HopThungRac({
                 {hienThi.map((o) => (
                   <tr
                     key={o.id}
-                    className={`align-top [&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-2 ${
+                    onClick={() => xemTruoc(o)}
+                    className={`cursor-pointer align-top transition-colors hover:bg-slate-50 [&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-2 ${
                       dangChay === o.id ? "opacity-50" : ""
                     }`}
+                    title="Bấm để xem lại phiếu"
                   >
                     <td className="font-mono text-[12px] font-medium text-slate-600 line-through">{o.soPhieu}</td>
                     <td className="text-slate-600">{ngayVN(o.ngay)}</td>
@@ -208,7 +212,10 @@ export function HopThungRac({
                       })()}
                     </td>
                     <td>
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div
+                        className="flex items-center justify-end gap-1.5"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         {duocXoa ? (
                           <>
                             <Nut
