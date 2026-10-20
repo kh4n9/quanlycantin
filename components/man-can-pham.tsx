@@ -8,7 +8,7 @@ import { conThieu } from "@/lib/thieu-hang";
 import type { Order } from "@/lib/types";
 import { useNap } from "@/lib/use-nap";
 import { useInPhieu } from "./print";
-import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, ONhan, OText, Trong } from "./ui";
+import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, OText, Trong } from "./ui";
 
 type MatHangMua = {
   productId: string;
@@ -245,29 +245,32 @@ export function ManCanPham() {
 
   return (
     <div className="space-y-4">
-      <section className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-the">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="text-[15px] font-semibold tracking-tight text-slate-900">Can phạm mua hàng</h2>
-            <p className="mt-0.5 text-[12px] text-slate-500">
-              Danh sách được gom từ các phiếu bán; bấm vào một dòng để xem lịch sử mua hàng.
-            </p>
+      <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200/80 bg-linear-to-r from-slate-50 to-white px-3.5 py-3">
+          <div className="mr-2">
+            <div className="text-[13.5px] font-semibold tracking-tight text-slate-800">Can phạm mua hàng</div>
+            <div className="text-[11px] text-slate-500">Bấm vào dòng để xem lịch sử mua hàng</div>
           </div>
-          <Nut kieu="phu" onClick={() => void xuatExcel()} disabled={dsDangXem.length === 0}>
-            <BieuTuong ten="tai" className="h-4 w-4" /> Xuất Excel
-          </Nut>
-        </div>
-
-        <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-[160px_160px_auto_1fr]">
-          <div>
-            <ONhan>Từ ngày</ONhan>
-            <OText type="date" value={tu} onChange={(e) => setTu(e.target.value)} />
+          <div className="flex items-center gap-1.5">
+            <OText
+              type="date"
+              value={tu}
+              onChange={(e) => setTu(e.target.value)}
+              aria-label="Từ ngày"
+              title="Từ ngày"
+              className="w-36"
+            />
+            <span className="text-slate-400">→</span>
+            <OText
+              type="date"
+              value={den}
+              onChange={(e) => setDen(e.target.value)}
+              aria-label="Đến ngày"
+              title="Đến ngày"
+              className="w-36"
+            />
           </div>
-          <div>
-            <ONhan>Đến ngày</ONhan>
-            <OText type="date" value={den} onChange={(e) => setDen(e.target.value)} />
-          </div>
-          <div className="flex flex-wrap items-end gap-1.5">
+          <div className="flex items-center gap-1.5">
             <Nut
               co="sm"
               onClick={() => {
@@ -296,16 +299,23 @@ export function ManCanPham() {
               Tất cả
             </Nut>
           </div>
-          <div>
-            <ONhan>Tìm can phạm hoặc mặt hàng</ONhan>
+          <div className="relative min-w-52 flex-1">
+            <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400">
+              <BieuTuong ten="tim" className="h-4 w-4" />
+            </span>
             <OText
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Gõ tên, buồng giam hoặc tên hàng…"
+              placeholder="Tìm tên, buồng giam hoặc mặt hàng…"
+              aria-label="Tìm can phạm hoặc mặt hàng"
+              className="pl-8"
             />
           </div>
+          <Nut onClick={() => void xuatExcel()} disabled={dsDangXem.length === 0}>
+            <BieuTuong ten="tai" /> Excel
+          </Nut>
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3.5 py-2 text-[11px] text-slate-500">
           <span>
             Đang xem {so(dsDangXem.length)} / {so(ds.length)} can phạm
           </span>
