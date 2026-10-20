@@ -45,7 +45,7 @@ const MUC: Muc[] = [
     nhan: "Can phạm",
     icon: "nguoi",
     moTa: "Tra cứu can phạm đã mua hàng, lịch sử và mặt hàng thường mua",
-    quyen: "xem_bao_cao",
+    quyen: "xem_can_pham",
   },
   { khoa: "baocao", nhan: "Báo cáo", icon: "bieu", moTa: "Số phiếu, mặt hàng và can phạm mua nhiều", quyen: "xem_bao_cao" },
   { khoa: "taikhoan", nhan: "Tài khoản", icon: "nguoi", moTa: "Tạo tài khoản, phân quyền, đặt lại mật khẩu", quyen: "quan_ly_tai_khoan" },
@@ -382,10 +382,10 @@ function Khung() {
                   )}
                   {mucHienTai === "kiem" && coQuyen("kiem_phieu") && <ManKiemPhieu />}
                   {mucHienTai === "mathang" && coQuyen("quan_ly_mat_hang") && <ManMatHang />}
-                  {mucHienTai === "canpham" && coQuyen("xem_bao_cao") && <ManCanPham />}
+                  {mucHienTai === "canpham" && coQuyen("xem_can_pham") && <ManCanPham />}
                   {mucHienTai === "baocao" && coQuyen("xem_bao_cao") && <ManBaoCao />}
                   {mucHienTai === "taikhoan" && coQuyen("quan_ly_tai_khoan") && <ManTaiKhoan />}
-                  {mucHienTai === "cai" && <ManCaiDat />}
+                  {mucHienTai === "cai" && coQuyen("sua_cai_dat") && <ManCaiDat />}
                 </>
               )}
             </div>

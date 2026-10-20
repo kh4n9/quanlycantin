@@ -39,27 +39,10 @@ async function chayKhoiTao(): Promise<void> {
   ]);
 
   await taoQuanTriDauTien();
-  await capNhatQuyenMoi();
   await chuyenDuLieuTuFileJson();
 
   const daDon = await donThungRacQuaHan();
   if (daDon > 0) console.log(`[db] Đã tự xoá ${daDon} phiếu quá hạn lưu trong thùng rác`);
-}
-
-/**
- * Cấp quyền mới cho tài khoản đang có. Hiện dùng cho quyền "kiểm phiếu" vừa thêm:
- * ai đã được phép sửa phiếu thì mặc định cũng được kiểm. Quản trị viên có thể
- * bỏ lại trong màn hình Tài khoản.
- */
-async function capNhatQuyenMoi(): Promise<void> {
-  const db = await getDb();
-  const kq = await db.collection(COL.nguoiDung).updateMany(
-    { $and: [{ quyen: "sua_phieu" }, { quyen: { $ne: "kiem_phieu" } }] },
-    { $addToSet: { quyen: "kiem_phieu" } },
-  );
-  if (kq.modifiedCount > 0) {
-    console.log(`[db] Đã cấp quyền "kiểm phiếu" cho ${kq.modifiedCount} tài khoản`);
-  }
 }
 
 /**

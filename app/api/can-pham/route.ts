@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     await khoiTao();
-    const kq = await yeuCau("ban_hang");
+    const kq = await yeuCau("xem_can_pham");
     if ("res" in kq) return kq.res;
     return NextResponse.json({ canPham: await danhSachCanPham() });
   } catch (e) {

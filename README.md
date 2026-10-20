@@ -38,13 +38,15 @@ npm start
 |---|---|
 | **Bán hàng** | Nhập thông tin can phạm → nhập số lượng từng mặt hàng → lưu phiếu và in |
 | **Phiếu bán** | Tra cứu theo ngày, **sửa** lại, xem và in lại phiếu đã lập; **thùng rác** |
+| **Kiểm phiếu** | Rà soát số lượng từng phiếu và đánh dấu đã kiểm |
 | **Mặt hàng** | Danh mục mặt hàng, đơn vị tính, giá bán, **tắt/bật bán** |
+| **Can phạm** | Lịch sử mua hàng, chi tiêu và mặt hàng thường mua của từng can phạm |
 | **Báo cáo** | Số phiếu, số lượng hàng, mặt hàng và can phạm mua nhiều; xuất Excel |
-| **Tài khoản** | Tạo tài khoản, bật/tắt từng quyền, đặt lại mật khẩu |
+| **Tài khoản** | Tạo tài khoản, gán vai trò mẫu hoặc bật/tắt từng quyền, đặt lại mật khẩu |
 | **Cài đặt** | Tên đơn vị in trên phiếu, sao lưu, nạp/xoá dữ liệu |
 
-Bấm `Alt + 1…5` để chuyển nhanh giữa các màn hình. Địa chỉ trang nhớ màn hình
-đang mở (ví dụ `http://localhost:3000/#phieu`).
+Bấm `Alt + 1…8` để chuyển nhanh giữa các màn hình đang được phép dùng. Địa chỉ
+trang nhớ màn hình đang mở (ví dụ `http://localhost:3000/#phieu`).
 
 ## Nhập liệu nhanh ở màn hình Bán hàng
 
@@ -88,18 +90,27 @@ Lần đầu chạy, hệ thống tự tạo một tài khoản quản trị:
 **Đổi mật khẩu này ngay sau lần đăng nhập đầu tiên.** Khi còn dùng mật khẩu ban đầu,
 ứng dụng luôn hiện nhắc nhở ở đầu trang.
 
-Mỗi tài khoản được **bật/tắt từng quyền riêng**, không theo nhóm cố định:
+Mỗi tài khoản được **bật/tắt từng quyền riêng**. Khi thêm/sửa tài khoản có thể
+chọn nhanh một **vai trò mẫu** (Quản trị viên, Quản lý căn tin, Thu ngân, Kiểm
+phiếu, Chỉ xem) rồi tinh chỉnh từng quyền nếu cần:
 
 | Quyền | Cho phép làm gì |
 |---|---|
 | Xem phiếu bán | Xem danh sách, xem lại và in phiếu |
 | Lập phiếu bán | Tạo phiếu bán mới |
 | Sửa phiếu bán | Sửa nội dung phiếu đã lập |
+| Kiểm phiếu | Rà soát số lượng và đánh dấu phiếu đã kiểm |
 | Xoá phiếu bán | Xoá phiếu khỏi hệ thống |
 | Quản lý mặt hàng | Thêm, sửa, xoá, tắt/bật bán mặt hàng |
+| Xem can phạm | Tra cứu lịch sử mua hàng và mặt hàng thường mua của can phạm |
 | Xem báo cáo | Xem báo cáo và xuất Excel |
 | Sửa cài đặt và dữ liệu | Vào màn Cài đặt, sửa thông tin đơn vị, thiết lập thùng rác, nạp/xoá dữ liệu |
 | Quản lý tài khoản | Tạo tài khoản, phân quyền, đặt lại mật khẩu |
+
+Một số quyền tự bật quyền nền để màn hình luôn dùng được: lập/sửa phiếu tự có
+*Xem phiếu bán* và *Xem can phạm*; kiểm phiếu và xoá phiếu tự có *Xem phiếu bán*;
+xem can phạm tự có *Xem phiếu bán*. Trong hộp thoại phân quyền, các ô này hiện
+nhãn **tự động** và không bỏ chọn trực tiếp được — bỏ quyền gốc là chúng tự tắt.
 
 Mục nào không có quyền thì **không hiện** trên thanh điều hướng, và API cũng chặn
 tương ứng — không chỉ ẩn giao diện.

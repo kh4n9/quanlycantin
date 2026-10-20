@@ -1,9 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiClient } from "@/lib/client";
 import { useStore } from "@/lib/store";
-import { MO_TA_QUYEN, NHOM_QUYEN, QUYEN_DAY_DU, TEN_QUYEN, type Quyen } from "@/lib/quyen";
+import {
+  chuanHoaQuyen,
+  DS_QUYEN,
+  MO_TA_QUYEN,
+  NHOM_QUYEN,
+  quyenBatBuocBoi,
+  rutGonQuyen,
+  TEN_QUYEN,
+  VAI_TRO,
+  vaiTroCua,
+  type Quyen,
+  type VaiTro,
+} from "@/lib/quyen";
 import type { NguoiDungCongKhai } from "@/lib/types";
 import { thoiGianTruoc } from "@/lib/format";
 import { useNap } from "@/lib/use-nap";
@@ -25,9 +37,55 @@ const formTrong: FormTK = {
   tenDangNhap: "",
   hoTen: "",
   matKhau: "",
-  quyen: ["xem_phieu", "ban_hang"],
+  // Mặc định là bộ quyền gọn của vai trò Thu ngân; các quyền nền như xem
+  // phiếu / xem can phạm được bật tự động khi lưu.
+  quyen: ["ban_hang", "sua_phieu"],
   dangHoatDong: true,
 };
+
+/** Ô chọn cả nhóm quyền, có trạng thái nửa chọn khi mới cấp một phần. */
+function OTichNhom({
+  daChon,
+  nuaChon,
+  onChange,
+}: {
+  daChon: boolean;
+  nuaChon: boolean;
+  onChange: (chon: boolean) => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = nuaChon;
+  }, [nuaChon]);
+  return (
+    <input
+      ref={ref}
+      type="checkbox"
+      className="h-4 w-4 shrink-0 cursor-pointer accent-blue-700"
+      checked={daChon}
+      onChange={(e) => onChange(e.target.checked)}
+    />
+  );
+}
+
+/** Nhãn cho biết bộ quyền đang khớp vai trò mẫu nào. */
+function NhanVaiTro({ quyen, lon = false }: { quyen: Quyen[]; lon?: boolean }) {
+  const vaiTro = vaiTroCua(quyen);
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border font-semibold whitespace-nowrap ${
+        lon ? "px-2.5 py-1 text-[12px]" : "px-2 py-0.5 text-[11px]"
+      } ${
+        vaiTro
+          ? "border-blue-200 bg-blue-50 text-blue-700"
+          : "border-slate-200 bg-slate-50 text-slate-600"
+      }`}
+    >
+      <BieuTuong ten={vaiTro ? "nguoi" : "cai"} className={lon ? "h-3.5 w-3.5" : "h-3 w-3"} />
+      {vaiTro?.ten ?? "Tuỳ chỉnh"}
+    </span>
+  );
+}
 
 export function ManTaiKhoan() {
   const { nguoiDung: toi, napLai } = useStore();
@@ -76,10 +134,48 @@ export function ManTaiKhoan() {
       tenDangNhap: nd.tenDangNhap,
       hoTen: nd.hoTen,
       matKhau: "",
-      quyen: [...nd.quyen],
+      quyen: rutGonQuyen(nd.quyen),
       dangHoatDong: nd.dangHoatDong,
     });
     setChiTiet(null);
+  };
+
+  /* ---------------------- Chọn quyền trong hộp thoại ---------------------- */
+
+  const quyenHieuLuc = useMemo(() => (form ? chuanHoaQuyen(form.quyen) : []), [form]);
+  const vaiTroDangChon = useMemo(() => (form ? vaiTroCua(form.quyen) : null), [form]);
+
+  const capNhatQuyen = (moi: Iterable<Quyen>) => {
+    if (!form) return;
+    const co = new Set(moi);
+    // Giữ lại quyền chọn trực tiếp; quyền đi kèm do `chuanHoaQuyen` tự bật.
+    setForm({
+      ...form,
+      quyen: rutGonQuyen(DS_QUYEN.filter((q) => co.has(q))),
+    });
+  };
+
+  const batTatQuyen = (q: Quyen, bat: boolean) => {
+    if (!form) return;
+    const co = new Set(form.quyen);
+    if (bat) co.add(q);
+    else co.delete(q);
+    capNhatQuyen(co);
+  };
+
+  const batTatNhom = (nhom: Quyen[], bat: boolean) => {
+    if (!form) return;
+    const co = new Set(form.quyen);
+    for (const q of nhom) {
+      if (bat) co.add(q);
+      else co.delete(q);
+    }
+    capNhatQuyen(co);
+  };
+
+  const chonVaiTro = (vaiTro: VaiTro) => {
+    if (!form) return;
+    setForm({ ...form, quyen: rutGonQuyen(vaiTro.quyen) });
   };
 
   const nap = useCallback(async () => {
@@ -116,7 +212,7 @@ export function ManTaiKhoan() {
       if (form.id) {
         await apiClient.suaTaiKhoan(form.id, {
           hoTen: form.hoTen.trim(),
-          quyen: form.quyen,
+          quyen: chuanHoaQuyen(form.quyen),
           dangHoatDong: form.dangHoatDong,
         });
         bao(`Đã cập nhật tài khoản ${form.tenDangNhap}`);
@@ -125,7 +221,7 @@ export function ManTaiKhoan() {
           tenDangNhap: form.tenDangNhap.trim().toLowerCase(),
           hoTen: form.hoTen.trim(),
           matKhau: form.matKhau,
-          quyen: form.quyen,
+          quyen: chuanHoaQuyen(form.quyen),
           dangHoatDong: form.dangHoatDong,
         });
         bao(`Đã tạo tài khoản ${form.tenDangNhap.trim().toLowerCase()}`);
@@ -210,7 +306,8 @@ export function ManTaiKhoan() {
         <div className="mr-auto">
           <div className="text-sm font-semibold text-slate-800">Tài khoản</div>
           <div className="text-[11px] text-slate-500">
-            Bật/tắt từng quyền cho mỗi tài khoản. Mật khẩu lưu dạng đã băm, không xem lại được.
+            Gán vai trò mẫu hoặc bật/tắt từng quyền cho mỗi tài khoản. Mật khẩu lưu dạng đã băm,
+            không xem lại được.
           </div>
         </div>
         <Nut kieu="chinh" onClick={() => setForm({ ...formTrong })}>
@@ -290,7 +387,13 @@ export function ManTaiKhoan() {
                     : "Chưa đăng nhập"}
                 </div>
 
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <NhanVaiTro quyen={nd.quyen} />
+                  <span className="text-[10px] text-slate-400">
+                    {nd.quyen.length}/{DS_QUYEN.length} quyền
+                  </span>
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-1">
                   {nd.quyen.length === 0 ? (
                     <span className="text-[11px] text-slate-500">Chưa được cấp quyền nào</span>
                   ) : (
@@ -356,6 +459,10 @@ export function ManTaiKhoan() {
                   )}
                 </td>
                 <td>
+                  <div className="mb-1.5 flex items-center gap-1.5">
+                    <NhanVaiTro quyen={nd.quyen} />
+                    <span className="text-[10px] text-slate-400">{nd.quyen.length}/{DS_QUYEN.length}</span>
+                  </div>
                   {nd.quyen.length === 0 ? (
                     <span className="text-[12px] text-slate-500">Chưa được cấp quyền nào</span>
                   ) : (
@@ -469,61 +576,127 @@ export function ManTaiKhoan() {
             </div>
 
             <div>
-              <div className="mb-2 flex items-center justify-between">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <span className="text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
-                  Quyền được cấp
+                  Vai trò mẫu
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  {vaiTroDangChon
+                    ? `Khớp vai trò: ${vaiTroDangChon.ten}`
+                    : `Bộ quyền tuỳ chỉnh · ${quyenHieuLuc.length}/${DS_QUYEN.length} quyền`}
+                </span>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {VAI_TRO.map((vaiTro) => {
+                  const dangChon = vaiTroDangChon?.ma === vaiTro.ma;
+                  return (
+                    <button
+                      key={vaiTro.ma}
+                      type="button"
+                      onClick={() => chonVaiTro(vaiTro)}
+                      className={`rounded-lg border p-2.5 text-left transition ${
+                        dangChon
+                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/15"
+                          : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/40"
+                      }`}
+                    >
+                      <span className="flex items-center justify-between gap-2">
+                        <span className="text-[13px] font-semibold text-slate-800">{vaiTro.ten}</span>
+                        {dangChon && <span className="text-[10px] font-bold text-blue-700">ĐANG DÙNG</span>}
+                      </span>
+                      <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">{vaiTro.moTa}</span>
+                      <span className="mt-1 block text-[10px] text-slate-400">{vaiTro.quyen.length} quyền</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
+                  Quyền chi tiết{" "}
+                  <span className="font-normal text-slate-400 normal-case">
+                    ({quyenHieuLuc.length}/{DS_QUYEN.length})
+                  </span>
                 </span>
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => setForm({ ...form, quyen: [...QUYEN_DAY_DU] })}
+                    onClick={() => capNhatQuyen(DS_QUYEN)}
                     className="text-[12px] font-medium text-blue-700 hover:underline"
                   >
                     Chọn tất cả
                   </button>
                   <button
                     type="button"
-                    onClick={() => setForm({ ...form, quyen: [] })}
+                    onClick={() => capNhatQuyen([])}
                     className="text-[12px] font-medium text-slate-500 hover:underline"
                   >
                     Bỏ chọn
                   </button>
                 </div>
               </div>
-              <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50/60 p-3 sm:grid-cols-2">
-                {NHOM_QUYEN.map((nhom) => (
-                  <div key={nhom.nhom}>
-                    <div className="mb-1.5 text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
-                      {nhom.nhom}
+              <div className="grid gap-3 sm:grid-cols-2">
+                {NHOM_QUYEN.map((nhom) => {
+                  const soBat = nhom.quyen.filter((q) => quyenHieuLuc.includes(q)).length;
+                  const daChon = soBat === nhom.quyen.length;
+                  return (
+                    <div key={nhom.nhom} className="rounded-lg border border-slate-200 bg-white p-2.5">
+                      <label className="mb-1.5 flex cursor-pointer items-center gap-2">
+                        <OTichNhom
+                          daChon={daChon}
+                          nuaChon={soBat > 0 && !daChon}
+                          onChange={(chon) => batTatNhom(nhom.quyen, chon)}
+                        />
+                        <span className="text-[11px] font-semibold tracking-wide text-slate-600 uppercase">
+                          {nhom.nhom}
+                        </span>
+                        <span className="ml-auto text-[10px] font-medium text-slate-400">
+                          {soBat}/{nhom.quyen.length}
+                        </span>
+                      </label>
+                      <div className="flex flex-col gap-0.5">
+                        {nhom.quyen.map((q) => {
+                          const daBat = quyenHieuLuc.includes(q);
+                          const khoaBoi = quyenBatBuocBoi(q, form.quyen);
+                          const biKhoa = khoaBoi.length > 0;
+                          return (
+                            <label
+                              key={q}
+                              className={`flex items-start gap-2 rounded px-1 py-1 ${
+                                biKhoa ? "cursor-default" : "cursor-pointer hover:bg-slate-50"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                className="mt-0.5 h-4 w-4 shrink-0 accent-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                checked={daBat}
+                                disabled={biKhoa}
+                                onChange={(e) => batTatQuyen(q, e.target.checked)}
+                              />
+                              <span className="min-w-0">
+                                <span className="flex flex-wrap items-center gap-1.5 text-[13px] font-medium text-slate-800">
+                                  {TEN_QUYEN[q]}
+                                  {biKhoa && (
+                                    <span className="rounded bg-slate-100 px-1 py-0.5 text-[10px] font-normal text-slate-500">
+                                      tự động
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="block text-[11px] text-slate-500">
+                                  {biKhoa
+                                    ? `Bật theo: ${khoaBoi.map((k) => TEN_QUYEN[k]).join(", ")}`
+                                    : MO_TA_QUYEN[q]}
+                                </span>
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div className="flex flex-col gap-1.5">
-                      {nhom.quyen.map((q) => (
-                        <label
-                          key={q}
-                          className="flex cursor-pointer items-start gap-2 rounded px-1 py-0.5 hover:bg-white"
-                        >
-                          <input
-                            type="checkbox"
-                            className="mt-0.5 h-4 w-4 shrink-0 accent-blue-700"
-                            checked={form.quyen.includes(q)}
-                            onChange={(e) =>
-                              setForm({
-                                ...form,
-                                quyen: e.target.checked
-                                  ? QUYEN_DAY_DU.filter((x) => x === q || form.quyen.includes(x))
-                                  : form.quyen.filter((x) => x !== q),
-                              })
-                            }
-                          />
-                          <span className="min-w-0">
-                            <span className="block text-[13px] font-medium text-slate-800">{TEN_QUYEN[q]}</span>
-                            <span className="block text-[11px] text-slate-500">{MO_TA_QUYEN[q]}</span>
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -665,23 +838,45 @@ export function ManTaiKhoan() {
             </div>
 
             <div>
-              <div className="mb-1.5 text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
-                Quyền được cấp
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <span className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
+                  Quyền được cấp
+                </span>
+                <NhanVaiTro quyen={chiTiet.quyen} lon />
+                <span className="ml-auto text-[11px] text-slate-400">
+                  {chiTiet.quyen.length}/{DS_QUYEN.length} quyền
+                </span>
               </div>
-              {chiTiet.quyen.length === 0 ? (
-                <span className="text-[12px] text-slate-500">Chưa được cấp quyền nào</span>
-              ) : (
-                <div className="flex flex-wrap gap-1">
-                  {chiTiet.quyen.map((q) => (
-                    <span
-                      key={q}
-                      className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[12px] text-slate-700"
-                    >
-                      {TEN_QUYEN[q]}
-                    </span>
-                  ))}
-                </div>
-              )}
+              <div className="grid gap-2 sm:grid-cols-2">
+                {NHOM_QUYEN.map((nhom) => (
+                  <div key={nhom.nhom} className="rounded-lg border border-slate-200 bg-slate-50/40 p-2.5">
+                    <div className="text-[10px] font-semibold tracking-wide text-slate-500 uppercase">
+                      {nhom.nhom}
+                    </div>
+                    <div className="mt-1 flex flex-col gap-1">
+                      {nhom.quyen.map((q) => {
+                        const co = chiTiet.quyen.includes(q);
+                        return (
+                          <div
+                            key={q}
+                            className={`flex items-center gap-1.5 text-[12px] ${
+                              co ? "text-slate-800" : "text-slate-400"
+                            }`}
+                          >
+                            <span
+                              className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                                co ? "bg-emerald-500" : "bg-slate-300"
+                              }`}
+                            />
+                            <span className={co ? "font-medium" : ""}>{TEN_QUYEN[q]}</span>
+                            {!co && <span className="text-[10px] text-slate-400">chưa cấp</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

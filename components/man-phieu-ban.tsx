@@ -82,13 +82,18 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
   /** Danh mục cho form sửa phiếu — chỉ cần khi bấm sửa, lỗi ở đây không chặn màn hình */
   const napDanhMuc = useCallback(async () => {
     try {
-      const [sp, cp] = await Promise.all([apiClient.products(), apiClient.canPham()]);
+      // Danh mục mặt hàng cần cho bộ lọc món của cả người chỉ xem; gợi ý can
+      // phạm chỉ phục vụ form sửa phiếu nên chỉ tải khi có quyền sửa.
+      const [sp, cp] = await Promise.all([
+        apiClient.products(),
+        duocSua ? apiClient.canPham() : Promise.resolve({ canPham: [] as CanPhamGoiY[] }),
+      ]);
       setSanPham(sp.products);
       setGoiY(cp.canPham);
     } catch {
       /* để trống */
     }
-  }, []);
+  }, [duocSua]);
 
   useNap(napDanhMuc);
 

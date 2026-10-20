@@ -3,7 +3,7 @@ import { promisify } from "node:util";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { COL, KHONG_LAY_ID, getDb } from "./mongo";
-import { chuanHoaQuyen, type Quyen } from "./quyen";
+import { TEN_QUYEN, chuanHoaQuyen, type Quyen } from "./quyen";
 import type { NguoiDung, NguoiDungCongKhai } from "./types";
 
 const scryptAsync = promisify(scrypt);
@@ -153,7 +153,7 @@ export const loiChuaDangNhap = () =>
   NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
 
 export const loiKhongCoQuyen = (quyen: Quyen) =>
-  NextResponse.json({ error: `Tài khoản không có quyền: ${quyen}` }, { status: 403 });
+  NextResponse.json({ error: `Tài khoản không có quyền: ${TEN_QUYEN[quyen] ?? quyen}` }, { status: 403 });
 
 /**
  * Dùng trong các route API:
