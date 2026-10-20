@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/client";
 import { homNay, khop, ngayVN, so } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import type { LineItem, Order } from "@/lib/types";
+import { useNap } from "@/lib/use-nap";
 import { bao, baoLoi, BieuTuong, Nut, OText, Trong } from "./ui";
 
 type LocKiem = "chua_kiem" | "da_kiem" | "tat_ca";
@@ -32,9 +33,12 @@ export function ManKiemPhieu() {
   const [ds, setDs] = useState<Order[]>([]);
   const [dangTai, setDangTai] = useState(true);
 
-  const [dangChon, setDangChon] = useState<Order | null>(null);
-  const [dsDong, setDsDong] = useState<LineItem[]>([]);
-  const [ghiChu, setGhiChu] = useState("");
+  // Chỉ lưu id phiếu đang xem; phiếu và danh sách dòng suy ra từ danh sách đã lọc.
+  // Nhờ vậy khi danh sách tải xong hoặc bộ lọc đổi, mục đầu tiên tự được chọn mà
+  // không phải đồng bộ state bằng effect.
+  const [dangChonId, setDangChonId] = useState<string | null>(null);
+  const [sua, setSua] = useState<{ id: string; dong: LineItem[] } | null>(null);
+  const [ghiChuSua, setGhiChuSua] = useState<{ id: string; value: string } | null>(null);
   const [dangLuu, setDangLuu] = useState(false);
 
   const nap = useCallback(async () => {
@@ -49,9 +53,7 @@ export function ManKiemPhieu() {
     }
   }, [tu, den]);
 
-  useEffect(() => {
-    void nap();
-  }, [nap]);
+  useNap(nap);
 
   const hienThi = useMemo(() => {
     let d = ds;
@@ -61,38 +63,36 @@ export function ManKiemPhieu() {
     return d;
   }, [ds, loc, q]);
 
+  // Phiếu đang xem: giữ lựa chọn nếu còn trong danh sách, không thì lấy phiếu đầu
+  const dangChon = hienThi.find((o) => o.id === dangChonId) ?? hienThi[0] ?? null;
+  // Dòng đang sửa và ghi chú chỉ có hiệu lực cho đúng phiếu đang xem
+  const dsDong = useMemo(
+    () => (sua && dangChon && sua.id === dangChon.id ? sua.dong : (dangChon?.items ?? [])),
+    [sua, dangChon],
+  );
+  const ghiChu =
+    ghiChuSua && dangChon && ghiChuSua.id === dangChon.id
+      ? ghiChuSua.value
+      : (dangChon?.kiemGhiChu ?? "");
+
   const tienDo = useMemo(() => {
     const daKiem = ds.filter((o) => o.kiemLuc).length;
     return { daKiem, tong: ds.length, con: ds.length - daKiem };
   }, [ds]);
 
-  // Tự chọn phiếu đầu tiên khi danh sách vừa tải hoặc phiếu đang chọn không còn trong danh sách
-  useEffect(() => {
-    if (hienThi.length === 0) {
-      setDangChon(null);
-      return;
-    }
-    if (!dangChon || !hienThi.some((o) => o.id === dangChon.id)) {
-      chonPhieu(hienThi[0]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hienThi]);
-
   function chonPhieu(o: Order) {
-    setDangChon(o);
-    setDsDong(o.items.map((i) => ({ ...i })));
-    setGhiChu(o.kiemGhiChu);
+    setDangChonId(o.id);
+    setSua(null);
+    setGhiChuSua(null);
   }
 
   const suaDong = (i: number, soLuong: number) => {
-    setDsDong((cu) => {
-      const moi = [...cu];
-      const d = { ...moi[i] };
-      d.soLuong = Math.max(0, Math.round(soLuong || 0));
-      d.thanhTien = d.soLuong * d.donGia;
-      moi[i] = d;
-      return moi;
-    });
+    const moi = [...dsDong];
+    const d = { ...moi[i] };
+    d.soLuong = Math.max(0, Math.round(soLuong || 0));
+    d.thanhTien = d.soLuong * d.donGia;
+    moi[i] = d;
+    setSua({ id: dangChon?.id ?? "", dong: moi });
   };
 
   const coThayDoi = useMemo(() => {
@@ -141,8 +141,8 @@ export function ManKiemPhieu() {
     try {
       const kq = await apiClient.boDanhDauKiem(dangChon.id);
       setDs((cu) => cu.map((o) => (o.id === kq.order.id ? kq.order : o)));
-      setDangChon(kq.order);
-      setGhiChu(kq.order.kiemGhiChu);
+      setDangChonId(kq.order.id);
+      setGhiChuSua(null);
       bao(`Đã bỏ đánh dấu kiểm phiếu ${kq.order.soPhieu}`);
     } catch (e) {
       baoLoi((e as Error).message);
@@ -189,7 +189,7 @@ export function ManKiemPhieu() {
   return (
     <div className="flex flex-col gap-3">
       {/* --- Bộ lọc và tiến độ --- */}
-      <div className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 shadow-sm">
+      <div className="rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 shadow-the">
         <div className="flex flex-wrap items-center gap-2">
           <span className="mr-1 text-sm font-semibold text-slate-800">Kiểm phiếu</span>
           <Nut co="sm" onClick={() => datNhanh("homnay")}>
@@ -250,16 +250,16 @@ export function ManKiemPhieu() {
       </div>
 
       {tienDo.tong === 0 && !dangTai ? (
-        <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-the">
           <Trong
             tieuDe="Không có phiếu nào trong khoảng ngày này"
             moTa="Chọn khoảng ngày khác để bắt đầu kiểm."
           />
         </div>
       ) : (
-        <div className="grid min-h-0 gap-3 lg:grid-cols-[20rem_1fr]">
+        <div className="grid min-h-0 min-w-0 gap-3 lg:grid-cols-[20rem_1fr]">
           {/* --- Danh sách phiếu --- */}
-          <div className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
             <div className="border-b border-slate-200 bg-slate-50/70 px-3 py-2 text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
               Danh sách ({so(hienThi.length)})
             </div>
@@ -308,8 +308,8 @@ export function ManKiemPhieu() {
 
           {/* --- Chi tiết phiếu đang kiểm --- */}
           {dangChon ? (
-            <div className="flex flex-col gap-3">
-              <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <div className="flex min-w-0 flex-col gap-3">
+              <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-slate-200 bg-slate-50/70 px-4 py-2.5">
                   <div>
                     <div className="font-mono text-sm font-semibold text-blue-700">{dangChon.soPhieu}</div>
@@ -346,7 +346,7 @@ export function ManKiemPhieu() {
                 </div>
 
                 <div className="mem-cuon max-h-[calc(100vh-340px)] min-h-[220px] overflow-auto">
-                  <table className="w-full border-collapse text-sm">
+                  <table className="w-full min-w-[760px] border-collapse text-sm">
                     <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
                       <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:font-semibold">
                         <th className="w-10">#</th>
@@ -443,7 +443,7 @@ export function ManKiemPhieu() {
               </div>
 
               {/* --- Ghi chú và hành động --- */}
-              <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+              <div className="rounded-xl border border-slate-200/80 bg-white p-3 shadow-the">
                 <div className="mb-2 flex flex-wrap items-end gap-3">
                   <div className="min-w-64 flex-1">
                     <label className="mb-1 block text-[12px] font-medium text-slate-600">
@@ -451,7 +451,7 @@ export function ManKiemPhieu() {
                     </label>
                     <OText
                       value={ghiChu}
-                      onChange={(e) => setGhiChu(e.target.value)}
+                      onChange={(e) => setGhiChuSua({ id: dangChon.id, value: e.target.value })}
                       placeholder="Ví dụ: sổ ghi 5 gói, thực tế 4 gói"
                     />
                   </div>
@@ -497,7 +497,7 @@ export function ManKiemPhieu() {
               </div>
             </div>
           ) : (
-            <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+            <div className="rounded-xl border border-slate-200/80 bg-white shadow-the">
               <Trong
                 tieuDe="Đã kiểm hết phiếu trong khoảng này"
                 moTa="Đổi bộ lọc sang “Đã kiểm” hoặc “Tất cả” để xem lại, hoặc chọn khoảng ngày khác."

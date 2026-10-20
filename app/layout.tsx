@@ -1,9 +1,31 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
+const TEN_UNG_DUNG = "Quản lý căn tin phạm nhân";
+
 export const metadata: Metadata = {
-  title: "Quản lý căn tin phạm nhân",
+  title: TEN_UNG_DUNG,
   description: "Lập phiếu bán hàng cho can phạm tại căn tin",
+  applicationName: TEN_UNG_DUNG,
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Căn tin",
+    statusBarStyle: "black-translucent",
+  },
+  formatDetection: { telephone: false },
+  openGraph: {
+    type: "website",
+    locale: "vi_VN",
+    siteName: TEN_UNG_DUNG,
+    title: TEN_UNG_DUNG,
+    description: "Lập phiếu bán hàng cho can phạm tại căn tin",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1e3a8a",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

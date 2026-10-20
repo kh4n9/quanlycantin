@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -26,8 +25,12 @@ export function tachSoLuong(chuoi: string): { soLuong: number | null; tuKhoa: st
  *  - ô tìm kiếm trống vẫn "chọn" mục đầu danh sách dù người dùng không chọn gì;
  *  - Ctrl+Enter (phím lưu phiếu của form) bị ô tìm kiếm hiểu thành Enter và
  *    tự thêm một mặt hàng vào phiếu.
+ *
+ * Hàm chỉ chạy trong sự kiện bàn phím (không dựng handler lúc render) để không
+ * đọc ref/state trong thân render.
  */
-function dungO(
+function xuLyPhimO(
+  e: PhimReact,
   viTri: number,
   setViTri: (n: number) => void,
   soKetQua: number,
@@ -35,29 +38,27 @@ function dungO(
   dong: () => void,
   choPhepChon: boolean,
 ) {
-  return (e: PhimReact) => {
-    // Nhường các tổ hợp có phím điều khiển cho phím tắt của form
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
+  // Nhường các tổ hợp có phím điều khiển cho phím tắt của form
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setViTri(Math.min(viTri + 1, soKetQua - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setViTri(Math.max(viTri - 1, 0));
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (choPhepChon && soKetQua > 0) chon(viTri);
-      else dong();
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      dong();
-    }
-  };
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    setViTri(Math.min(viTri + 1, soKetQua - 1));
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    setViTri(Math.max(viTri - 1, 0));
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    if (choPhepChon && soKetQua > 0) chon(viTri);
+    else dong();
+  } else if (e.key === "Escape") {
+    e.preventDefault();
+    dong();
+  }
 }
 
 const lopOTim =
-  "h-11 w-full rounded-md border border-slate-300 bg-white pr-3 pl-9 text-[15px] text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100";
+  "h-11 w-full rounded-lg border border-slate-300 bg-white pr-3 pl-9 text-[15px] text-slate-900 shadow-xs placeholder:text-slate-500 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10";
 
 const ICON_TIM = (
   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
@@ -86,38 +87,38 @@ export function ChonHang({
 
   const { soLuong, tuKhoa } = tachSoLuong(q);
 
-  const ketQua = useMemo(
-    () =>
-      products
-        .filter((p) => p.dangDung && (khop(p.ma, tuKhoa) || khop(p.ten, tuKhoa)))
-        .sort((a, b) => a.ten.localeCompare(b.ten, "vi"))
-        .slice(0, 40),
-    [products, tuKhoa],
-  );
-
-  useEffect(() => setViTri(0), [tuKhoa]);
+  // Danh sách gợi ý rất nhỏ (≤40 dòng) nên lọc trực tiếp khi render là đủ nhanh;
+  // React Compiler tự quyết định có memo hay không.
+  const ketQua = products
+    .filter((p) => p.dangDung && (khop(p.ma, tuKhoa) || khop(p.ten, tuKhoa)))
+    .sort((a, b) => a.ten.localeCompare(b.ten, "vi"))
+    .slice(0, 40);
 
   const chon = (i: number) => {
     const p = ketQua[i];
     if (!p) return;
     onChon(p, soLuong ?? 1);
     setQ("");
+    setViTri(0);
     setMo(false);
     ref.current?.focus();
   };
 
   // Chỉ cho Enter thêm hàng khi danh sách gợi ý đang mở và người dùng đã gõ từ khoá
-  const onKey = dungO(
-    viTri,
-    setViTri,
-    ketQua.length,
-    chon,
-    () => {
-      setMo(false);
-      setQ("");
-    },
-    mo && tuKhoa.length > 0,
-  );
+  const onKey = (e: PhimReact) =>
+    xuLyPhimO(
+      e,
+      viTri,
+      setViTri,
+      ketQua.length,
+      chon,
+      () => {
+        setMo(false);
+        setQ("");
+        setViTri(0);
+      },
+      mo && tuKhoa.length > 0,
+    );
 
   return (
     <div className="relative">
@@ -130,6 +131,7 @@ export function ChonHang({
           value={q}
           onChange={(e) => {
             setQ(e.target.value);
+            setViTri(0);
             setMo(true);
           }}
           onFocus={() => setMo(true)}
@@ -142,14 +144,14 @@ export function ChonHang({
           className={`${lopOTim} pr-24`}
         />
         {soLuong !== null && (
-          <span className="absolute top-1/2 right-3 -translate-y-1/2 rounded border border-blue-200 bg-blue-50 px-2 py-0.5 text-[12px] font-semibold text-blue-700">
+          <span className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-[12px] font-semibold text-blue-700">
             SL: {soLuong}
           </span>
         )}
       </div>
 
       {mo && ketQua.length > 0 && (
-        <ul className="mem-cuon absolute z-30 mt-1 max-h-80 w-full overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-xl">
+        <ul className="mem-cuon absolute z-30 mt-1 max-h-80 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-noi">
           {ketQua.map((p, i) => (
             <li key={p.id}>
               <button
@@ -178,7 +180,7 @@ export function ChonHang({
       )}
 
       {mo && tuKhoa.length > 0 && ketQua.length === 0 && (
-        <div className="absolute z-30 mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-3 text-sm text-slate-500 shadow-xl">
+        <div className="absolute z-30 mt-1 w-full rounded-xl border border-slate-200/80 bg-white px-3 py-3 text-sm text-slate-500 shadow-noi">
           Không tìm thấy mặt hàng nào khớp “{tuKhoa}”.
         </div>
       )}
@@ -213,13 +215,12 @@ export function ChonMonLoc({
     [products, q],
   );
 
-  useEffect(() => setViTri(0), [q]);
-
   const chon = (i: number) => {
     const p = ketQua[i];
     if (!p) return;
     onChon(p);
     setQ("");
+    setViTri(0);
     setMo(false);
   };
 
@@ -238,13 +239,14 @@ export function ChonMonLoc({
     } else if (e.key === "Escape") {
       setMo(false);
       setQ("");
+      setViTri(0);
     }
   };
 
   // Đã chọn món rồi thì hiện chip, bấm × để bỏ lọc
   if (daChon) {
     return (
-      <div className="flex h-9 items-center gap-1.5 rounded-md border border-blue-300 bg-blue-50 px-2 text-[13px]">
+      <div className="flex h-9 items-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-2 text-[13px]">
         <span className="text-slate-500">Món:</span>
         <span className="max-w-52 truncate font-medium text-blue-800">{daChon.ten}</span>
         <button
@@ -283,11 +285,11 @@ export function ChonMonLoc({
         onKeyDown={onKey}
         placeholder="Lọc theo món hàng…"
         title="Chỉ liệt kê những món có bán trong khoảng ngày đang xem"
-        className="h-9 w-52 rounded-md border border-slate-300 bg-white pr-2 pl-8 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+        className="h-9 w-52 rounded-lg border border-slate-300 bg-white pr-2 pl-8 text-sm text-slate-900 shadow-xs placeholder:text-slate-500 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
       />
 
       {mo && ketQua.length > 0 && (
-        <ul className="mem-cuon absolute z-30 mt-1 max-h-72 w-72 overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-xl">
+        <ul className="mem-cuon absolute z-30 mt-1 max-h-72 w-72 overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-noi">
           {ketQua.map((p, i) => (
             <li key={p.id}>
               <button
@@ -301,7 +303,7 @@ export function ChonMonLoc({
               >
                 <span className="w-16 shrink-0 truncate font-mono text-[11px] text-slate-500">{p.ma}</span>
                 <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-slate-800">{p.ten}</span>
-                {!p.dangDung && <span className="shrink-0 text-[10px] text-slate-400">ngừng bán</span>}
+                {!p.dangDung && <span className="shrink-0 text-[10px] text-slate-500">ngừng bán</span>}
               </button>
             </li>
           ))}
@@ -309,7 +311,7 @@ export function ChonMonLoc({
       )}
 
       {mo && q.length > 0 && ketQua.length === 0 && (
-        <div className="absolute z-30 mt-1 w-72 rounded-md border border-slate-200 bg-white px-3 py-3 text-sm text-slate-500 shadow-xl">
+        <div className="absolute z-30 mt-1 w-72 rounded-xl border border-slate-200/80 bg-white px-3 py-3 text-sm text-slate-500 shadow-noi">
           Không có món nào khớp “{q}”.
         </div>
       )}
@@ -346,12 +348,11 @@ export function OTenCanPham({
 
   const ketQua = useMemo(() => goiY.filter((c) => khop(c.hoTen, giaTri)).slice(0, 12), [goiY, giaTri]);
 
-  useEffect(() => setViTri(0), [giaTri]);
-
   const chon = (i: number) => {
     const c = ketQua[i];
     if (!c) return;
     onChonGoiY(c);
+    setViTri(0);
     setMo(false);
   };
 
@@ -397,6 +398,7 @@ export function OTenCanPham({
         value={giaTri}
         onChange={(e) => {
           onDoi(e.target.value);
+          setViTri(0);
           setMo(true);
         }}
         onFocus={() => setMo(true)}
@@ -410,8 +412,8 @@ export function OTenCanPham({
       />
 
       {hienBang && (
-        <ul className="mem-cuon absolute z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-xl">
-          <li className="px-3 py-1 text-[11px] font-medium tracking-wide text-slate-400 uppercase">
+        <ul className="mem-cuon absolute z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-noi">
+          <li className="px-3 py-1 text-[11px] font-medium tracking-wide text-slate-500 uppercase">
             Đã mua trước đây — chọn để điền luôn năm sinh, buồng giam
           </li>
           {ketQua.map((c, i) => (

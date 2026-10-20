@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { apiClient, type DuLieuPhieu } from "@/lib/client";
 import type { CanPhamGoiY, Product } from "@/lib/types";
+import { useNap } from "@/lib/use-nap";
 import { PhieuBanForm } from "./phieu-ban-form";
 import { useInPhieu } from "./print";
 import { bao, baoLoi, Trong } from "./ui";
@@ -26,9 +27,7 @@ export function ManBanHang() {
     }
   }, []);
 
-  useEffect(() => {
-    void nap();
-  }, [nap]);
+  useNap(nap);
 
   const luuPhieu = useCallback(
     async (duLieu: DuLieuPhieu) => {
@@ -42,7 +41,7 @@ export function ManBanHang() {
 
   if (!dangTai && products.length === 0) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="rounded-xl border border-slate-200/80 bg-white shadow-the">
         <Trong
           tieuDe="Chưa có mặt hàng nào để bán"
           moTa="Vào mục “Mặt hàng” để thêm mặt hàng, hoặc nạp danh mục mẫu trong “Cài đặt” để dùng thử ngay."

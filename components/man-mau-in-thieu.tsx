@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { BaoCao } from "@/lib/client";
 import { homNay } from "@/lib/format";
 import {
@@ -47,10 +47,6 @@ export function ManMauInThieu() {
   const [dangLuu, setDangLuu] = useState(false);
   const [xemTruoc, setXemTruoc] = useState(false);
 
-  useEffect(() => {
-    setMau(settings.mauInThieu);
-  }, [settings.mauInThieu]);
-
   const doiNhan = (khoa: keyof NhanThieu, giaTri: string) =>
     setMau((m) => ({ ...m, nhan: { ...m.nhan, [khoa]: giaTri } }));
   const doiBat = (khoa: keyof HienThieu, giaTri: boolean) =>
@@ -60,8 +56,10 @@ export function ManMauInThieu() {
 
   const luu = async () => {
     setDangLuu(true);
+    const chuan = chuanHoaMauInThieu(mau);
     try {
-      await capNhatSettings({ mauInThieu: chuanHoaMauInThieu(mau) });
+      await capNhatSettings({ mauInThieu: chuan });
+      setMau(chuan);
       bao("Đã lưu mẫu phiếu trả đồ thiếu");
     } catch (e) {
       baoLoi((e as Error).message);
@@ -230,13 +228,13 @@ export function ManMauInThieu() {
               <PhieuThieu du={BAOCAO_MAU} settings={settings} tu={homNay()} den={homNay()} mau={mau} />
             </div>
           </div>
-          <p className="mt-1.5 text-[11px] text-slate-400">Bản in khổ A4. Bấm “Xem trước” để xem đúng cỡ.</p>
+          <p className="mt-1.5 text-[11px] text-slate-500">Bản in khổ A4. Bấm “Xem trước” để xem đúng cỡ.</p>
         </div>
       </div>
 
       {xemTruoc && (
         <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-10">
-          <div className="w-full max-w-4xl rounded-lg border border-slate-200 bg-white shadow-xl">
+          <div className="hop-noi w-full max-w-4xl rounded-2xl border border-slate-200 bg-white shadow-noi">
             <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
               <h3 className="text-sm font-semibold text-slate-800">Xem trước phiếu trả đồ thiếu</h3>
               <Nut co="sm" onClick={() => setXemTruoc(false)}>

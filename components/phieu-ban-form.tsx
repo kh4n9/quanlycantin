@@ -123,6 +123,85 @@ export function PhieuBanForm({
     });
   };
 
+  /** Ô số lượng dùng chung cho bảng trên máy tính và thẻ trên điện thoại */
+  const oSoLuong = (d: LineItem, i: number, rong = false) => (
+    <div
+      className={`flex items-center overflow-hidden rounded-lg border border-slate-300 bg-white shadow-xs ${
+        rong ? "w-full" : "inline-flex"
+      }`}
+    >
+      <button
+        type="button"
+        onClick={() => suaDong(i, { soLuong: Math.max(0, d.soLuong - 1) })}
+        disabled={d.soLuong <= 0}
+        className={`flex shrink-0 items-center justify-center text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-30 ${
+          rong ? "h-9 w-9" : "h-8 w-7"
+        }`}
+        title="Giảm 1"
+      >
+        <span className="text-base leading-none font-semibold">−</span>
+      </button>
+      <input
+        type="number"
+        min={0}
+        value={d.soLuong}
+        onChange={(e) => suaDong(i, { soLuong: Number(e.target.value) })}
+        onFocus={(e) => e.target.select()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            oTimHang.current?.focus();
+          } else if (e.key === "+" || e.key === "=") {
+            e.preventDefault();
+            suaDong(i, { soLuong: d.soLuong + 1 });
+          } else if (e.key === "-") {
+            e.preventDefault();
+            suaDong(i, { soLuong: Math.max(0, d.soLuong - 1) });
+          }
+        }}
+        className={`border-x border-slate-200 px-1 text-center text-sm font-semibold tabular-nums outline-none focus:bg-blue-50/60 ${
+          rong ? "h-9 min-w-0 flex-1" : "h-8 w-12"
+        }`}
+      />
+      <button
+        type="button"
+        onClick={() => suaDong(i, { soLuong: d.soLuong + 1 })}
+        className={`flex shrink-0 items-center justify-center text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 ${
+          rong ? "h-9 w-9" : "h-8 w-7"
+        }`}
+        title="Tăng 1"
+      >
+        <span className="text-base leading-none font-semibold">+</span>
+      </button>
+    </div>
+  );
+
+  const oDonGia = (d: LineItem, i: number, rong = false) => (
+    <input
+      type="number"
+      min={0}
+      step={500}
+      value={d.donGia}
+      onChange={(e) => suaDong(i, { donGia: Number(e.target.value) })}
+      onFocus={(e) => e.target.select()}
+      placeholder="0"
+      className={`rounded-lg border border-slate-300 px-2 text-right text-sm tabular-nums shadow-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 ${
+        rong ? "h-9 w-full" : "h-8 w-24"
+      }`}
+    />
+  );
+
+  const nutXoaDong = (d: LineItem, i: number) => (
+    <button
+      onClick={() => setDsDong((cu) => cu.filter((_, idx) => idx !== i))}
+      className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+      title="Xoá dòng"
+      aria-label={`Xoá ${d.ten}`}
+    >
+      <BieuTuong ten="xoa" className="h-4 w-4" />
+    </button>
+  );
+
   const lamMoi = useCallback((boQuaXacNhan = false) => {
     if (!boQuaXacNhan && isDirty) {
       if (!window.confirm("Bạn có dữ liệu phiếu bán đang nhập chưa lưu. Bạn có chắc muốn xoá để làm mới không?")) {
@@ -192,16 +271,19 @@ export function PhieuBanForm({
   return (
     <div className="flex flex-col gap-3">
       {/* --- Thông tin can phạm, ghi thẳng trên phiếu --- */}
-      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-        <div className="mb-2 flex items-baseline justify-between gap-3">
-          <span className="text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
-            Thông tin can phạm
-          </span>
-          <span className="text-[11px] text-slate-400">
+      <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-the">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-700 ring-1 ring-blue-100">
+              1
+            </span>
+            <span className="text-[13px] font-semibold tracking-tight text-slate-800">Thông tin can phạm</span>
+          </div>
+          <span className="hidden text-[11px] text-slate-500 sm:block">
             Gõ tên đã mua trước đây để tự điền năm sinh và buồng giam
           </span>
         </div>
-        <div className="grid gap-3 sm:grid-cols-[1fr_8rem_1fr]">
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_7rem_minmax(0,1fr)]">
           <div>
             <ONhan>Họ và tên *</ONhan>
             <OTenCanPham
@@ -253,165 +335,157 @@ export function PhieuBanForm({
       </div>
 
       {/* --- Thêm mặt hàng --- */}
-      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-        <div className="mb-1.5 flex items-baseline justify-between gap-3">
-          <span className="text-[12px] font-semibold tracking-wide text-slate-500 uppercase">Thêm mặt hàng</span>
-          <span className="text-[11px] text-slate-400">
-            Mẹo: gõ <b>số lượng + dấu cách + tên hàng</b>, ví dụ “5 mì”. Enter để thêm dòng.
+      <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-the">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-700 ring-1 ring-blue-100">
+              2
+            </span>
+            <span className="text-[13px] font-semibold tracking-tight text-slate-800">Thêm mặt hàng</span>
+          </div>
+          <span className="hidden text-[11px] text-slate-500 sm:block">
+            Mẹo: gõ <b className="font-semibold text-slate-600">số lượng + dấu cách + tên hàng</b>, ví dụ “5 mì”.
+            Enter để thêm dòng.
           </span>
         </div>
         <ChonHang products={sanPham} onChon={themHang} inputRef={oTimHang} />
       </div>
 
       {/* --- Danh sách mặt hàng đã chọn --- */}
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <div className="mem-cuon max-h-[50vh] min-h-[180px] overflow-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
-              <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-2 [&>th]:py-2 [&>th]:font-semibold">
-                <th className="w-10">#</th>
-                <th className="text-left">Tên mặt hàng</th>
-                <th className="w-16">ĐVT</th>
-                <th className="w-28 text-center">Số lượng</th>
-                <th className="w-28 text-right">Đơn giá</th>
-                <th className="w-32 text-right">Thành tiền</th>
-                <th className="w-10" />
-              </tr>
-            </thead>
-            <tbody>
-              {dsDong.length === 0 && (
-                <tr>
-                  <td colSpan={7}>
-                    <Trong
-                      tieuDe="Chưa có mặt hàng nào trên phiếu"
-                      moTa="Dùng ô “Thêm mặt hàng” ở trên để chọn hàng can phạm mua."
-                    />
-                  </td>
-                </tr>
-              )}
+      <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
+        {dsDong.length === 0 ? (
+          <Trong
+            tieuDe="Chưa có mặt hàng nào trên phiếu"
+            moTa="Dùng ô “Thêm mặt hàng” ở trên để chọn hàng can phạm mua."
+          />
+        ) : (
+          <>
+            {/* Trên điện thoại, mỗi dòng hàng là một thẻ để thao tác đủ số lượng và đơn giá */}
+            <div className="divide-y divide-slate-100 sm:hidden">
               {dsDong.map((d, i) => (
-                <tr
-                  key={d.productId}
-                  className="[&>td]:border-b [&>td]:border-slate-100 [&>td]:px-2 [&>td]:py-1.5 hover:bg-slate-50/70"
-                >
-                  <td className="text-center text-slate-400">{i + 1}</td>
-                  <td>
-                    <div className="font-medium text-slate-800">{d.ten}</div>
-                    <div className="font-mono text-[11px] text-slate-400">{d.ma}</div>
-                  </td>
-                  <td className="text-center text-slate-600">{d.donViTinh}</td>
-                  <td className="text-center">
-                    <div className="inline-flex items-center rounded border border-slate-300 bg-white shadow-xs">
-                      <button
-                        type="button"
-                        onClick={() => suaDong(i, { soLuong: Math.max(0, d.soLuong - 1) })}
-                        disabled={d.soLuong <= 0}
-                        className="flex h-8 w-7 items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-30"
-                        title="Giảm 1"
-                      >
-                        <span className="text-base font-semibold leading-none">−</span>
-                      </button>
-                      <input
-                        type="number"
-                        min={0}
-                        value={d.soLuong}
-                        onChange={(e) => suaDong(i, { soLuong: Number(e.target.value) })}
-                        onFocus={(e) => e.target.select()}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            oTimHang.current?.focus();
-                          } else if (e.key === "+" || e.key === "=") {
-                            e.preventDefault();
-                            suaDong(i, { soLuong: d.soLuong + 1 });
-                          } else if (e.key === "-") {
-                            e.preventDefault();
-                            suaDong(i, { soLuong: Math.max(0, d.soLuong - 1) });
-                          }
-                        }}
-                        className="h-8 w-12 border-x border-slate-200 px-1 text-center text-sm font-medium outline-none focus:bg-blue-50/50"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => suaDong(i, { soLuong: d.soLuong + 1 })}
-                        className="flex h-8 w-7 items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-                        title="Tăng 1"
-                      >
-                        <span className="text-base font-semibold leading-none">+</span>
-                      </button>
+                <div key={d.productId} className="p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-slate-800">{d.ten}</div>
+                      <div className="font-mono text-[11px] text-slate-500">
+                        {d.ma} · {d.donViTinh}
+                      </div>
                     </div>
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      min={0}
-                      step={500}
-                      value={d.donGia}
-                      onChange={(e) => suaDong(i, { donGia: Number(e.target.value) })}
-                      onFocus={(e) => e.target.select()}
-                      placeholder="0"
-                      className="h-8 w-24 rounded border border-slate-300 px-2 text-right text-sm outline-none focus:ring-2 focus:ring-blue-100"
-                    />
-                  </td>
-                  <td className="text-right font-semibold text-slate-800">{so(d.thanhTien)}</td>
-                  <td className="text-center">
-                    <button
-                      onClick={() => setDsDong((cu) => cu.filter((_, idx) => idx !== i))}
-                      className="rounded p-1 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                      title="Xoá dòng"
-                    >
-                      <BieuTuong ten="xoa" className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
+                    {nutXoaDong(d, i)}
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-3">
+                    <div>
+                      <div className="mb-1 text-[11px] font-medium text-slate-500">Số lượng</div>
+                      {oSoLuong(d, i, true)}
+                    </div>
+                    <div>
+                      <div className="mb-1 text-[11px] font-medium text-slate-500">Đơn giá</div>
+                      {oDonGia(d, i, true)}
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-baseline justify-between text-[12px]">
+                    <span className="text-slate-500">Thành tiền</span>
+                    <span className="font-semibold text-slate-900 tabular-nums">{so(d.thanhTien)}</span>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+
+            <div className="mem-cuon hidden max-h-[50vh] min-h-[180px] overflow-auto sm:block">
+              <table className="w-full min-w-[680px] border-collapse text-sm">
+                <thead className="sticky top-0 z-10 bg-slate-50/95 text-[11px] tracking-wide text-slate-500 uppercase backdrop-blur">
+                  <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-semibold">
+                    <th className="w-10">#</th>
+                    <th className="text-left">Tên mặt hàng</th>
+                    <th className="w-16">ĐVT</th>
+                    <th className="w-28 text-center">Số lượng</th>
+                    <th className="w-28 text-right">Đơn giá</th>
+                    <th className="w-32 text-right">Thành tiền</th>
+                    <th className="w-10" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {dsDong.map((d, i) => (
+                    <tr
+                      key={d.productId}
+                      className="group [&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-2.5 hover:bg-blue-50/40"
+                    >
+                      <td className="text-center text-[12px] text-slate-400">{i + 1}</td>
+                      <td>
+                        <div className="font-semibold text-slate-800">{d.ten}</div>
+                        <div className="font-mono text-[11px] text-slate-500">{d.ma}</div>
+                      </td>
+                      <td className="text-center text-slate-600">{d.donViTinh}</td>
+                      <td className="text-center">{oSoLuong(d, i)}</td>
+                      <td>{oDonGia(d, i)}</td>
+                      <td className="text-right font-semibold text-slate-800 tabular-nums">{so(d.thanhTien)}</td>
+                      <td className="text-center">{nutXoaDong(d, i)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
 
       {/* --- Thanh tổng kết --- */}
       <div
-        className={`rounded-lg border border-slate-200 bg-white p-3 shadow-sm ${trongHopThoai ? "" : "sticky bottom-0"}`}
+        className={`rounded-xl border border-slate-200/80 bg-white/95 p-4 shadow-the backdrop-blur ${
+          trongHopThoai ? "" : "z-10 lg:sticky lg:bottom-0"
+        }`}
       >
-        <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
-          <div className="w-40">
-            <label className="mb-1 block text-[12px] font-medium text-slate-600">Ngày bán</label>
+        <div className="flex flex-wrap items-end gap-x-5 gap-y-4">
+          <div className="w-40 shrink-0">
+            <ONhan>Ngày bán</ONhan>
             <OText type="date" value={ngay} onChange={(e) => setNgay(e.target.value)} />
           </div>
-          <div className="min-w-56 flex-1">
-            <label className="mb-1 block text-[12px] font-medium text-slate-600">Ghi chú</label>
+          <div className="min-w-40 flex-1">
+            <ONhan>Ghi chú</ONhan>
             <OText value={ghiChu} onChange={(e) => setGhiChu(e.target.value)} placeholder="Không bắt buộc" />
           </div>
 
-          <div className="ml-auto text-right">
-            <div className="text-[12px] text-slate-500">
-              {dsDong.length} mặt hàng · {so(tongDonVi)} đơn vị
+          <div className="flex w-full flex-col gap-3 sm:ml-auto sm:w-auto sm:flex-row sm:items-center">
+            <div className="text-right">
+              <div className="text-[10px] font-semibold tracking-[0.12em] text-slate-500 uppercase">Tổng thu</div>
+              {tongTien > 0 ? (
+                <div className="mt-0.5 text-3xl font-bold tracking-tight text-slate-900 tabular-nums">
+                  {tien(tongTien)}
+                </div>
+              ) : dsDong.length > 0 ? (
+                <div className="mt-1 text-xl font-bold text-slate-500">Chưa ghi giá</div>
+              ) : (
+                <div className="mt-0.5 text-3xl font-bold tracking-tight text-slate-500 tabular-nums">0 đ</div>
+              )}
+              <div className="mt-0.5 text-[11px] text-slate-500">
+                {dsDong.length} mặt hàng · {so(tongDonVi)} đơn vị
+              </div>
             </div>
-            {tongTien > 0 ? (
-              <div className="text-2xl font-bold text-slate-900">{tien(tongTien)}</div>
-            ) : dsDong.length > 0 ? (
-              <div className="text-2xl font-bold text-slate-300">Chưa ghi giá</div>
-            ) : (
-              <div className="text-2xl font-bold text-slate-300">0 đ</div>
-            )}
-          </div>
 
-          <div className="flex gap-2">
-            {onHuy ? (
-              <Nut co="lg" onClick={xuLyHuy} disabled={dangLuu}>
-                Huỷ
+            <div className="flex w-full gap-2 sm:w-auto">
+              {onHuy ? (
+                <Nut co="lg" onClick={xuLyHuy} disabled={dangLuu} className="flex-1 sm:flex-none">
+                  Huỷ
+                </Nut>
+              ) : (
+                <Nut co="lg" onClick={() => lamMoi(false)} disabled={dangLuu} className="flex-1 sm:flex-none">
+                  Làm mới
+                </Nut>
+              )}
+              <Nut
+                kieu="chinh"
+                co="lg"
+                onClick={() => void luu()}
+                disabled={dangLuu}
+                className="flex-1 whitespace-nowrap sm:flex-none"
+              >
+                <BieuTuong ten="check" className="h-4 w-4" />
+                {dangLuu ? "Đang lưu…" : (nhanLuu ?? (suaDoi ? "Lưu thay đổi" : "Lưu phiếu"))}
+                <span className="ml-1 hidden rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-medium text-blue-50 sm:inline">
+                  Ctrl+↵
+                </span>
               </Nut>
-            ) : (
-              <Nut co="lg" onClick={() => lamMoi(false)} disabled={dangLuu}>
-                Làm mới
-              </Nut>
-            )}
-            <Nut kieu="chinh" co="lg" onClick={() => void luu()} disabled={dangLuu}>
-              <BieuTuong ten="check" className="h-4 w-4" />
-              {dangLuu ? "Đang lưu…" : (nhanLuu ?? (suaDoi ? "Lưu thay đổi" : "Lưu phiếu"))}
-              <span className="ml-1 rounded bg-blue-600/60 px-1.5 py-0.5 text-[10px] font-normal">Ctrl+↵</span>
-            </Nut>
+            </div>
           </div>
         </div>
       </div>

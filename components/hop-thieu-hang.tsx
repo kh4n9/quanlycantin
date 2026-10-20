@@ -23,22 +23,18 @@ export function HopThieuHang({
   dong: () => void;
   onLuu: (o: Order) => void;
 }) {
-  const [cheDo, setCheDo] = useState<CheDo>("thieu");
-  const [dsThieu, setDsThieu] = useState<Record<string, string>>({});
+  // Hộp thoại chỉ được dựng khi có phiếu (xem ManPhieuBan) và được key theo id
+  // phiếu, nên state khởi tạo theo `phieu` là đủ; mở phiếu khác sẽ remount.
+  const [cheDo, setCheDo] = useState<CheDo>(() =>
+    phieu?.items.some((i) => conThieu(i) > 0) ? "bu" : "thieu",
+  );
+  const [dsThieu, setDsThieu] = useState<Record<string, string>>(() =>
+    phieu ? Object.fromEntries(phieu.items.map((i) => [i.productId, String(i.thieu ?? 0)])) : {},
+  );
   const [dsBu, setDsBu] = useState<Record<string, string>>({});
   const [ngayBu, setNgayBu] = useState(homNay());
   const [ghiChuBu, setGhiChuBu] = useState("");
   const [dangLuu, setDangLuu] = useState(false);
-
-  // Mở phiếu khác thì nạp lại từ đầu, không giữ số đã gõ của phiếu trước
-  useEffect(() => {
-    if (!phieu) return;
-    setCheDo(phieu.items.some((i) => conThieu(i) > 0) ? "bu" : "thieu");
-    setDsThieu(Object.fromEntries(phieu.items.map((i) => [i.productId, String(i.thieu ?? 0)])));
-    setDsBu({});
-    setNgayBu(homNay());
-    setGhiChuBu("");
-  }, [phieu]);
 
   const tongConThieu = useMemo(
     () => (phieu ? phieu.items.reduce((s, i) => s + conThieu(i), 0) : 0),
@@ -201,7 +197,7 @@ export function HopThieuHang({
         )}
 
         <div className="mem-cuon max-h-[42vh] overflow-auto rounded-md border border-slate-200">
-          <table className="w-full border-collapse text-sm">
+          <table className="w-full min-w-[620px] border-collapse text-sm">
             <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
               <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:font-semibold">
                 <th className="text-left">Mặt hàng</th>
@@ -226,7 +222,7 @@ export function HopThieuHang({
                     <td className="text-center">
                       <span
                         className={`inline-block min-w-10 rounded px-1.5 py-0.5 tabular-nums ${
-                          con > 0 ? "bg-amber-50 font-semibold text-amber-700" : "text-slate-400"
+                          con > 0 ? "bg-amber-50 font-semibold text-amber-700" : "text-slate-500"
                         }`}
                       >
                         {con || "—"}
@@ -311,7 +307,7 @@ export function HopThieuHang({
                     </span>
                     <span className="text-slate-500">{ngayVN(b.ngay)}</span>
                     {b.ghiChu && <span className="text-slate-500">· {b.ghiChu}</span>}
-                    {b.boi && <span className="ml-auto text-slate-400">bởi {b.boi}</span>}
+                    {b.boi && <span className="ml-auto text-slate-500">bởi {b.boi}</span>}
                   </div>
                 )),
               )}

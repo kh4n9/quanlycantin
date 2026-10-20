@@ -11,17 +11,17 @@ type NutProps = ComponentPropsWithRef<"button"> & {
 
 export function Nut({ kieu = "vien", co = "md", className = "", ...rest }: NutProps) {
   const nen = {
-    chinh: "bg-blue-700 text-white hover:bg-blue-800 border-transparent shadow-sm",
-    phu: "bg-slate-800 text-white hover:bg-slate-900 border-transparent shadow-sm",
-    nguy: "bg-rose-600 text-white hover:bg-rose-700 border-transparent shadow-sm",
-    vien: "bg-white text-slate-700 hover:bg-slate-50 border-slate-300 shadow-sm",
-    mo: "bg-transparent text-slate-600 hover:bg-slate-100 border-transparent",
+    chinh: "border-blue-700 bg-blue-700 text-white shadow-sm hover:border-blue-800 hover:bg-blue-800 hover:shadow",
+    phu: "border-slate-800 bg-slate-800 text-white shadow-sm hover:border-slate-900 hover:bg-slate-900 hover:shadow",
+    nguy: "border-rose-600 bg-rose-600 text-white shadow-sm hover:border-rose-700 hover:bg-rose-700 hover:shadow",
+    vien: "border-slate-300 bg-white text-slate-700 shadow-xs hover:border-slate-400 hover:bg-slate-50",
+    mo: "border-transparent bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900",
   }[kieu];
-  const coChu = { sm: "h-8 px-3 text-[13px]", md: "h-9 px-4 text-sm", lg: "h-11 px-5 text-[15px]" }[co];
+  const coChu = { sm: "h-8 px-3 text-[13px]", md: "h-9 px-3.5 text-sm", lg: "h-11 px-5 text-[15px]" }[co];
   return (
     <button
       {...rest}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-md border font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${nen} ${coChu} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border font-semibold transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-1 active:translate-y-px disabled:pointer-events-none disabled:opacity-45 ${nen} ${coChu} ${className}`}
     />
   );
 }
@@ -29,7 +29,7 @@ export function Nut({ kieu = "vien", co = "md", className = "", ...rest }: NutPr
 /* ---------------------------- Nhập liệu ---------------------------- */
 
 const oNhapChung =
-  "rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100 disabled:text-slate-400";
+  "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs placeholder:text-slate-500 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 disabled:bg-slate-50 disabled:text-slate-400";
 
 /**
  * Mặc định ô nhập rộng hết cỡ, nhưng nếu nơi gọi tự đặt bề rộng (w-36, w-44…)
@@ -59,7 +59,7 @@ export function OVung({ className = "", ...rest }: ComponentPropsWithRef<"textar
 
 export function ONhan({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <label className={`mb-1 block text-[12px] font-medium text-slate-600 ${className}`}>{children}</label>
+    <label className={`mb-1.5 block text-[12px] font-semibold text-slate-600 ${className}`}>{children}</label>
   );
 }
 
@@ -75,13 +75,13 @@ export function Nhan({
   const mau = {
     xam: "bg-slate-100 text-slate-700 border-slate-200",
     xanh: "bg-blue-50 text-blue-700 border-blue-200",
-    vang: "bg-amber-50 text-amber-700 border-amber-200",
+    vang: "bg-amber-50 text-amber-800 border-amber-200",
     do: "bg-rose-50 text-rose-700 border-rose-200",
     luc: "bg-emerald-50 text-emerald-700 border-emerald-200",
   }[sac];
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium whitespace-nowrap ${mau}`}
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap ${mau}`}
     >
       {children}
     </span>
@@ -106,14 +106,14 @@ export function The({
   thanClassName?: string;
 }) {
   return (
-    <section className={`overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm ${className}`}>
+    <section className={`overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the ${className}`}>
       {(tieuDe || hanhDong) && (
-        <header className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50/70 px-4 py-2.5">
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 bg-linear-to-r from-slate-50 to-white px-4 py-3">
           <div className="min-w-0">
-            {tieuDe && <h2 className="truncate text-sm font-semibold text-slate-800">{tieuDe}</h2>}
-            {phuDe && <p className="truncate text-[12px] text-slate-500">{phuDe}</p>}
+            {tieuDe && <h2 className="truncate text-[13.5px] font-semibold tracking-tight text-slate-800">{tieuDe}</h2>}
+            {phuDe && <p className="mt-0.5 truncate text-[12px] text-slate-500">{phuDe}</p>}
           </div>
-          {hanhDong && <div className="flex shrink-0 items-center gap-2">{hanhDong}</div>}
+          {hanhDong && <div className="flex max-w-full flex-wrap items-center justify-end gap-2">{hanhDong}</div>}
         </header>
       )}
       <div className={thanClassName}>{children}</div>
@@ -149,13 +149,13 @@ export function HopThoai({
 
   if (!mo) return null;
   return (
-    <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-12">
-      <div className={`w-full ${rong} rounded-lg border border-slate-200 bg-white shadow-xl`}>
-        <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-          <h3 className="text-sm font-semibold text-slate-800">{tieuDe}</h3>
+    <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/50 p-4 pt-12 backdrop-blur-[2px]">
+      <div className={`hop-noi w-full ${rong} rounded-2xl border border-slate-200 bg-white shadow-noi`}>
+        <header className="flex items-center justify-between border-b border-slate-200/80 px-5 py-3.5">
+          <h3 className="text-[15px] font-semibold tracking-tight text-slate-800">{tieuDe}</h3>
           <button
             onClick={dong}
-            className="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
             aria-label="Đóng"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
@@ -163,9 +163,9 @@ export function HopThoai({
             </svg>
           </button>
         </header>
-        <div className="px-4 py-3">{children}</div>
+        <div className="px-5 py-4">{children}</div>
         {chanTrang && (
-          <footer className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-4 py-3">
+          <footer className="flex items-center justify-end gap-2 border-t border-slate-200/80 bg-slate-50/80 px-5 py-3">
             {chanTrang}
           </footer>
         )}
@@ -203,19 +203,23 @@ export function HopThongBao() {
   }, []);
 
   const mau = {
-    luc: "border-emerald-200 bg-emerald-50 text-emerald-800",
-    do: "border-rose-200 bg-rose-50 text-rose-800",
-    xanh: "border-blue-200 bg-blue-50 text-blue-800",
+    luc: "border-emerald-200 border-l-emerald-500 bg-white text-emerald-900",
+    do: "border-rose-200 border-l-rose-500 bg-white text-rose-900",
+    xanh: "border-blue-200 border-l-blue-500 bg-white text-blue-900",
   };
+  const icon = { luc: "check", do: "canh", xanh: "check" } as const;
+  const iconMau = { luc: "text-emerald-600", do: "text-rose-600", xanh: "text-blue-600" };
 
   return (
-    <div className="khong-in pointer-events-none fixed right-4 bottom-4 z-[60] flex w-80 flex-col gap-2">
+    <div className="khong-in pointer-events-none fixed right-4 bottom-4 z-[60] flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2">
       {ds.map((t) => (
         <div
           key={t.id}
-          className={`pointer-events-auto rounded-md border px-3 py-2 text-sm shadow-lg ${mau[t.sac]}`}
+          role="status"
+          className={`truot-vao pointer-events-auto flex items-start gap-2.5 rounded-xl border border-l-4 px-3.5 py-3 text-[13px] font-medium shadow-lg ${mau[t.sac]}`}
         >
-          {t.noiDung}
+          <BieuTuong ten={icon[t.sac]} className={`mt-0.5 h-4 w-4 shrink-0 ${iconMau[t.sac]}`} />
+          <span className="leading-snug">{t.noiDung}</span>
         </div>
       ))}
     </div>
@@ -234,15 +238,15 @@ export function Trong({
   hanhDong?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 px-6 py-14 text-center">
-      <div className="rounded-full bg-slate-100 p-3 text-slate-400">
+    <div className="flex flex-col items-center justify-center gap-2.5 px-6 py-14 text-center">
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-3.5 text-slate-400">
         <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7">
           <path d="M3 7h18v13H3zM3 7l2-3h14l2 3M9 12h6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
-      <p className="text-sm font-medium text-slate-700">{tieuDe}</p>
-      {moTa && <p className="max-w-md text-[13px] text-slate-500">{moTa}</p>}
-      {hanhDong && <div className="mt-2">{hanhDong}</div>}
+      <p className="text-sm font-semibold text-slate-700">{tieuDe}</p>
+      {moTa && <p className="max-w-md text-[13px] leading-relaxed text-slate-500">{moTa}</p>}
+      {hanhDong && <div className="mt-1.5">{hanhDong}</div>}
     </div>
   );
 }

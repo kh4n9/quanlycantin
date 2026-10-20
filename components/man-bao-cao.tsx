@@ -1,18 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { apiClient, type BaoCao } from "@/lib/client";
 import { useStore } from "@/lib/store";
 import { taiExcel, type TrangExcel } from "@/lib/excel";
 import { DS_KIEU_IN } from "@/lib/mau-in";
 import type { KieuInThieu } from "@/lib/types";
+import { useDaMount, useNap } from "@/lib/use-nap";
 import { PhieuThieu } from "./in-thieu";
 import { homNay, ngayVN, so, tien } from "@/lib/format";
 import { baoLoi, BieuTuong, Nut, Trong } from "./ui";
 
 /** Màu duy nhất cho chuỗi dữ liệu — đã kiểm bằng scripts/validate_palette.js */
-const MAU_DUONG = "#2563eb";
+const MAU_DUONG = "linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%)";
 
 function dauThang(d = new Date()): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
@@ -32,14 +33,10 @@ export function ManBaoCao() {
   const [du, setDu] = useState<BaoCao | null>(null);
   const [dangTai, setDangTai] = useState(true);
   // Portal cần document nên chỉ dựng sau khi đã sang phía trình duyệt
-  const [daMount, setDaMount] = useState(false);
-  useEffect(() => setDaMount(true), []);
+  const daMount = useDaMount();
 
   // Kiểu sắp danh sách khi in, lấy mặc định từ mẫu đã lưu trong Cài đặt
-  const [kieuIn, setKieuIn] = useState<KieuInThieu>("theo_buong");
-  useEffect(() => {
-    setKieuIn(settings.mauInThieu.kieuIn);
-  }, [settings.mauInThieu.kieuIn]);
+  const [kieuIn, setKieuIn] = useState<KieuInThieu>(settings.mauInThieu.kieuIn);
   const [xemTruocThieu, setXemTruocThieu] = useState(false);
 
   /**
@@ -67,9 +64,7 @@ export function ManBaoCao() {
     }
   }, [tu, den]);
 
-  useEffect(() => {
-    void nap();
-  }, [nap]);
+  useNap(nap);
 
   const datNhanh = (kieu: "homnay" | "7ngay" | "thangnay" | "thangtruoc") => {
     const d = new Date();
@@ -202,8 +197,8 @@ export function ManBaoCao() {
   return (
     <div className="flex flex-col gap-3">
       {/* Bộ lọc — một hàng phía trên các biểu đồ */}
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 shadow-sm">
-        <span className="mr-1 text-sm font-semibold text-slate-800">Khoảng thời gian</span>
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-3.5 py-3 shadow-the">
+        <span className="mr-1 text-[13px] font-semibold text-slate-800">Khoảng thời gian</span>
         {(
           [
             ["homnay", "Hôm nay"],
@@ -221,14 +216,14 @@ export function ManBaoCao() {
             type="date"
             value={tu}
             onChange={(e) => setTu(e.target.value)}
-            className="h-8 rounded-md border border-slate-300 bg-white px-2 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+            className="h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-sm shadow-xs outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
           />
           <span className="text-slate-400">→</span>
           <input
             type="date"
             value={den}
             onChange={(e) => setDen(e.target.value)}
-            className="h-8 rounded-md border border-slate-300 bg-white px-2 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+            className="h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-sm shadow-xs outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
           />
         </div>
         <Nut onClick={xuatExcel} disabled={!du} className="ml-auto">
@@ -237,11 +232,11 @@ export function ManBaoCao() {
       </div>
 
       {dangTai && !du ? (
-        <div className="rounded-lg border border-slate-200 bg-white py-16 text-center text-sm text-slate-500 shadow-sm">
+        <div className="rounded-xl border border-slate-200/80 bg-white py-16 text-center text-sm text-slate-500 shadow-the">
           Đang tổng hợp số liệu…
         </div>
       ) : !du || du.tongQuan.soPhieu === 0 ? (
-        <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-the">
           <Trong
             tieuDe="Chưa có phiếu bán nào trong khoảng thời gian này"
             moTa="Chọn khoảng ngày khác, hoặc lập phiếu bán ở màn hình Bán hàng."
@@ -250,7 +245,7 @@ export function ManBaoCao() {
       ) : (
         <>
           {du.tongQuan.soPhieuThieu > 0 && (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-[13px] text-amber-800">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-2.5 text-[13px] text-amber-800 shadow-xs">
               <BieuTuong ten="canh" className="h-4 w-4 shrink-0" />
               <span>
                 Đang có <b>{so(du.tongQuan.soPhieuThieu)}</b> phiếu còn nợ hàng can phạm, tổng cộng{" "}
@@ -337,7 +332,7 @@ export function ManBaoCao() {
       {/* Xem trước danh sách phát trước khi in */}
       {xemTruocThieu && du && (
         <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-10">
-          <div className="w-full max-w-4xl rounded-lg border border-slate-200 bg-white shadow-xl">
+          <div className="hop-noi w-full max-w-4xl rounded-2xl border border-slate-200 bg-white shadow-noi">
             <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
               <div>
                 <h3 className="text-sm font-semibold text-slate-800">Xem trước danh sách phát</h3>
@@ -380,10 +375,28 @@ export function ManBaoCao() {
 
 function Tile({ nhan, giaTri, phu, chinh = false }: { nhan: string; giaTri: string; phu?: string; chinh?: boolean }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3.5 py-3 shadow-sm">
-      <div className="text-[12px] text-slate-500">{nhan}</div>
-      <div className={`mt-1 font-bold text-slate-900 ${chinh ? "text-2xl" : "text-xl"}`}>{giaTri}</div>
-      {phu && <div className="mt-0.5 text-[11px] text-slate-500">{phu}</div>}
+    <div
+      className={`relative overflow-hidden rounded-xl border bg-white px-4 py-3.5 shadow-the ${
+        chinh ? "border-blue-200 ring-1 ring-blue-100/70" : "border-slate-200/80"
+      }`}
+    >
+      {chinh && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-blue-500/10 blur-2xl"
+        />
+      )}
+      <div className="relative">
+        <div className="text-[12px] font-medium text-slate-500">{nhan}</div>
+        <div
+          className={`mt-1 font-bold tracking-tight whitespace-nowrap text-slate-900 tabular-nums ${
+            chinh ? "text-2xl sm:text-3xl" : "text-lg sm:text-2xl"
+          }`}
+        >
+          {giaTri}
+        </div>
+        {phu && <div className="mt-0.5 text-[11px] text-slate-500">{phu}</div>}
+      </div>
     </div>
   );
 }
@@ -411,22 +424,22 @@ function BieuDoTheoNgay({ data, dungTien }: { data: DiemNgay[]; dungTien: boolea
   const ngayCaoNhat = data.reduce((a, b) => (giaTri(b) > giaTri(a) ? b : a), data[0]);
 
   return (
-    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-200 bg-slate-50/70 px-4 py-2.5">
+    <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
+      <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-200/80 bg-linear-to-r from-slate-50 to-white px-4 py-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-800">
+          <h2 className="text-[13.5px] font-semibold tracking-tight text-slate-800">
             {dungTien ? "Doanh thu theo ngày" : "Số phiếu bán theo ngày"}
           </h2>
-          <p className="text-[11px] text-slate-500">
+          <p className="mt-0.5 text-[11px] text-slate-500">
             Tổng {dungTien ? tien(tong) : `${so(tong)} phiếu`} · cao nhất {ngayVN(ngayCaoNhat?.ngay ?? "")} (
             {dungTien ? tien(giaTri(ngayCaoNhat)) : `${so(giaTri(ngayCaoNhat))} phiếu`})
           </p>
         </div>
-        <span className="text-[11px] text-slate-400">Đưa chuột lên cột để xem chi tiết ngày</span>
+        <span className="text-[11px] text-slate-500">Đưa chuột lên cột để xem chi tiết ngày</span>
       </header>
 
       <div className="flex gap-3 px-4 pt-4 pb-3">
-        <div className="flex h-[220px] w-20 shrink-0 flex-col justify-between text-right text-[10px] text-slate-400">
+        <div className="flex h-[220px] w-20 shrink-0 flex-col justify-between text-right text-[10px] text-slate-500">
           {[...moc].reverse().map((m) => (
             <span key={m} className="-translate-y-1/2 tabular-nums">
               {so(m)}
@@ -462,13 +475,13 @@ function BieuDoTheoNgay({ data, dungTien }: { data: DiemNgay[]; dungTien: boolea
                         height: `${Math.max(phanTram, giaTri(d) > 0 ? 1.5 : 0)}%`,
                         maxWidth: 52,
                         background: MAU_DUONG,
-                        borderTopLeftRadius: 4,
-                        borderTopRightRadius: 4,
+                        borderTopLeftRadius: 6,
+                        borderTopRightRadius: 6,
                         opacity: tro === null || dangTro ? 1 : 0.45,
                       }}
                     />
                     {dangTro && (
-                      <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-44 -translate-x-1/2 rounded-md border border-slate-300 bg-white px-3 py-2 text-[12px] shadow-lg">
+                      <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-44 -translate-x-1/2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[12px] shadow-lg">
                         <div className="font-semibold text-slate-800">{ngayVN(d.ngay)}</div>
                         <div className="mt-1 flex justify-between gap-3 text-slate-600">
                           <span>Số phiếu</span>
@@ -490,7 +503,7 @@ function BieuDoTheoNgay({ data, dungTien }: { data: DiemNgay[]; dungTien: boolea
 
           <div className="mt-1 flex" style={{ gap: 2 }}>
             {data.map((d, i) => (
-              <div key={d.ngay} className="min-w-0 flex-1 text-center text-[10px] whitespace-nowrap text-slate-400">
+              <div key={d.ngay} className="min-w-0 flex-1 text-center text-[10px] whitespace-nowrap text-slate-500">
                 {i % buocNhan === 0 || i === data.length - 1 ? d.ngay.slice(8, 10) : ""}
               </div>
             ))}
@@ -528,10 +541,10 @@ function HangConThieu({
 }) {
   if (hang.length === 0) {
     return (
-      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <header className="border-b border-slate-200 bg-slate-50/70 px-4 py-2.5">
-          <h2 className="text-sm font-semibold text-slate-800">Hàng còn thiếu</h2>
-          <p className="text-[11px] text-slate-500">
+      <section className="overflow-hidden rounded-xl border border-emerald-200/80 bg-white shadow-the">
+        <header className="border-b border-emerald-200/70 bg-emerald-50/60 px-4 py-3">
+          <h2 className="text-[13.5px] font-semibold tracking-tight text-emerald-900">Hàng còn thiếu</h2>
+          <p className="mt-0.5 text-[11px] text-emerald-800">
             Khoảng {ngayVN(tu)} – {ngayVN(den)}
           </p>
         </header>
@@ -546,11 +559,11 @@ function HangConThieu({
   const tongThieu = hang.reduce((s, h) => s + h.conThieu, 0);
 
   return (
-    <section className="overflow-hidden rounded-lg border border-amber-200 bg-white shadow-sm">
-      <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-amber-200 bg-amber-50/70 px-4 py-2.5">
+    <section className="overflow-hidden rounded-xl border border-amber-200 bg-white shadow-the">
+      <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-amber-200 bg-amber-50/70 px-4 py-3">
         <div>
-          <h2 className="text-sm font-semibold text-amber-900">Hàng còn thiếu</h2>
-          <p className="text-[11px] text-amber-700">
+          <h2 className="text-[13.5px] font-semibold tracking-tight text-amber-900">Hàng còn thiếu</h2>
+          <p className="mt-0.5 text-[11px] text-amber-800">
             Khi hàng về, đối chiếu mục này để biết cần bù cho phiếu nào
           </p>
         </div>
@@ -565,7 +578,7 @@ function HangConThieu({
                 value={kieuIn}
                 onChange={(e) => setKieuIn(e.target.value as KieuInThieu)}
                 title={DS_KIEU_IN.find((k) => k.khoa === kieuIn)?.moTa}
-                className="h-8 rounded-md border border-slate-300 bg-white px-2 text-[13px] outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                className="h-8 rounded-lg border border-slate-300 bg-white px-2 text-[13px] shadow-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
               >
                 {DS_KIEU_IN.map((k) => (
                   <option key={k.khoa} value={k.khoa}>
@@ -594,7 +607,7 @@ function HangConThieu({
         {hang.map((h) => (
           <div key={h.productId} className="px-4 py-3">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span className="font-mono text-[11px] text-slate-400">{h.ma}</span>
+              <span className="font-mono text-[11px] text-slate-500">{h.ma}</span>
               <span className="font-medium text-slate-900">{h.ten}</span>
               <span className="text-[12px] text-slate-500">{h.donViTinh}</span>
               <span className="ml-auto rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[12px] font-semibold text-amber-800">
@@ -602,21 +615,23 @@ function HangConThieu({
               </span>
             </div>
 
-            <table className="mt-1.5 w-full border-collapse text-[13px]">
-              <tbody>
-                {h.phieu.map((p) => (
-                  <tr key={`${h.productId}-${p.id}`} className="[&>td]:py-1">
-                    <td className="w-32 font-mono text-[12px] text-blue-700">{p.soPhieu}</td>
-                    <td className="w-24 text-slate-500">{ngayVN(p.ngay)}</td>
-                    <td className="text-slate-700">{p.hoTen}</td>
-                    <td className="w-24 text-slate-500">{p.buongGiam || "—"}</td>
-                    <td className="w-24 text-right font-semibold text-amber-700 tabular-nums">
-                      thiếu {so(p.conThieu)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="mem-cuon mt-1.5 overflow-x-auto">
+              <table className="w-full border-collapse text-[13px] sm:min-w-[560px]">
+                <tbody>
+                  {h.phieu.map((p) => (
+                    <tr key={`${h.productId}-${p.id}`} className="[&>td]:py-1">
+                      <td className="w-28 font-mono text-[12px] text-blue-700 sm:w-32">{p.soPhieu}</td>
+                      <td className="hidden w-24 text-slate-500 sm:table-cell">{ngayVN(p.ngay)}</td>
+                      <td className="text-slate-700">{p.hoTen}</td>
+                      <td className="hidden w-24 text-slate-500 sm:table-cell">{p.buongGiam || "—"}</td>
+                      <td className="w-20 text-right font-semibold text-amber-700 tabular-nums sm:w-24">
+                        thiếu {so(p.conThieu)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         ))}
       </div>
@@ -655,34 +670,35 @@ function BangXepHang({
   const hienThi = hang.slice(0, 15);
 
   return (
-    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <header className="flex items-baseline justify-between gap-2 border-b border-slate-200 bg-slate-50/70 px-4 py-2.5">
+    <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
+      <header className="flex items-baseline justify-between gap-2 border-b border-slate-200/80 bg-linear-to-r from-slate-50 to-white px-4 py-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-800">{tieuDe}</h2>
-          <p className="text-[11px] text-slate-500">{phuDe}</p>
+          <h2 className="text-[13.5px] font-semibold tracking-tight text-slate-800">{tieuDe}</h2>
+          <p className="mt-0.5 text-[11px] text-slate-500">{phuDe}</p>
         </div>
-        <span className="text-[11px] text-slate-400">
+        <span className="text-[11px] text-slate-500">
           Hiện {hienThi.length} / {hang.length}
         </span>
       </header>
-      <table className="w-full border-collapse text-sm">
-        <thead className="bg-slate-50 text-[12px] text-slate-600">
-          <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-1.5 [&>th]:text-left [&>th]:font-semibold">
-            <th className="w-10">#</th>
-            <th className="w-32">Mã</th>
+      <div className="mem-cuon overflow-x-auto">
+        <table className="w-full border-collapse text-sm sm:min-w-[520px]">
+        <thead className="bg-slate-50/90 text-[11px] tracking-wide text-slate-500 uppercase">
+          <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:text-left [&>th]:font-semibold">
+            <th className="hidden w-10 sm:table-cell">#</th>
+            <th className="hidden w-32 sm:table-cell">Mã</th>
             <th>Tên</th>
-            <th className="w-28 text-right">{cot}</th>
-            <th className="w-56 text-right">{nhanGiaTri}</th>
+            <th className="w-20 text-right sm:w-28">{cot}</th>
+            <th className="w-24 text-right sm:w-56">{nhanGiaTri}</th>
           </tr>
         </thead>
         <tbody>
           {hienThi.map((h, i) => (
             <tr key={h.id} className="[&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-1.5">
-              <td className="text-center text-[12px] text-slate-400">{i + 1}</td>
-              <td className="font-mono text-[12px] text-slate-500">{h.ma}</td>
+              <td className="hidden text-center text-[12px] text-slate-400 sm:table-cell">{i + 1}</td>
+              <td className="hidden font-mono text-[12px] text-slate-500 sm:table-cell">{h.ma}</td>
               <td>
                 <div className="font-medium text-slate-800">{h.ten}</div>
-                {h.phu && <div className="text-[11px] text-slate-400">{h.phu}</div>}
+                {h.phu && <div className="text-[11px] text-slate-500">{h.phu}</div>}
               </td>
               <td className="text-right text-slate-600 tabular-nums">
                 {so(h.soLuong)} {h.donVi}
@@ -690,19 +706,20 @@ function BangXepHang({
               <td>
                 <div className="flex items-center justify-end gap-2">
                   {/* Độ dài cột mã hoá độ lớn; con số vẫn hiện đầy đủ */}
-                  <div className="h-2 w-28 overflow-hidden rounded-sm bg-slate-100">
+                  <div className="hidden h-2 w-28 overflow-hidden rounded-sm bg-slate-100 sm:block">
                     <div
                       className="h-full rounded-sm"
                       style={{ width: `${(h.giaTri / lonNhat) * 100}%`, background: MAU_DUONG }}
                     />
                   </div>
-                  <span className="w-20 text-right font-semibold text-slate-800 tabular-nums">{h.hienThi}</span>
+                  <span className="text-right font-semibold text-slate-800 tabular-nums sm:w-20">{h.hienThi}</span>
                 </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      </div>
     </section>
   );
 }

@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { apiClient } from "@/lib/client";
 import { useStore } from "@/lib/store";
 import { ManMauIn } from "./man-mau-in";
 import { ManMauInThieu } from "./man-mau-in-thieu";
 import { bao, baoLoi, BieuTuong, Nut, ONhan, OText, The } from "./ui";
+import { useNap } from "@/lib/use-nap";
 
 export function ManCaiDat() {
   const { settings, capNhatSettings, napLai, coQuyen } = useStore();
@@ -20,12 +21,8 @@ export function ManCaiDat() {
   const [dangLuu, setDangLuu] = useState(false);
   const [dangNap, setDangNap] = useState(false);
 
-  useEffect(() => {
-    setTenDonVi(settings.tenDonVi);
-    setDiaChi(settings.diaChi);
-    setNguoiLapPhieu(settings.nguoiLapPhieu);
-    setSoNgayGiuThungRac(String(settings.soNgayGiuThungRac || 0));
-  }, [settings]);
+  // Màn hình này chỉ mount sau khi StoreProvider đã nạp xong cài đặt, nên các ô
+  // nhập lấy giá trị ban đầu trực tiếp từ settings là đủ.
 
   const demDuLieu = useCallback(async () => {
     try {
@@ -37,9 +34,7 @@ export function ManCaiDat() {
     }
   }, []);
 
-  useEffect(() => {
-    void demDuLieu();
-  }, [demDuLieu]);
+  useNap(demDuLieu);
 
   const luu = async () => {
     setDangLuu(true);

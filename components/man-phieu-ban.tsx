@@ -6,6 +6,7 @@ import { taiExcel } from "@/lib/excel";
 import { homNay, khop, ngayVN, so, tien } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import type { CanPhamGoiY, Order, Product } from "@/lib/types";
+import { useNap } from "@/lib/use-nap";
 import { HopThieuHang } from "./hop-thieu-hang";
 import { ChonMonLoc } from "./pickers";
 import { HopThungRac } from "./hop-thung-rac";
@@ -58,9 +59,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
     }
   }, [tu, den]);
 
-  useEffect(() => {
-    void nap();
-  }, [nap]);
+  useNap(nap);
 
   /** Chỉ lấy số lượng để hiện trên nút, không cần nội dung */
   const demThungRac = useCallback(async () => {
@@ -72,20 +71,20 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
     }
   }, [duocXoa]);
 
-  useEffect(() => {
-    void demThungRac();
-  }, [demThungRac]);
+  useNap(demThungRac);
 
-  useEffect(() => {
-    Promise.all([apiClient.products(), apiClient.canPham()])
-      .then(([sp, cp]) => {
-        setSanPham(sp.products);
-        setGoiY(cp.canPham);
-      })
-      .catch(() => {
-        /* chỉ cần khi bấm sửa, lỗi ở đây không chặn màn hình */
-      });
+  /** Danh mục cho form sửa phiếu — chỉ cần khi bấm sửa, lỗi ở đây không chặn màn hình */
+  const napDanhMuc = useCallback(async () => {
+    try {
+      const [sp, cp] = await Promise.all([apiClient.products(), apiClient.canPham()]);
+      setSanPham(sp.products);
+      setGoiY(cp.canPham);
+    } catch {
+      /* để trống */
+    }
   }, []);
+
+  useNap(napDanhMuc);
 
   const soPhieuThieu = useMemo(() => ds.filter((o) => phieuConThieu(o) > 0).length, [ds]);
 
@@ -119,6 +118,18 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
   );
   const tongTien = hienThi.reduce((s, o) => s + o.tongTien, 0);
   const coTien = hienThi.some((o) => o.tongTien > 0);
+  const tongDonVi = hienThi.reduce((s, o) => s + o.items.reduce((a, i) => a + i.soLuong, 0), 0);
+
+  const tieuDeTrong = dangTai
+    ? "Đang tải…"
+    : monLoc
+      ? `Không có phiếu nào chứa món “${monLoc.ten}” trong khoảng này`
+      : "Không có phiếu nào trong khoảng ngày này";
+  const moTaTrong = dangTai
+    ? undefined
+    : monLoc
+      ? "Món này không bán trong khoảng ngày đang xem. Đổi khoảng ngày, hoặc bấm × để bỏ lọc món."
+      : "Đổi khoảng ngày hoặc từ khoá tìm kiếm để xem phiếu khác.";
 
   const luuSua = useCallback(
     async (duLieu: DuLieuPhieu) => {
@@ -143,6 +154,50 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
   };
 
   const moXoa = (o: Order) => chiMoMot("xoa", o);
+
+  /** Cụm nút thao tác dùng chung cho bảng trên máy tính và danh sách thẻ trên điện thoại */
+  const thaoTacPhieu = (o: Order) => (
+    <div className="flex items-center justify-end gap-1">
+      {duocSua && (
+        <Nut
+          kieu="mo"
+          co="sm"
+          onClick={() => chiMoMot("thieu", o)}
+          title={
+            phieuConThieu(o) > 0
+              ? `Còn thiếu ${so(phieuConThieu(o))} đơn vị — bấm để ghi bù`
+              : "Ghi hàng thiếu"
+          }
+        >
+          {/* Bọc trong span để tô màu cảnh báo: đặt thẳng class lên Nut
+              sẽ tranh chấp với màu chữ mặc định của nút, mà thứ tự
+              trong file CSS mới quyết định nên không chắc ăn. */}
+          <span className={phieuConThieu(o) > 0 ? "text-amber-600" : ""}>
+            <BieuTuong ten="canh" className="h-4 w-4" />
+          </span>
+        </Nut>
+      )}
+      {duocSua && (
+        <Nut kieu="mo" co="sm" onClick={() => chiMoMot("sua", o)} title="Sửa phiếu">
+          <BieuTuong ten="sua" className="h-4 w-4" />
+        </Nut>
+      )}
+      <Nut kieu="mo" co="sm" onClick={() => xemTruoc(o)} title="Xem và in phiếu">
+        <BieuTuong ten="in" className="h-4 w-4" />
+      </Nut>
+      {duocXoa && (
+        <Nut
+          kieu="mo"
+          co="sm"
+          onClick={() => moXoa(o)}
+          title="Chuyển vào thùng rác"
+          className="hover:text-rose-600"
+        >
+          <BieuTuong ten="xoa" className="h-4 w-4" />
+        </Nut>
+      )}
+    </div>
+  );
 
   const xacNhanXoa = async () => {
     if (!dangXoa) return;
@@ -199,10 +254,10 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
 
   return (
     <>
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 bg-slate-50/70 px-3 py-2.5">
+    <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200/80 bg-linear-to-r from-slate-50 to-white px-3.5 py-3">
         <div className="mr-2">
-          <div className="text-sm font-semibold text-slate-800">Phiếu bán</div>
+          <div className="text-[13.5px] font-semibold tracking-tight text-slate-800">Phiếu bán</div>
           <div className="text-[11px] text-slate-500">Bấm vào dòng để xem và in lại phiếu</div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -228,10 +283,10 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
           onBo={() => setMonLoc(null)}
         />
         <label
-          className={`flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm transition ${
+          className={`flex h-9 cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm transition ${
             chiThieuHang
               ? "border-amber-300 bg-amber-50 text-amber-800"
-              : "border-slate-300 bg-white text-slate-700"
+              : "border-slate-300 bg-white text-slate-700 shadow-xs hover:border-slate-400"
           }`}
           title="Chỉ hiện những phiếu còn nợ hàng can phạm"
         >
@@ -268,10 +323,63 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
         </div>
       )}
 
-      <div className="mem-cuon max-h-[calc(100vh-210px)] min-h-[320px] overflow-auto">
-        <table className="w-full border-collapse text-sm">
-          <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
-            <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:text-left [&>th]:font-semibold">
+      {/* Trên điện thoại, danh sách phiếu dùng thẻ để không phải cuộn ngang */}
+      <div className="sm:hidden">
+        {hienThi.length === 0 ? (
+          <Trong tieuDe={tieuDeTrong} moTa={moTaTrong} />
+        ) : (
+          <>
+            <div className="divide-y divide-slate-100">
+              {hienThi.map((o) => (
+                <div key={o.id} className="p-3">
+                  <button type="button" onClick={() => xemTruoc(o)} className="block w-full text-left">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="font-mono text-[12px] font-semibold text-blue-700">{o.soPhieu}</div>
+                        <div className="mt-0.5 truncate font-semibold text-slate-800">{o.hoTen}</div>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <div className="text-[15px] font-bold text-slate-900 tabular-nums">
+                          {o.tongTien > 0 ? tien(o.tongTien) : "—"}
+                        </div>
+                        <div className="text-[11px] text-slate-500">{o.items.length} mặt hàng</div>
+                      </div>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
+                      <span>{ngayVN(o.ngay)}</span>
+                      <span>Buồng {o.buongGiam || "—"}</span>
+                      {o.namSinh && <span>SN {o.namSinh}</span>}
+                      {monLoc && (
+                        <span className="font-medium text-blue-700">
+                          {so(luongMonTrong(o))} {monLoc.donViTinh} món lọc
+                        </span>
+                      )}
+                      {phieuConThieu(o) > 0 && (
+                        <span className="font-medium text-amber-700">thiếu {so(phieuConThieu(o))}</span>
+                      )}
+                    </div>
+                  </button>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <span className="text-[11px] text-slate-500">Bấm vào phiếu để xem trước</span>
+                    <div onClick={(e) => e.stopPropagation()}>{thaoTacPhieu(o)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 bg-slate-50/80 px-3 py-2.5 text-[12px]">
+              <span className="font-medium text-slate-600">
+                Tổng {so(hienThi.length)} phiếu · {so(tongDonVi)} đơn vị
+              </span>
+              <span className="font-bold text-slate-900 tabular-nums">{coTien ? tien(tongTien) : "—"}</span>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="mem-cuon hidden max-h-[calc(100vh-210px)] min-h-[320px] overflow-auto sm:block">
+        <table className="w-full min-w-[1040px] border-collapse text-sm">
+          <thead className="sticky top-0 z-10 bg-slate-50/95 text-[11px] tracking-wide text-slate-500 uppercase backdrop-blur">
+            <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2.5 [&>th]:text-left [&>th]:font-semibold">
               <th className="w-36">Số phiếu</th>
               <th className="w-28">Ngày</th>
               <th>Can phạm</th>
@@ -285,22 +393,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
             {hienThi.length === 0 && (
               <tr>
                 <td colSpan={7}>
-                  <Trong
-                    tieuDe={
-                      dangTai
-                        ? "Đang tải…"
-                        : monLoc
-                          ? `Không có phiếu nào chứa món “${monLoc.ten}” trong khoảng này`
-                          : "Không có phiếu nào trong khoảng ngày này"
-                    }
-                    moTa={
-                      dangTai
-                        ? undefined
-                        : monLoc
-                          ? "Món này không bán trong khoảng ngày đang xem. Đổi khoảng ngày, hoặc bấm × để bỏ lọc món."
-                          : "Đổi khoảng ngày hoặc từ khoá tìm kiếm để xem phiếu khác."
-                    }
-                  />
+                  <Trong tieuDe={tieuDeTrong} moTa={moTaTrong} />
                 </td>
               </tr>
             )}
@@ -308,12 +401,12 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
               <tr
                 key={o.id}
                 onClick={() => xemTruoc(o)}
-                className="cursor-pointer [&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-2 hover:bg-blue-50/50"
+                className="cursor-pointer [&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-2.5 hover:bg-blue-50/40"
               >
                 <td className="font-mono text-[12px] font-medium text-blue-700">{o.soPhieu}</td>
                 <td className="text-slate-600">{ngayVN(o.ngay)}</td>
                 <td>
-                  <div className="font-medium text-slate-800">{o.hoTen}</div>
+                  <div className="font-semibold text-slate-800">{o.hoTen}</div>
                   <div className="text-[11px] text-slate-500">
                     {o.namSinh ? `SN ${o.namSinh}` : "Chưa rõ năm sinh"}
                   </div>
@@ -335,64 +428,23 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
                     </span>
                   )}
                 </td>
-                <td className="text-right font-semibold text-slate-800">
+                <td className="text-right font-semibold text-slate-800 tabular-nums">
                   {o.tongTien > 0 ? so(o.tongTien) : "—"}
                 </td>
-                <td onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-center justify-end gap-1">
-                    {duocSua && (
-                      <Nut
-                        kieu="mo"
-                        co="sm"
-                        onClick={() => chiMoMot("thieu", o)}
-                        title={
-                          phieuConThieu(o) > 0
-                            ? `Còn thiếu ${so(phieuConThieu(o))} đơn vị — bấm để ghi bù`
-                            : "Ghi hàng thiếu"
-                        }
-                      >
-                        {/* Bọc trong span để tô màu cảnh báo: đặt thẳng class lên Nut
-                            sẽ tranh chấp với màu chữ mặc định của nút, mà thứ tự
-                            trong file CSS mới quyết định nên không chắc ăn. */}
-                        <span className={phieuConThieu(o) > 0 ? "text-amber-600" : ""}>
-                          <BieuTuong ten="canh" className="h-4 w-4" />
-                        </span>
-                      </Nut>
-                    )}
-                    {duocSua && (
-                      <Nut kieu="mo" co="sm" onClick={() => chiMoMot("sua", o)} title="Sửa phiếu">
-                        <BieuTuong ten="sua" className="h-4 w-4" />
-                      </Nut>
-                    )}
-                    <Nut kieu="mo" co="sm" onClick={() => xemTruoc(o)} title="Xem và in phiếu">
-                      <BieuTuong ten="in" className="h-4 w-4" />
-                    </Nut>
-                    {duocXoa && (
-                      <Nut
-                        kieu="mo"
-                        co="sm"
-                        onClick={() => moXoa(o)}
-                        title="Chuyển vào thùng rác"
-                        className="hover:text-rose-600"
-                      >
-                        <BieuTuong ten="xoa" className="h-4 w-4" />
-                      </Nut>
-                    )}
-                  </div>
-                </td>
+                <td onClick={(e) => e.stopPropagation()}>{thaoTacPhieu(o)}</td>
               </tr>
             ))}
           </tbody>
           {hienThi.length > 0 && (
-            <tfoot className="sticky bottom-0 bg-slate-50">
-              <tr className="[&>td]:border-t [&>td]:border-slate-200 [&>td]:px-3 [&>td]:py-2">
+            <tfoot className="sticky bottom-0 bg-slate-50/95 backdrop-blur">
+              <tr className="[&>td]:border-t [&>td]:border-slate-200 [&>td]:px-3 [&>td]:py-2.5">
                 <td colSpan={4} className="text-[12px] font-medium text-slate-600">
                   Tổng {so(hienThi.length)} phiếu
                 </td>
-                <td className="text-center text-[12px] text-slate-600">
-                  {so(hienThi.reduce((s, o) => s + o.items.reduce((a, i) => a + i.soLuong, 0), 0))} đơn vị
+                <td className="text-center text-[12px] text-slate-600">{so(tongDonVi)} đơn vị</td>
+                <td className="text-right text-[15px] font-bold whitespace-nowrap text-slate-900 tabular-nums">
+                  {coTien ? tien(tongTien) : "—"}
                 </td>
-                <td className="text-right text-base font-bold text-slate-900">{coTien ? tien(tongTien) : "—"}</td>
                 <td />
               </tr>
             </tfoot>
@@ -465,24 +517,29 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
       </HopThoai>
 
       {/* --- Ghi hàng thiếu / bù hàng --- */}
-      <HopThieuHang
-        phieu={phieuThieu}
-        dong={() => setPhieuThieu(null)}
-        onLuu={(o) => {
-          setDs((cu) => cu.map((x) => (x.id === o.id ? o : x)));
-          setPhieuThieu(o);
-        }}
-      />
+      {phieuThieu && (
+        <HopThieuHang
+          key={phieuThieu.id}
+          phieu={phieuThieu}
+          dong={() => setPhieuThieu(null)}
+          onLuu={(o) => {
+            setDs((cu) => cu.map((x) => (x.id === o.id ? o : x)));
+            setPhieuThieu(o);
+          }}
+        />
+      )}
 
       {/* --- Thùng rác --- */}
-      <HopThungRac
-        mo={moThungRac}
-        dong={() => setMoThungRac(false)}
-        onThayDoi={() => {
-          void nap();
-          void demThungRac();
-        }}
-      />
+      {moThungRac && (
+        <HopThungRac
+          mo
+          dong={() => setMoThungRac(false)}
+          onThayDoi={() => {
+            void nap();
+            void demThungRac();
+          }}
+        />
+      )}
     </>
   );
 }

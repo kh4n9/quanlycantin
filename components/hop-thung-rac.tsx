@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { apiClient } from "@/lib/client";
 import { khop, ngayVN, so } from "@/lib/format";
 import { useStore } from "@/lib/store";
+import { useNap } from "@/lib/use-nap";
 import type { Order } from "@/lib/types";
 import { bao, baoLoi, BieuTuong, HopThoai, Nut, OText, Trong } from "./ui";
 
@@ -25,6 +26,8 @@ export function HopThungRac({
   const [dangChay, setDangChay] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [soNgayGiu, setSoNgayGiu] = useState(0);
+  // Mốc "bây giờ" chốt lúc tải dữ liệu — không gọi Date.now() trong lúc render
+  const [bayGio, setBayGio] = useState(0);
 
   const nap = useCallback(async () => {
     setDangTai(true);
@@ -32,6 +35,7 @@ export function HopThungRac({
       const kq = await apiClient.thungRac();
       setDs(kq.orders);
       setSoNgayGiu(kq.soNgayGiuThungRac);
+      setBayGio(Date.now());
       if (kq.daXoaTuDong > 0) {
         bao(`Đã tự xoá vĩnh viễn ${so(kq.daXoaTuDong)} phiếu quá hạn lưu trong thùng rác`);
       }
@@ -44,17 +48,13 @@ export function HopThungRac({
 
   /** Số ngày còn lại trước khi phiếu bị tự xoá. null nếu không bật tự xoá. */
   const conLaiBaoNhieuNgay = (o: Order): number | null => {
-    if (soNgayGiu <= 0 || !o.xoaLuc) return null;
-    const daQua = Math.floor((Date.now() - new Date(o.xoaLuc).getTime()) / 86_400_000);
+    if (soNgayGiu <= 0 || !o.xoaLuc || !bayGio) return null;
+    const daQua = Math.floor((bayGio - new Date(o.xoaLuc).getTime()) / 86_400_000);
     return Math.max(0, soNgayGiu - daQua);
   };
 
-  // Mở lại thì bắt đầu với ô tìm kiếm trống
-  useEffect(() => {
-    if (!mo) return;
-    setQ("");
-    void nap();
-  }, [mo, nap]);
+  // Hộp thoại chỉ dựng khi mở nên mỗi lần mở là một lần nạp mới, ô tìm kiếm trống
+  useNap(nap);
 
   const hienThi = useMemo(
     () =>
@@ -152,7 +152,7 @@ export function HopThungRac({
           />
         ) : (
           <div className="mem-cuon max-h-[54vh] overflow-auto rounded-md border border-slate-200">
-            <table className="w-full border-collapse text-sm">
+            <table className="w-full min-w-[720px] border-collapse text-sm">
               <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
                 <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:text-left [&>th]:font-semibold">
                   <th className="w-28">Số phiếu</th>
@@ -196,12 +196,12 @@ export function HopThungRac({
                       {o.xoaLuc
                         ? new Date(o.xoaLuc).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })
                         : "—"}
-                      {o.xoaBoi ? <div className="text-[11px] text-slate-400">bởi {o.xoaBoi}</div> : null}
+                      {o.xoaBoi ? <div className="text-[11px] text-slate-500">bởi {o.xoaBoi}</div> : null}
                       {(() => {
                         const con = conLaiBaoNhieuNgay(o);
                         if (con === null) return null;
                         return (
-                          <div className={`text-[11px] ${con <= 3 ? "font-medium text-rose-600" : "text-slate-400"}`}>
+                          <div className={`text-[11px] ${con <= 3 ? "font-medium text-rose-600" : "text-slate-500"}`}>
                             {con === 0 ? "sắp bị xoá" : `còn ${con} ngày`}
                           </div>
                         );
@@ -232,7 +232,7 @@ export function HopThungRac({
                             </Nut>
                           </>
                         ) : (
-                          <span className="text-[11px] text-slate-400">Không có quyền</span>
+                          <span className="text-[11px] text-slate-500">Không có quyền</span>
                         )}
                       </div>
                     </td>

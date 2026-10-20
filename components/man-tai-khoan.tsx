@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { apiClient } from "@/lib/client";
 import { useStore } from "@/lib/store";
 import { MO_TA_QUYEN, NHOM_QUYEN, QUYEN_DAY_DU, TEN_QUYEN, type Quyen } from "@/lib/quyen";
 import type { NguoiDungCongKhai } from "@/lib/types";
+import { useNap } from "@/lib/use-nap";
 import { bao, baoLoi, BieuTuong, HopThoai, Nut, ONhan, OText, Trong } from "./ui";
 
 type FormTK = {
@@ -44,9 +45,7 @@ export function ManTaiKhoan() {
     }
   }, []);
 
-  useEffect(() => {
-    void nap();
-  }, [nap]);
+  useNap(nap);
 
   const luu = async () => {
     if (!form) return;
@@ -124,10 +123,51 @@ export function ManTaiKhoan() {
     }
   };
 
-  const soQuyen = useMemo(() => (nd: NguoiDungCongKhai) => nd.quyen.length, []);
+  /** Cụm nút thao tác dùng chung cho bảng trên máy tính và danh sách thẻ trên điện thoại */
+  const thaoTacNd = (nd: NguoiDungCongKhai) => (
+    <div className="flex items-center justify-end gap-1">
+      <Nut
+        kieu="mo"
+        co="sm"
+        title="Đặt lại mật khẩu"
+        onClick={() => {
+          setDatLai(nd);
+          setMatKhauMoi("");
+        }}
+      >
+        <BieuTuong ten="cai" className="h-4 w-4" />
+      </Nut>
+      <Nut
+        kieu="mo"
+        co="sm"
+        title="Sửa họ tên, quyền, trạng thái"
+        onClick={() =>
+          setForm({
+            id: nd.id,
+            tenDangNhap: nd.tenDangNhap,
+            hoTen: nd.hoTen,
+            matKhau: "",
+            quyen: [...nd.quyen],
+            dangHoatDong: nd.dangHoatDong,
+          })
+        }
+      >
+        <BieuTuong ten="sua" className="h-4 w-4" />
+      </Nut>
+      <Nut
+        kieu="mo"
+        co="sm"
+        title="Xoá tài khoản"
+        onClick={() => void xoa(nd)}
+        className="hover:text-rose-600"
+      >
+        <BieuTuong ten="xoa" className="h-4 w-4" />
+      </Nut>
+    </div>
+  );
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 bg-slate-50/70 px-3 py-2.5">
         <div className="mr-auto">
           <div className="text-sm font-semibold text-slate-800">Tài khoản</div>
@@ -140,8 +180,73 @@ export function ManTaiKhoan() {
         </Nut>
       </div>
 
-      <div className="mem-cuon max-h-[66vh] overflow-auto">
-        <table className="w-full border-collapse text-sm">
+      {/* Trên điện thoại, danh sách tài khoản dùng thẻ để quyền không bị cắt */}
+      <div className="sm:hidden">
+        {ds.length === 0 ? (
+          <Trong tieuDe={dangTai ? "Đang tải…" : "Chưa có tài khoản nào"} />
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {ds.map((nd) => (
+              <div key={nd.id} className={`p-3 ${nd.dangHoatDong ? "" : "opacity-60"}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-mono text-[13px] font-semibold text-slate-800">{nd.tenDangNhap}</span>
+                      {nd.id === toi?.id && (
+                        <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">
+                          bạn
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-0.5 font-medium text-slate-800">{nd.hoTen}</div>
+                    {nd.phaiDoiMatKhau && (
+                      <div className="text-[11px] text-amber-600">Chưa đổi mật khẩu ban đầu</div>
+                    )}
+                  </div>
+                  <span
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${
+                      nd.dangHoatDong
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : "border-slate-300 bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${nd.dangHoatDong ? "bg-emerald-500" : "bg-slate-400"}`}
+                    />
+                    {nd.dangHoatDong ? "Hoạt động" : "Đã khoá"}
+                  </span>
+                </div>
+
+                <div className="mt-1.5 text-[11px] text-slate-500">
+                  {nd.lanDangNhapCuoi
+                    ? `Đăng nhập cuối ${new Date(nd.lanDangNhapCuoi).toLocaleString("vi-VN")}`
+                    : "Chưa đăng nhập"}
+                </div>
+
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {nd.quyen.length === 0 ? (
+                    <span className="text-[11px] text-slate-500">Chưa được cấp quyền nào</span>
+                  ) : (
+                    nd.quyen.map((q) => (
+                      <span
+                        key={q}
+                        className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] text-slate-600"
+                      >
+                        {TEN_QUYEN[q]}
+                      </span>
+                    ))
+                  )}
+                </div>
+
+                <div className="mt-2 flex justify-end border-t border-slate-100 pt-2">{thaoTacNd(nd)}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mem-cuon hidden max-h-[66vh] overflow-auto sm:block">
+        <table className="w-full min-w-[1080px] border-collapse text-sm">
           <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
             <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:text-left [&>th]:font-semibold">
               <th className="w-40">Tên đăng nhập</th>
@@ -183,7 +288,7 @@ export function ManTaiKhoan() {
                 </td>
                 <td>
                   {nd.quyen.length === 0 ? (
-                    <span className="text-[12px] text-slate-400">Chưa được cấp quyền nào</span>
+                    <span className="text-[12px] text-slate-500">Chưa được cấp quyền nào</span>
                   ) : (
                     <div className="flex flex-wrap gap-1">
                       {nd.quyen.map((q) => (
@@ -214,47 +319,7 @@ export function ManTaiKhoan() {
                 <td className="text-[12px] text-slate-500">
                   {nd.lanDangNhapCuoi ? new Date(nd.lanDangNhapCuoi).toLocaleString("vi-VN") : "Chưa đăng nhập"}
                 </td>
-                <td>
-                  <div className="flex items-center justify-end gap-1">
-                    <Nut
-                      kieu="mo"
-                      co="sm"
-                      title="Đặt lại mật khẩu"
-                      onClick={() => {
-                        setDatLai(nd);
-                        setMatKhauMoi("");
-                      }}
-                    >
-                      <BieuTuong ten="cai" className="h-4 w-4" />
-                    </Nut>
-                    <Nut
-                      kieu="mo"
-                      co="sm"
-                      title="Sửa họ tên, quyền, trạng thái"
-                      onClick={() =>
-                        setForm({
-                          id: nd.id,
-                          tenDangNhap: nd.tenDangNhap,
-                          hoTen: nd.hoTen,
-                          matKhau: "",
-                          quyen: [...nd.quyen],
-                          dangHoatDong: nd.dangHoatDong,
-                        })
-                      }
-                    >
-                      <BieuTuong ten="sua" className="h-4 w-4" />
-                    </Nut>
-                    <Nut
-                      kieu="mo"
-                      co="sm"
-                      title="Xoá tài khoản"
-                      onClick={() => void xoa(nd)}
-                      className="hover:text-rose-600"
-                    >
-                      <BieuTuong ten="xoa" className="h-4 w-4" />
-                    </Nut>
-                  </div>
-                </td>
+                <td>{thaoTacNd(nd)}</td>
               </tr>
             ))}
           </tbody>
@@ -291,7 +356,7 @@ export function ManTaiKhoan() {
                   placeholder="canbo1"
                   className="font-mono"
                 />
-                {form.id && <p className="mt-1 text-[11px] text-slate-400">Không đổi được tên đăng nhập</p>}
+                {form.id && <p className="mt-1 text-[11px] text-slate-500">Không đổi được tên đăng nhập</p>}
               </div>
               <div>
                 <ONhan>Họ tên *</ONhan>
@@ -382,7 +447,7 @@ export function ManTaiKhoan() {
                 onChange={(e) => setForm({ ...form, dangHoatDong: e.target.checked })}
               />
               <span className="text-sm text-slate-700">
-                Cho phép đăng nhập <span className="text-slate-400">(bỏ chọn để khoá tài khoản)</span>
+                Cho phép đăng nhập <span className="text-slate-500">(bỏ chọn để khoá tài khoản)</span>
               </span>
             </label>
           </div>
@@ -423,10 +488,10 @@ export function ManTaiKhoan() {
 /**
  * Hộp thoại đổi mật khẩu của chính người đang đăng nhập.
  *
- * Hộp thoại này luôn được gắn trong khung ứng dụng nên state không tự mất khi
- * đóng. Phải xoá nội dung mỗi lần mở, nếu không lần sau mở lại ô "mật khẩu hiện
- * tại" vẫn còn chữ gõ dở từ lần trước — mà ô mật khẩu hiện dấu chấm nên người
- * dùng không nhìn ra, dẫn tới báo sai mật khẩu một cách vô cớ.
+ * Khung ứng dụng chỉ dựng hộp thoại khi mở (xem app-shell) nên mỗi lần mở là một
+ * lần mount mới, state tự trắng. Nếu giữ hộp thoại thường trực, ô "mật khẩu hiện
+ * tại" sẽ còn chữ gõ dở từ lần trước — mà ô mật khẩu hiện dấu chấm nên người dùng
+ * không nhìn ra, dẫn tới báo sai mật khẩu một cách vô cớ.
  */
 export function HopDoiMatKhau({ mo, dong }: { mo: boolean; dong: () => void }) {
   const { napLai, nguoiDung } = useStore();
@@ -435,15 +500,6 @@ export function HopDoiMatKhau({ mo, dong }: { mo: boolean; dong: () => void }) {
   const [nhapLai, setNhapLai] = useState("");
   const [dangLuu, setDangLuu] = useState(false);
   const [loi, setLoi] = useState("");
-
-  useEffect(() => {
-    if (mo) {
-      setMatKhauCu("");
-      setMatKhauMoi("");
-      setNhapLai("");
-      setLoi("");
-    }
-  }, [mo]);
 
   const doi = async () => {
     setLoi("");

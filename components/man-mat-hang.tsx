@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { apiClient } from "@/lib/client";
 import { taiExcel } from "@/lib/excel";
 import { khop, so } from "@/lib/format";
 import type { Product } from "@/lib/types";
+import { useNap } from "@/lib/use-nap";
 import { bao, baoLoi, BieuTuong, HopThoai, Nut, OChon, ONhan, OText, Trong } from "./ui";
 
 const NHOM_GOI_Y = [
@@ -52,9 +53,7 @@ export function ManMatHang() {
     }
   }, []);
 
-  useEffect(() => {
-    void napLai();
-  }, [napLai]);
+  useNap(napLai);
 
   const dsNhom = useMemo(
     () => [...new Set(products.map((p) => p.nhom).filter(Boolean))].sort((a, b) => a.localeCompare(b, "vi")),
@@ -133,6 +132,49 @@ export function ManMatHang() {
     }
   };
 
+  /** Nút bật/tạm dừng bán dùng chung cho bảng và thẻ trên điện thoại */
+  const nutTrangThai = (p: Product) => (
+    <button
+      onClick={() => void doiTrangThai(p)}
+      disabled={dangDoi === p.id}
+      title={p.dangDung ? "Bấm để tạm dừng bán" : "Bấm để mở bán lại"}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium transition disabled:opacity-50 ${
+        p.dangDung
+          ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+          : "border-slate-300 bg-slate-100 text-slate-500 hover:bg-slate-200"
+      }`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${p.dangDung ? "bg-emerald-500" : "bg-slate-400"}`} />
+      {dangDoi === p.id ? "Đang lưu…" : p.dangDung ? "Đang bán" : "Tạm dừng"}
+    </button>
+  );
+
+  const thaoTacHang = (p: Product) => (
+    <div className="flex items-center justify-end gap-1">
+      <Nut
+        kieu="mo"
+        co="sm"
+        title="Sửa"
+        onClick={() =>
+          setForm({
+            id: p.id,
+            ma: p.ma,
+            ten: p.ten,
+            nhom: p.nhom,
+            donViTinh: p.donViTinh,
+            giaBan: String(p.giaBan),
+            ghiChu: p.ghiChu,
+          })
+        }
+      >
+        <BieuTuong ten="sua" className="h-4 w-4" />
+      </Nut>
+      <Nut kieu="mo" co="sm" onClick={() => void xoa(p)} title="Xoá" className="hover:text-rose-600">
+        <BieuTuong ten="xoa" className="h-4 w-4" />
+      </Nut>
+    </div>
+  );
+
   const xuatExcel = () => {
     void taiExcel("danh-muc-mat-hang", {
       ten: "Mặt hàng",
@@ -152,7 +194,7 @@ export function ManMatHang() {
   };
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 bg-slate-50/70 px-3 py-2.5">
         <div className="relative min-w-64 flex-1">
           <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400">
@@ -190,8 +232,50 @@ export function ManMatHang() {
         </Nut>
       </div>
 
-      <div className="mem-cuon max-h-[66vh] overflow-auto">
-        <table className="w-full border-collapse text-sm">
+      {/* Trên điện thoại, danh mục dùng thẻ để không phải cuộn ngang */}
+      <div className="sm:hidden">
+        {danhSach.length === 0 ? (
+          <Trong
+            tieuDe={dangTai ? "Đang tải dữ liệu…" : "Chưa có mặt hàng nào"}
+            moTa={dangTai ? undefined : "Thêm mặt hàng mới, hoặc nạp danh mục mẫu trong Cài đặt."}
+            hanhDong={
+              dangTai ? undefined : (
+                <Nut kieu="chinh" onClick={() => setForm({ ...formTrong })}>
+                  Thêm mặt hàng
+                </Nut>
+              )
+            }
+          />
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {danhSach.map((p) => (
+              <div key={p.id} className={`p-3 ${!p.dangDung ? "opacity-60" : ""}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-medium text-slate-800">{p.ten}</div>
+                    <div className="font-mono text-[11px] text-slate-500">{p.ma}</div>
+                  </div>
+                  <div className="shrink-0 text-right text-[15px] font-semibold text-slate-800 tabular-nums">
+                    {p.giaBan > 0 ? so(p.giaBan) : "—"}
+                  </div>
+                </div>
+                {p.ghiChu && <div className="mt-0.5 text-[11px] text-slate-500">{p.ghiChu}</div>}
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
+                  <span>{p.nhom}</span>
+                  <span>ĐVT: {p.donViTinh}</span>
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
+                  {nutTrangThai(p)}
+                  {thaoTacHang(p)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mem-cuon hidden max-h-[66vh] overflow-auto sm:block">
+        <table className="w-full min-w-[760px] border-collapse text-sm">
           <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
             <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:text-left [&>th]:font-semibold">
               <th className="w-28">Mã</th>
@@ -231,53 +315,15 @@ export function ManMatHang() {
                 <td className="font-mono text-[12px] text-slate-500">{p.ma}</td>
                 <td>
                   <div className="font-medium text-slate-800">{p.ten}</div>
-                  {p.ghiChu && <div className="text-[11px] text-slate-400">{p.ghiChu}</div>}
+                  {p.ghiChu && <div className="text-[11px] text-slate-500">{p.ghiChu}</div>}
                 </td>
                 <td className="text-slate-600">{p.nhom}</td>
                 <td className="text-slate-600">{p.donViTinh}</td>
-                <td className="text-right font-medium text-slate-700">{p.giaBan > 0 ? so(p.giaBan) : "—"}</td>
-                <td>
-                  <button
-                    onClick={() => void doiTrangThai(p)}
-                    disabled={dangDoi === p.id}
-                    title={p.dangDung ? "Bấm để tạm dừng bán" : "Bấm để mở bán lại"}
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium transition disabled:opacity-50 ${
-                      p.dangDung
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                        : "border-slate-300 bg-slate-100 text-slate-500 hover:bg-slate-200"
-                    }`}
-                  >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${p.dangDung ? "bg-emerald-500" : "bg-slate-400"}`}
-                    />
-                    {dangDoi === p.id ? "Đang lưu…" : p.dangDung ? "Đang bán" : "Tạm dừng"}
-                  </button>
+                <td className="text-right font-medium text-slate-700">
+                  {p.giaBan > 0 ? so(p.giaBan) : "—"}
                 </td>
-                <td>
-                  <div className="flex items-center justify-end gap-1">
-                    <Nut
-                      kieu="mo"
-                      co="sm"
-                      title="Sửa"
-                      onClick={() =>
-                        setForm({
-                          id: p.id,
-                          ma: p.ma,
-                          ten: p.ten,
-                          nhom: p.nhom,
-                          donViTinh: p.donViTinh,
-                          giaBan: String(p.giaBan),
-                          ghiChu: p.ghiChu,
-                        })
-                      }
-                    >
-                      <BieuTuong ten="sua" className="h-4 w-4" />
-                    </Nut>
-                    <Nut kieu="mo" co="sm" onClick={() => void xoa(p)} title="Xoá" className="hover:text-rose-600">
-                      <BieuTuong ten="xoa" className="h-4 w-4" />
-                    </Nut>
-                  </div>
-                </td>
+                <td>{nutTrangThai(p)}</td>
+                <td>{thaoTacHang(p)}</td>
               </tr>
             ))}
           </tbody>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { homNay } from "@/lib/format";
 import { DS_BAT_TAT, DS_NHAN, MAU_IN_MAC_DINH, chuanHoaMauIn } from "@/lib/mau-in";
 import { useStore } from "@/lib/store";
@@ -40,10 +40,6 @@ export function ManMauIn() {
   const [dangLuu, setDangLuu] = useState(false);
   const [moXemTruoc, setMoXemTruoc] = useState(false);
 
-  useEffect(() => {
-    setMau(settings.mauIn);
-  }, [settings.mauIn]);
-
   const doiNhan = (khoa: keyof NhanPhieu, giaTri: string) =>
     setMau((m) => ({ ...m, nhan: { ...m.nhan, [khoa]: giaTri } }));
 
@@ -60,8 +56,10 @@ export function ManMauIn() {
 
   const luu = async () => {
     setDangLuu(true);
+    const chuan = chuanHoaMauIn(mau);
     try {
-      await capNhatSettings({ mauIn: chuanHoaMauIn(mau) });
+      await capNhatSettings({ mauIn: chuan });
+      setMau(chuan);
       bao("Đã lưu mẫu phiếu in");
     } catch (e) {
       baoLoi((e as Error).message);
@@ -236,7 +234,7 @@ export function ManMauIn() {
               <MauPhieuBan order={DON_MAU} settings={settings} mau={mau} />
             </div>
           </div>
-          <p className="mt-1.5 text-[11px] text-slate-400">
+          <p className="mt-1.5 text-[11px] text-slate-500">
             Phiếu mẫu in trên khổ A4. Bấm “Xem trước” để xem đúng cỡ thật.
           </p>
         </div>
@@ -245,7 +243,7 @@ export function ManMauIn() {
       {/* Xem trước đúng cỡ, in thử được luôn */}
       {moXemTruoc && (
         <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-10">
-          <div className="w-full max-w-3xl rounded-lg border border-slate-200 bg-white shadow-xl">
+          <div className="hop-noi w-full max-w-3xl rounded-2xl border border-slate-200 bg-white shadow-noi">
             <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
               <h3 className="text-sm font-semibold text-slate-800">Xem trước mẫu phiếu in</h3>
               <Nut co="sm" onClick={() => setMoXemTruoc(false)}>

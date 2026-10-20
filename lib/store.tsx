@@ -4,7 +4,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -13,6 +12,7 @@ import { apiClient, LoiApi } from "./client";
 import { MAU_IN_MAC_DINH, MAU_IN_THIEU_MAC_DINH } from "./mau-in";
 import type { Quyen } from "./quyen";
 import type { NguoiDungCongKhai, Settings } from "./types";
+import { useNap } from "./use-nap";
 
 type StoreValue = {
   nguoiDung: NguoiDungCongKhai | null;
@@ -81,9 +81,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setCoDuLieuChuaLuu(dirty);
   }, []);
 
-  useEffect(() => {
-    void napLai();
-  }, [napLai]);
+  // Kiểm tra phiên đăng nhập một lần khi mở ứng dụng
+  useNap(napLai);
 
   const value = useMemo<StoreValue>(
     () => ({

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { bamMatKhau, chuanHoaNguoiDung, timNguoiDungTheoId, yeuCau } from "@/lib/auth";
+import { bamMatKhau, timNguoiDungTheoId, yeuCau } from "@/lib/auth";
 import { khoiTao } from "@/lib/db";
 import { COL, KHONG_LAY_ID, getDb } from "@/lib/mongo";
 import { chuanHoaQuyen, type Quyen } from "@/lib/quyen";
