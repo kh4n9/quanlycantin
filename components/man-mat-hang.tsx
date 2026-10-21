@@ -142,13 +142,13 @@ export function ManMatHang() {
       }}
       disabled={dangDoi === p.id}
       title={p.dangDung ? "Bấm để tạm dừng bán" : "Bấm để mở bán lại"}
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium transition disabled:opacity-50 ${
+      className={`inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-[10px] font-medium tracking-[0.03em] uppercase transition disabled:opacity-50 ${
         p.dangDung
-          ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-          : "border-slate-300 bg-slate-100 text-slate-500 hover:bg-slate-200"
+          ? "border-ngoc/30 bg-ngoc-nhat text-ngoc hover:bg-ngoc-nhat/70"
+          : "border-ke-dam bg-giay text-muc-mo hover:bg-ke/40"
       }`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${p.dangDung ? "bg-emerald-500" : "bg-slate-400"}`} />
+      <span className={`h-1.5 w-1.5 rounded-full ${p.dangDung ? "bg-ngoc" : "bg-ke-dam"}`} />
       {dangDoi === p.id ? "Đang lưu…" : p.dangDung ? "Đang bán" : "Tạm dừng"}
     </button>
   );
@@ -171,7 +171,7 @@ export function ManMatHang() {
       <Nut kieu="mo" co="sm" title="Sửa" onClick={() => moSua(p)}>
         <BieuTuong ten="sua" className="h-4 w-4" />
       </Nut>
-      <Nut kieu="mo" co="sm" onClick={() => void xoa(p)} title="Xoá" className="hover:text-rose-600">
+      <Nut kieu="mo" co="sm" onClick={() => void xoa(p)} title="Xoá" className="hover:text-dau">
         <BieuTuong ten="xoa" className="h-4 w-4" />
       </Nut>
     </div>
@@ -196,10 +196,10 @@ export function ManMatHang() {
   };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 bg-slate-50/70 px-3 py-2.5">
+    <div className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
+      <div className="flex flex-wrap items-center gap-2 border-b border-dashed border-ke bg-giay px-3.5 py-3">
         <div className="relative min-w-64 flex-1">
-          <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400">
+          <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muc-mo">
             <BieuTuong ten="tim" className="h-4 w-4" />
           </span>
           <OText
@@ -249,7 +249,7 @@ export function ManMatHang() {
             }
           />
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-ke/60">
             {danhSach.map((p) => (
               <div
                 key={p.id}
@@ -262,25 +262,25 @@ export function ManMatHang() {
                     setChiTiet(p);
                   }
                 }}
-                className={`cursor-pointer p-3 transition-colors hover:bg-slate-50 ${
+                className={`cursor-pointer p-3 transition-colors hover:bg-giay/60 ${
                   !p.dangDung ? "opacity-60" : ""
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="font-medium text-slate-800">{p.ten}</div>
-                    <div className="font-mono text-[11px] text-slate-500">{p.ma}</div>
+                    <div className="font-semibold text-muc">{p.ten}</div>
+                    <div className="font-mono text-[10.5px] tracking-[0.01em] text-muc-mo">{p.ma}</div>
                   </div>
-                  <div className="shrink-0 text-right text-[15px] font-semibold text-slate-800 tabular-nums">
+                  <div className="so shrink-0 text-right text-[14px] font-semibold text-muc">
                     {p.giaBan > 0 ? so(p.giaBan) : "—"}
                   </div>
                 </div>
-                {p.ghiChu && <div className="mt-0.5 text-[11px] text-slate-500">{p.ghiChu}</div>}
-                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
+                {p.ghiChu && <div className="mt-0.5 text-[11px] text-muc-nhat">{p.ghiChu}</div>}
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 font-mono text-[10px] tracking-[0.01em] text-muc-mo">
                   <span>{p.nhom}</span>
-                  <span>ĐVT: {p.donViTinh}</span>
+                  <span>ĐVT {p.donViTinh}</span>
                 </div>
-                <div className="mt-2 flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
+                <div className="mt-2 flex items-center justify-between gap-2 border-t border-ke/60 pt-2">
                   {nutTrangThai(p)}
                   {thaoTacHang(p)}
                 </div>
@@ -291,16 +291,16 @@ export function ManMatHang() {
       </div>
 
       <div className="mem-cuon hidden max-h-[66vh] overflow-auto sm:block">
-        <table className="w-full min-w-[760px] border-collapse text-sm">
-          <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
-            <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:text-left [&>th]:font-semibold">
-              <th className="w-28">Mã</th>
+        <table className="w-full min-w-[760px] table-fixed border-collapse text-sm">
+          <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+            <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
+              <th className="w-24">Mã</th>
               <th>Tên mặt hàng</th>
-              <th className="w-28">Nhóm</th>
-              <th className="w-20">ĐVT</th>
+              <th className="w-32">Nhóm</th>
+              <th className="w-16">ĐVT</th>
               <th className="w-28 text-right">Giá bán</th>
               <th className="w-32">Trạng thái</th>
-              <th className="w-28" />
+              <th className="w-24" />
             </tr>
           </thead>
           <tbody>
@@ -325,18 +325,18 @@ export function ManMatHang() {
               <tr
                 key={p.id}
                 onClick={() => setChiTiet(p)}
-                className={`cursor-pointer [&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-2 transition-colors hover:bg-slate-50/70 ${
+                className={`cursor-pointer [&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-2.5 transition-colors hover:bg-giay/60 ${
                   !p.dangDung ? "opacity-50" : ""
                 }`}
               >
-                <td className="font-mono text-[12px] text-slate-500">{p.ma}</td>
+                <td className="so text-[11.5px] text-muc-mo">{p.ma}</td>
                 <td>
-                  <div className="font-medium text-slate-800">{p.ten}</div>
-                  {p.ghiChu && <div className="text-[11px] text-slate-500">{p.ghiChu}</div>}
+                  <div className="font-semibold text-muc">{p.ten}</div>
+                  {p.ghiChu && <div className="text-[11px] text-muc-mo">{p.ghiChu}</div>}
                 </td>
-                <td className="text-slate-600">{p.nhom}</td>
-                <td className="text-slate-600">{p.donViTinh}</td>
-                <td className="text-right font-medium text-slate-700">
+                <td className="text-[13px] text-muc-nhat">{p.nhom}</td>
+                <td className="text-[13px] text-muc-nhat">{p.donViTinh}</td>
+                <td className="so text-right text-[13px] font-medium text-muc">
                   {p.giaBan > 0 ? so(p.giaBan) : "—"}
                 </td>
                 <td>{nutTrangThai(p)}</td>
@@ -368,12 +368,12 @@ export function ManMatHang() {
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2.5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border border-ke-dam bg-giay text-muc-nhat">
                   <BieuTuong ten="kho" />
                 </span>
                 <div className="min-w-0">
-                  <div className="text-[15px] font-semibold tracking-tight text-slate-900">{chiTiet.ten}</div>
-                  <div className="font-mono text-[12px] text-slate-500">{chiTiet.ma}</div>
+                  <div className="font-serif text-[16px] font-semibold tracking-[-0.01em] text-muc">{chiTiet.ten}</div>
+                  <div className="so text-[10.5px] text-muc-mo">{chiTiet.ma}</div>
                 </div>
               </div>
               <Nhan sac={chiTiet.dangDung ? "luc" : "xam"}>
@@ -381,30 +381,30 @@ export function ManMatHang() {
               </Nhan>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50/60 p-3 text-[13px]">
+            <div className="grid grid-cols-2 gap-3 rounded-sm border border-ke bg-giay/60 p-3 text-[13px]">
               <div>
-                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Nhóm hàng</div>
-                <div className="mt-0.5 font-medium text-slate-800">{chiTiet.nhom || "Khác"}</div>
+                <div className="nhan-muc">Nhóm hàng</div>
+                <div className="mt-0.5 font-medium text-muc">{chiTiet.nhom || "Khác"}</div>
               </div>
               <div>
-                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Đơn vị tính</div>
-                <div className="mt-0.5 font-medium text-slate-800">{chiTiet.donViTinh}</div>
+                <div className="nhan-muc">Đơn vị tính</div>
+                <div className="mt-0.5 font-medium text-muc">{chiTiet.donViTinh}</div>
               </div>
               <div>
-                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Giá bán</div>
-                <div className="mt-0.5 font-semibold text-slate-900 tabular-nums">
+                <div className="nhan-muc">Giá bán</div>
+                <div className="so mt-0.5 font-semibold text-muc">
                   {chiTiet.giaBan > 0 ? `${so(chiTiet.giaBan)} đ` : "Chưa đặt giá"}
                 </div>
               </div>
               <div>
-                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Ngày tạo</div>
-                <div className="mt-0.5 text-slate-700">
+                <div className="nhan-muc">Ngày tạo</div>
+                <div className="so mt-0.5 text-[11px] text-muc-nhat">
                   {chiTiet.createdAt ? new Date(chiTiet.createdAt).toLocaleString("vi-VN") : "—"}
                 </div>
               </div>
               <div className="col-span-2">
-                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Ghi chú</div>
-                <div className="mt-0.5 whitespace-pre-wrap text-slate-700">{chiTiet.ghiChu || "—"}</div>
+                <div className="nhan-muc">Ghi chú</div>
+                <div className="mt-0.5 whitespace-pre-wrap text-muc-nhat">{chiTiet.ghiChu || "—"}</div>
               </div>
             </div>
           </div>
@@ -444,7 +444,7 @@ export function ManMatHang() {
                 list="ds-nhom"
                 value={form.nhom}
                 onChange={(e) => setForm({ ...form, nhom: e.target.value })}
-                className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-sm border border-ke-dam bg-white px-2.5 py-1.5 text-sm text-muc outline-none transition focus:border-muc"
               />
               <datalist id="ds-nhom">
                 {[...new Set([...NHOM_GOI_Y, ...dsNhom])].map((n) => (

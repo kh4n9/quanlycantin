@@ -113,20 +113,21 @@ export function HopThungRac({
       chanTrang={<Nut onClick={dong}>Đóng</Nut>}
     >
       <div className="flex flex-col gap-2">
-        <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] text-slate-600">
+        <p className="rounded-sm border border-ke border-l-[3px] border-l-ke-dam bg-giay px-3 py-2 text-[12px] text-muc-nhat">
           Phiếu ở đây đã bị bỏ khỏi danh sách và mọi báo cáo, nhưng dữ liệu vẫn còn nguyên. Phục hồi được bất cứ
-          lúc nào. Chỉ <b>xoá vĩnh viễn</b> mới không lấy lại được.
+          lúc nào. Chỉ <b className="font-semibold text-muc">xoá vĩnh viễn</b> mới không lấy lại được.
           {soNgayGiu > 0 && (
             <>
               {" "}
-              Phiếu nằm đây quá <b>{so(soNgayGiu)} ngày</b> sẽ tự bị xoá vĩnh viễn (đặt lại ở mục Cài đặt).
+              Phiếu nằm đây quá <b className="font-semibold text-muc">{so(soNgayGiu)} ngày</b> sẽ tự bị xoá vĩnh viễn
+              (đặt lại ở mục Cài đặt).
             </>
           )}
         </p>
 
         {ds.length > 0 && (
           <div className="relative">
-            <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400">
+            <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muc-mo">
               <BieuTuong ten="tim" className="h-4 w-4" />
             </span>
             <OText
@@ -136,7 +137,7 @@ export function HopThungRac({
               className="pl-8"
             />
             {q && (
-              <span className="absolute top-1/2 right-2.5 -translate-y-1/2 text-[12px] text-slate-500">
+              <span className="so absolute top-1/2 right-2.5 -translate-y-1/2 text-[10px] text-muc-mo">
                 {so(hienThi.length)} / {so(ds.length)}
               </span>
             )}
@@ -144,7 +145,7 @@ export function HopThungRac({
         )}
 
         {dangTai ? (
-          <p className="py-8 text-center text-sm text-slate-500">Đang tải…</p>
+          <p className="py-8 text-center font-mono text-[11px] tracking-[0.02em] text-muc-mo">Đang tải…</p>
         ) : ds.length === 0 ? (
           <Trong tieuDe="Thùng rác đang trống" moTa="Các phiếu bị xoá sẽ được giữ ở đây để phục hồi khi cần." />
         ) : hienThi.length === 0 ? (
@@ -153,10 +154,10 @@ export function HopThungRac({
             moTa="Thử từ khoá khác, hoặc xoá ô tìm kiếm để xem tất cả."
           />
         ) : (
-          <div className="mem-cuon max-h-[54vh] overflow-auto rounded-md border border-slate-200">
+          <div className="mem-cuon max-h-[54vh] overflow-auto rounded-sm border border-ke">
             <table className="w-full min-w-[720px] border-collapse text-sm">
-              <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
-                <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:text-left [&>th]:font-semibold">
+              <thead className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+                <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
                   <th className="w-28">Số phiếu</th>
                   <th className="w-24">Ngày bán</th>
                   <th>Can phạm</th>
@@ -172,40 +173,48 @@ export function HopThungRac({
                   <tr
                     key={o.id}
                     onClick={() => xemTruoc(o)}
-                    className={`cursor-pointer align-top transition-colors hover:bg-slate-50 [&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-2 ${
+                    className={`cursor-pointer transition-colors hover:bg-giay/60 [&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-2 [&>td]:align-middle ${
                       dangChay === o.id ? "opacity-50" : ""
                     }`}
                     title="Bấm để xem lại phiếu"
                   >
-                    <td className="font-mono text-[12px] font-medium text-slate-600 line-through">{o.soPhieu}</td>
-                    <td className="text-slate-600">{ngayVN(o.ngay)}</td>
+                    <td className="so text-[11px] font-medium text-muc-mo line-through">{o.soPhieu}</td>
+                    <td className="so text-[11px] text-muc-nhat">{ngayVN(o.ngay)}</td>
                     <td>
-                      <div className="font-medium text-slate-800">{o.hoTen}</div>
-                      <div className="text-[11px] text-slate-500">
+                      <div className="font-semibold text-muc">{o.hoTen}</div>
+                      <div className="font-mono text-[10px] tracking-[0.01em] text-muc-mo">
                         {o.namSinh ? `SN ${o.namSinh}` : "—"} · {o.buongGiam || "—"}
                       </div>
                     </td>
-                    <td className="text-center text-slate-600">{o.items.length}</td>
-                    <td className="text-right text-slate-700 tabular-nums">
+                    <td className="so text-center text-[12px] text-muc-nhat">{o.items.length}</td>
+                    <td className="so text-right text-[12px] text-muc">
                       {o.tongTien > 0 ? so(o.tongTien) : "—"}
                     </td>
                     <td className="text-[12px]">
                       {o.lyDoXoa ? (
-                        <span className="text-slate-700">{o.lyDoXoa}</span>
+                        <span className="text-muc-nhat">{o.lyDoXoa}</span>
                       ) : (
-                        <span className="text-slate-400">—</span>
+                        <span className="text-muc-mo">—</span>
                       )}
                     </td>
-                    <td className="text-[12px] text-slate-500">
-                      {o.xoaLuc
-                        ? new Date(o.xoaLuc).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })
-                        : "—"}
-                      {o.xoaBoi ? <div className="text-[11px] text-slate-500">bởi {o.xoaBoi}</div> : null}
+                    <td>
+                      <div className="so text-[10.5px] text-muc-nhat">
+                        {o.xoaLuc
+                          ? new Date(o.xoaLuc).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })
+                          : "—"}
+                      </div>
+                      {o.xoaBoi ? (
+                        <div className="font-mono text-[9.5px] tracking-[0.01em] text-muc-mo">bởi {o.xoaBoi}</div>
+                      ) : null}
                       {(() => {
                         const con = conLaiBaoNhieuNgay(o);
                         if (con === null) return null;
                         return (
-                          <div className={`text-[11px] ${con <= 3 ? "font-medium text-rose-600" : "text-slate-500"}`}>
+                          <div
+                            className={`font-mono text-[9.5px] tracking-[0.02em] uppercase ${
+                              con <= 3 ? "font-semibold text-dau" : "text-muc-mo"
+                            }`}
+                          >
                             {con === 0 ? "sắp bị xoá" : `còn ${con} ngày`}
                           </div>
                         );
@@ -233,13 +242,15 @@ export function HopThungRac({
                               onClick={() => void xoaVinhVien(o)}
                               disabled={dangChay === o.id}
                               title="Xoá hẳn, không lấy lại được"
-                              className="hover:text-rose-500"
+                              className="hover:text-dau"
                             >
                               <BieuTuong ten="xoa" className="h-4 w-4" />
                             </Nut>
                           </>
                         ) : (
-                          <span className="text-[11px] text-slate-500">Không có quyền</span>
+                          <span className="font-mono text-[9.5px] tracking-[0.02em] text-muc-mo uppercase">
+                            Không có quyền
+                          </span>
                         )}
                       </div>
                     </td>

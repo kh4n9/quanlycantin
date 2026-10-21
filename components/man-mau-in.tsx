@@ -108,11 +108,9 @@ export function ManMauIn() {
           </div>
 
           <div>
-            <div className="mb-1.5 text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
-              Hiện trên phiếu
-            </div>
+            <div className="nhan-muc mb-1.5">Hiện trên phiếu</div>
             {matTien && (
-              <div className="mb-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-[12px] text-blue-800">
+              <div className="mb-2 rounded-sm border border-moc/30 border-l-[3px] border-l-moc bg-moc-nhat px-3 py-2 text-[12px] text-muc">
                 Đang tắt cả đơn giá lẫn thành tiền — phiếu in ra chỉ còn mặt hàng và số lượng.
               </div>
             )}
@@ -123,20 +121,20 @@ export function ManMauIn() {
                 return (
                   <label
                     key={muc.khoa}
-                    className={`flex items-start gap-2 rounded px-1 py-1 ${
-                      khoaPhuThuoc ? "cursor-not-allowed opacity-45" : "cursor-pointer hover:bg-slate-50"
+                    className={`flex items-start gap-2 rounded-sm px-1 py-1 ${
+                      khoaPhuThuoc ? "cursor-not-allowed opacity-45" : "cursor-pointer hover:bg-giay"
                     }`}
                   >
                     <input
                       type="checkbox"
-                      className="mt-0.5 h-4 w-4 shrink-0 accent-blue-700"
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-muc"
                       checked={mau.hien[muc.khoa]}
                       disabled={!duocSua || khoaPhuThuoc}
                       onChange={(e) => doiBat(muc.khoa, e.target.checked)}
                     />
                     <span className="min-w-0">
-                      <span className="block text-[13px] font-medium text-slate-800">{muc.nhan}</span>
-                      {muc.moTa && <span className="block text-[11px] text-slate-500">{muc.moTa}</span>}
+                      <span className="block text-[13px] font-medium text-muc">{muc.nhan}</span>
+                      {muc.moTa && <span className="block text-[11px] text-muc-nhat">{muc.moTa}</span>}
                     </span>
                   </label>
                 );
@@ -145,13 +143,11 @@ export function ManMauIn() {
           </div>
 
           <div>
-            <div className="mb-1.5 text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
-              Chữ hiện trên phiếu
-            </div>
+            <div className="nhan-muc mb-1.5">Chữ hiện trên phiếu</div>
             <div className="grid gap-2 sm:grid-cols-2">
               {DS_NHAN.map((n) => (
                 <div key={n.khoa}>
-                  <label className="mb-0.5 block text-[11px] text-slate-500">{n.nhan}</label>
+                  <label className="mb-0.5 block text-[11px] text-muc-nhat">{n.nhan}</label>
                   <OText
                     value={mau.nhan[n.khoa]}
                     onChange={(e) => doiNhan(n.khoa, e.target.value)}
@@ -164,16 +160,14 @@ export function ManMauIn() {
 
           <div>
             <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-              <span className="text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
-                Chữ ký cuối phiếu
-              </span>
+              <span className="nhan-muc">Chữ ký cuối phiếu</span>
               <div className="flex items-center gap-2">
-                <label className="text-[12px] text-slate-600">Số chữ ký mỗi hàng</label>
+                <label className="text-[12px] text-muc-nhat">Số chữ ký mỗi hàng</label>
                 <select
                   value={mau.soCotChuKy}
                   disabled={!duocSua}
                   onChange={(e) => setMau({ ...mau, soCotChuKy: Number(e.target.value) })}
-                  className="h-8 rounded-md border border-slate-300 bg-white px-2 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+                  className="h-8 rounded-sm border border-ke-dam bg-white px-2 font-mono text-[12px] text-muc outline-none transition focus:border-muc disabled:bg-giay"
                 >
                   {[1, 2, 3, 4].map((n) => (
                     <option key={n} value={n}>
@@ -188,7 +182,7 @@ export function ManMauIn() {
               {mau.chuKy.map((c, i) => (
                 <div key={i} className="flex items-end gap-2">
                   <div className="flex-1">
-                    <label className="mb-0.5 block text-[11px] text-slate-500">Tên ô chữ ký {i + 1}</label>
+                    <label className="mb-0.5 block text-[11px] text-muc-nhat">Tên ô chữ ký {i + 1}</label>
                     <OText
                       value={c.nhan}
                       onChange={(e) => doiChuKy(i, { nhan: e.target.value })}
@@ -196,7 +190,7 @@ export function ManMauIn() {
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="mb-0.5 block text-[11px] text-slate-500">Dòng phụ dưới chữ ký</label>
+                    <label className="mb-0.5 block text-[11px] text-muc-nhat">Dòng phụ dưới chữ ký</label>
                     <OText
                       value={c.ghiChu}
                       onChange={(e) => doiChuKy(i, { ghiChu: e.target.value })}
@@ -209,7 +203,7 @@ export function ManMauIn() {
                     onClick={() => boChuKy(i)}
                     disabled={!duocSua || mau.chuKy.length <= 1}
                     title="Bỏ ô chữ ký này"
-                    className="hover:text-rose-600"
+                    className="hover:text-dau"
                   >
                     <BieuTuong ten="xoa" className="h-4 w-4" />
                   </Nut>
@@ -226,39 +220,39 @@ export function ManMauIn() {
 
         {/* ------------------------------ Xem trước ------------------------------ */}
         <div className="lg:sticky lg:top-4 lg:self-start">
-          <div className="mb-1.5 text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
-            Xem trước
-          </div>
-          <div className="mem-cuon max-h-[38rem] overflow-auto rounded-md border border-slate-300 bg-white p-3 shadow-inner">
+          <div className="nhan-muc mb-1.5">Xem trước</div>
+          <div className="mem-cuon max-h-[38rem] overflow-auto rounded-sm border border-ke-dam bg-white p-3 shadow-[inset_0_1px_3px_rgb(22_32_28/0.05)]">
             <div style={{ transform: "scale(0.62)", transformOrigin: "top left", width: "161%" }}>
               <MauPhieuBan order={DON_MAU} settings={settings} mau={mau} />
             </div>
           </div>
-          <p className="mt-1.5 text-[11px] text-slate-500">
-            Phiếu mẫu in trên khổ A4. Bấm “Xem trước” để xem đúng cỡ thật.
+          <p className="mt-1.5 text-[11px] text-muc-nhat">
+            Phiếu mẫu in trên khổ A4. Bấm “Xem trước” để xem bản in đầy đủ.
           </p>
         </div>
       </div>
 
       {/* Xem trước đúng cỡ, in thử được luôn */}
       {moXemTruoc && (
-        <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-10">
-          <div className="hop-noi w-full max-w-3xl rounded-2xl border border-slate-200 bg-white shadow-noi">
-            <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-              <h3 className="text-sm font-semibold text-slate-800">Xem trước mẫu phiếu in</h3>
+        <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-muc/45 p-4 pt-10">
+          <div className="hop-noi w-full max-w-3xl rounded-lg border border-ke bg-white shadow-noi">
+            <header className="flex items-center justify-between border-b border-ke px-4 py-3">
+              <h3 className="font-serif text-[15px] font-semibold text-muc">Xem trước mẫu phiếu in</h3>
               <Nut co="sm" onClick={() => setMoXemTruoc(false)}>
                 Đóng
               </Nut>
             </header>
-            <div className="mem-cuon max-h-[75vh] overflow-auto p-6">
-              {settings.tenDonVi ? (
-                <MauPhieuBan order={DON_MAU} settings={settings} mau={mau} />
-              ) : (
-                <Trong
-                  tieuDe="Chưa đặt tên đơn vị"
-                  moTa="Vào thẻ “Thông tin đơn vị” để nhập tên đơn vị in ở đầu phiếu."
-                />
-              )}
+            <div className="mem-cuon max-h-[75vh] overflow-auto bg-giay p-5">
+              <div className="mx-auto w-[794px] max-w-full bg-white px-[45px] py-9 shadow-the ring-1 ring-ke/70">
+                {settings.tenDonVi ? (
+                  <MauPhieuBan order={DON_MAU} settings={settings} mau={mau} />
+                ) : (
+                  <Trong
+                    tieuDe="Chưa đặt tên đơn vị"
+                    moTa="Vào thẻ “Thông tin đơn vị” để nhập tên đơn vị in ở đầu phiếu."
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>

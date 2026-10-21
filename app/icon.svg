@@ -1,35 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Logo quản lý căn tin">
   <defs>
-    <linearGradient id="nen" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#3b82f6" />
-      <stop offset="0.55" stop-color="#2563eb" />
-      <stop offset="1" stop-color="#1e40af" />
-    </linearGradient>
-    <linearGradient id="bat" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffffff" />
-      <stop offset="1" stop-color="#dbeafe" />
+    <linearGradient id="vien" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16201c" />
+      <stop offset="1" stop-color="#0b1411" />
     </linearGradient>
   </defs>
 
-  <rect width="512" height="512" rx="116" fill="url(#nen)" />
-  <circle cx="256" cy="246" r="158" fill="#ffffff" opacity="0.07" />
+  <rect width="512" height="512" rx="116" fill="#f4f5ef" />
+  <rect x="6" y="6" width="500" height="500" rx="111" fill="none" stroke="url(#vien)" stroke-width="12" opacity="0.9" />
 
-  <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="18" opacity="0.9">
+  <g fill="none" stroke="#16201c" stroke-linecap="round" stroke-width="18" opacity="0.55">
     <path d="M196 170c-17-23 17-38 0-61" />
     <path d="M256 158c-17-23 17-38 0-61" />
     <path d="M316 170c-17-23 17-38 0-61" />
   </g>
 
-  <rect x="118" y="212" width="276" height="32" rx="16" fill="#ffffff" />
+  <rect x="118" y="212" width="276" height="32" rx="16" fill="#16201c" />
   <path
     d="M136 244h240l-19 103a66 66 0 0 1-65 55h-72a66 66 0 0 1-65-55z"
-    fill="url(#bat)"
+    fill="#16201c"
   />
-  <rect x="192" y="402" width="128" height="28" rx="14" fill="#ffffff" opacity="0.95" />
+  <rect x="192" y="402" width="128" height="28" rx="14" fill="#16201c" opacity="0.9" />
   <path
     d="M206 304l36 36 68-78"
     fill="none"
-    stroke="#1d4ed8"
+    stroke="#f4f5ef"
     stroke-linecap="round"
     stroke-linejoin="round"
     stroke-width="26"

@@ -13,7 +13,7 @@ import { homNay, ngayVN, so, tien } from "@/lib/format";
 import { baoLoi, BieuTuong, HopThoai, Nhan, Nut, Trong } from "./ui";
 
 /** Màu duy nhất cho chuỗi dữ liệu — đã kiểm bằng scripts/validate_palette.js */
-const MAU_DUONG = "linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%)";
+const MAU_DUONG = "linear-gradient(180deg, #2a342e 0%, #16201c 100%)";
 
 type HangBaoCao = BaoCao["theoHang"][number];
 type CanPhamBaoCao = BaoCao["theoCanPham"][number];
@@ -236,8 +236,8 @@ export function ManBaoCao() {
   return (
     <div className="flex flex-col gap-3">
       {/* Bộ lọc — một hàng phía trên các biểu đồ */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-3.5 py-3 shadow-the">
-        <span className="mr-1 text-[13px] font-semibold text-slate-800">Khoảng thời gian</span>
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-ke bg-giay-cao px-3.5 py-3 shadow-the">
+        <span className="mr-1 font-serif text-[14px] font-semibold text-muc">Khoảng thời gian</span>
         {(
           [
             ["homnay", "Hôm nay"],
@@ -255,14 +255,14 @@ export function ManBaoCao() {
             type="date"
             value={tu}
             onChange={(e) => setTu(e.target.value)}
-            className="h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-sm shadow-xs outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+            className="h-9 rounded-sm border border-ke-dam bg-giay-cao px-2.5 font-mono text-[11.5px] shadow-xs outline-none transition focus:border-muc"
           />
-          <span className="text-slate-400">→</span>
+          <span className="text-muc-mo">→</span>
           <input
             type="date"
             value={den}
             onChange={(e) => setDen(e.target.value)}
-            className="h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-sm shadow-xs outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+            className="h-9 rounded-sm border border-ke-dam bg-giay-cao px-2.5 font-mono text-[11.5px] shadow-xs outline-none transition focus:border-muc"
           />
         </div>
         <Nut onClick={xuatExcel} disabled={!du} className="ml-auto">
@@ -271,11 +271,11 @@ export function ManBaoCao() {
       </div>
 
       {dangTai && !du ? (
-        <div className="rounded-xl border border-slate-200/80 bg-white py-16 text-center text-sm text-slate-500 shadow-the">
+        <div className="rounded-lg border border-ke bg-giay-cao py-16 text-center font-mono text-[11px] tracking-[0.06em] text-muc-mo uppercase shadow-the">
           Đang tổng hợp số liệu…
         </div>
       ) : !du || du.tongQuan.soPhieu === 0 ? (
-        <div className="rounded-xl border border-slate-200/80 bg-white shadow-the">
+        <div className="rounded-lg border border-ke bg-giay-cao shadow-the">
           <Trong
             tieuDe="Chưa có phiếu bán nào trong khoảng thời gian này"
             moTa="Chọn khoảng ngày khác, hoặc lập phiếu bán ở màn hình Bán hàng."
@@ -284,11 +284,12 @@ export function ManBaoCao() {
       ) : (
         <>
           {du.tongQuan.soPhieuThieu > 0 && (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-2.5 text-[13px] text-amber-800 shadow-xs">
-              <BieuTuong ten="canh" className="h-4 w-4 shrink-0" />
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-moc/30 border-l-[3px] border-l-moc bg-moc-nhat px-3.5 py-2.5 text-[13px] text-muc shadow-xs">
+              <BieuTuong ten="canh" className="h-4 w-4 shrink-0 text-moc" />
               <span>
-                Đang có <b>{so(du.tongQuan.soPhieuThieu)}</b> phiếu còn nợ hàng can phạm, tổng cộng{" "}
-                <b>{so(du.tongQuan.tongLuongThieu)}</b> đơn vị chưa giao. Chi tiết ở mục “Hàng còn thiếu” bên dưới.
+                Đang có <b className="font-semibold">{so(du.tongQuan.soPhieuThieu)}</b> phiếu còn nợ hàng can phạm, tổng
+                cộng <b className="font-semibold">{so(du.tongQuan.tongLuongThieu)}</b> đơn vị chưa giao. Chi tiết ở mục
+                “Hàng còn thiếu” bên dưới.
               </span>
             </div>
           )}
@@ -461,12 +462,12 @@ export function ManBaoCao() {
 
       {/* Xem trước danh sách phát trước khi in */}
       {xemTruocThieu && du && (
-        <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-10">
-          <div className="hop-noi w-full max-w-4xl rounded-2xl border border-slate-200 bg-white shadow-noi">
-            <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
+        <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-muc/45 p-4 pt-10">
+          <div className="hop-noi w-full max-w-4xl rounded-lg border border-ke bg-white shadow-noi">
+            <header className="flex flex-wrap items-center justify-between gap-2 border-b border-ke px-4 py-3">
               <div>
-                <h3 className="text-sm font-semibold text-slate-800">Xem trước danh sách phát</h3>
-                <p className="text-[11px] text-slate-500">
+                <h3 className="font-serif text-[15px] font-semibold text-muc">Xem trước danh sách phát</h3>
+                <p className="font-mono text-[10px] tracking-[0.02em] text-muc-mo">
                   {DS_KIEU_IN.find((k) => k.khoa === kieuIn)?.nhan} — mẫu in sửa trong Cài đặt
                 </p>
               </div>
@@ -533,37 +534,28 @@ function Tile({
   const ss = soSanh ? phanTramSoSanh(soSanh.hienTai, soSanh.truoc) : null;
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border bg-white px-4 py-3.5 shadow-the ${
-        chinh ? "border-blue-200 ring-1 ring-blue-100/70" : "border-slate-200/80"
+      className={`relative overflow-hidden rounded-lg border bg-giay-cao px-4 py-3.5 shadow-the ${
+        chinh ? "border-muc/25" : "border-ke"
       }`}
     >
-      {chinh && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-blue-500/10 blur-2xl"
-        />
-      )}
+      {chinh && <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-muc" />}
       <div className="relative">
         <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 text-[12px] font-medium text-slate-500">{nhan}</div>
+          <div className="nhan-muc min-w-0 truncate">{nhan}</div>
           {icon && (
-            <span
-              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-                chinh ? "bg-blue-50 text-blue-700" : "bg-slate-50 text-slate-500"
-              }`}
-            >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-ke bg-giay text-muc-mo">
               <BieuTuong ten={icon} className="h-3.5 w-3.5" />
             </span>
           )}
         </div>
         <div
-          className={`mt-1 font-bold tracking-tight whitespace-nowrap text-slate-900 tabular-nums ${
-            chinh ? "text-2xl sm:text-3xl" : "text-lg sm:text-2xl"
+          className={`so mt-1.5 font-semibold tracking-tight whitespace-nowrap text-muc ${
+            chinh ? "text-[25px] sm:text-[30px]" : "text-[19px] sm:text-[22px]"
           }`}
         >
           {giaTri}
         </div>
-        {phu && <div className="mt-0.5 text-[11px] text-slate-500">{phu}</div>}
+        {phu && <div className="mt-1 text-[11px] text-muc-nhat">{phu}</div>}
         {ss && (
           <div className="mt-1.5">
             <Nhan sac={ss.sac}>{ss.nhan}</Nhan>
@@ -605,25 +597,25 @@ function BieuDoTheoNgay({
   const ngayCaoNhat = data.reduce((a, b) => (giaTri(b) > giaTri(a) ? b : a), data[0]);
 
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
-      <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-200/80 bg-linear-to-r from-slate-50 to-white px-4 py-3">
+    <section className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
+      <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-dashed border-ke bg-giay px-4 py-3">
         <div>
-          <h2 className="text-[13.5px] font-semibold tracking-tight text-slate-800">
+          <h2 className="font-serif text-[15px] leading-tight font-semibold tracking-[-0.01em] text-muc">
             {dungTien ? "Doanh thu theo ngày" : "Số phiếu bán theo ngày"}
           </h2>
-          <p className="mt-0.5 text-[11px] text-slate-500">
+          <p className="mt-0.5 text-[11px] text-muc-nhat">
             Tổng {dungTien ? tien(tong) : `${so(tong)} phiếu`} · TB {so(tong / Math.max(1, data.length))}/ngày · cao
             nhất {ngayVN(ngayCaoNhat?.ngay ?? "")} (
             {dungTien ? tien(giaTri(ngayCaoNhat)) : `${so(giaTri(ngayCaoNhat))} phiếu`})
           </p>
         </div>
-        <span className="text-[11px] text-slate-500">
+        <span className="font-mono text-[9.5px] tracking-[0.03em] text-muc-mo uppercase">
           {onChonNgay ? "Bấm vào cột để xem phiếu trong ngày" : "Đưa chuột lên cột để xem chi tiết ngày"}
         </span>
       </header>
 
       <div className="flex gap-3 px-4 pt-4 pb-3">
-        <div className="flex h-[220px] w-20 shrink-0 flex-col justify-between text-right text-[10px] text-slate-500">
+        <div className="so flex h-[220px] w-20 shrink-0 flex-col justify-between text-right text-[9.5px] text-muc-mo">
           {[...moc].reverse().map((m) => (
             <span key={m} className="-translate-y-1/2 tabular-nums">
               {so(m)}
@@ -635,7 +627,7 @@ function BieuDoTheoNgay({
           <div className="relative h-[220px]">
             <div className="absolute inset-0 flex flex-col justify-between">
               {moc.map((m, i) => (
-                <div key={m} className={`h-px w-full ${i === moc.length - 1 ? "bg-slate-300" : "bg-slate-100"}`} />
+                <div key={m} className={`h-px w-full ${i === moc.length - 1 ? "bg-ke-dam" : "bg-ke/60"}`} />
               ))}
             </div>
 
@@ -676,20 +668,20 @@ function BieuDoTheoNgay({
                       }}
                     />
                     {dangTro && (
-                      <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-44 -translate-x-1/2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[12px] shadow-lg">
-                        <div className="font-semibold text-slate-800">{ngayVN(d.ngay)}</div>
-                        <div className="mt-1 flex justify-between gap-3 text-slate-600">
+                      <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-44 -translate-x-1/2 rounded-md border border-ke-dam bg-giay-cao px-3 py-2 text-[11.5px] shadow-noi">
+                        <div className="font-mono text-[10px] tracking-[0.06em] text-muc uppercase">{ngayVN(d.ngay)}</div>
+                        <div className="mt-1 flex justify-between gap-3 text-muc-nhat">
                           <span>Số phiếu</span>
-                          <b className="tabular-nums text-slate-900">{so(d.soPhieu)}</b>
+                          <b className="so text-muc">{so(d.soPhieu)}</b>
                         </div>
-                        <div className="flex justify-between gap-3 text-slate-600">
+                        <div className="flex justify-between gap-3 text-muc-nhat">
                           <span>Lượng hàng</span>
-                          <span className="tabular-nums">{so(d.soLuongHang)}</span>
+                          <span className="so text-muc">{so(d.soLuongHang)}</span>
                         </div>
                         {dungTien && (
-                          <div className="flex justify-between gap-3 text-slate-600">
+                          <div className="flex justify-between gap-3 text-muc-nhat">
                             <span>Doanh thu</span>
-                            <span className="tabular-nums">{so(d.doanhThu)}</span>
+                            <span className="so text-muc">{so(d.doanhThu)}</span>
                           </div>
                         )}
                       </div>
@@ -702,7 +694,7 @@ function BieuDoTheoNgay({
 
           <div className="mt-1 flex" style={{ gap: 2 }}>
             {data.map((d, i) => (
-              <div key={d.ngay} className="min-w-0 flex-1 text-center text-[10px] whitespace-nowrap text-slate-500">
+              <div key={d.ngay} className="so min-w-0 flex-1 text-center text-[9.5px] whitespace-nowrap text-muc-mo">
                 {i % buocNhan === 0 || i === data.length - 1 ? d.ngay.slice(8, 10) : ""}
               </div>
             ))}
@@ -742,14 +734,16 @@ function HangConThieu({
 }) {
   if (hang.length === 0) {
     return (
-      <section className="overflow-hidden rounded-xl border border-emerald-200/80 bg-white shadow-the">
-        <header className="border-b border-emerald-200/70 bg-emerald-50/60 px-4 py-3">
-          <h2 className="text-[13.5px] font-semibold tracking-tight text-emerald-900">Hàng còn thiếu</h2>
-          <p className="mt-0.5 text-[11px] text-emerald-800">
+      <section className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
+        <header className="border-b border-dashed border-ke bg-giay px-4 py-3">
+          <h2 className="font-serif text-[15px] leading-tight font-semibold tracking-[-0.01em] text-muc">
+            Hàng còn thiếu
+          </h2>
+          <p className="mt-0.5 text-[11px] text-muc-nhat">
             Khoảng {ngayVN(tu)} – {ngayVN(den)}
           </p>
         </header>
-        <div className="flex items-center gap-2 px-4 py-4 text-[13px] text-emerald-700">
+        <div className="flex items-center gap-2 px-4 py-4 text-[13px] text-ngoc">
           <BieuTuong ten="check" className="h-4 w-4" />
           Không có phiếu nào còn nợ hàng can phạm trong khoảng này.
         </div>
@@ -760,26 +754,29 @@ function HangConThieu({
   const tongThieu = hang.reduce((s, h) => s + h.conThieu, 0);
 
   return (
-    <section className="overflow-hidden rounded-xl border border-amber-200 bg-white shadow-the">
-      <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-amber-200 bg-amber-50/70 px-4 py-3">
+    <section className="relative overflow-hidden rounded-lg border border-moc/30 bg-giay-cao shadow-the">
+      <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-moc" />
+      <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-dashed border-ke bg-giay px-4 py-3">
         <div>
-          <h2 className="text-[13.5px] font-semibold tracking-tight text-amber-900">Hàng còn thiếu</h2>
-          <p className="mt-0.5 text-[11px] text-amber-800">
+          <h2 className="font-serif text-[15px] leading-tight font-semibold tracking-[-0.01em] text-muc">
+            Hàng còn thiếu
+          </h2>
+          <p className="mt-0.5 text-[11px] text-muc-nhat">
             Khi hàng về, đối chiếu mục này để biết cần bù cho phiếu nào
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[12px] font-medium text-amber-800">
+          <span className="font-mono text-[10.5px] tracking-[0.03em] text-moc uppercase">
             {so(hang.length)} mặt hàng · tổng {so(tongThieu)} đơn vị
           </span>
           {onIn && (
             <>
-              <label className="text-[12px] text-slate-600">Kiểu in</label>
+              <label className="text-[12px] text-muc-nhat">Kiểu in</label>
               <select
                 value={kieuIn}
                 onChange={(e) => setKieuIn(e.target.value as KieuInThieu)}
                 title={DS_KIEU_IN.find((k) => k.khoa === kieuIn)?.moTa}
-                className="h-8 rounded-lg border border-slate-300 bg-white px-2 text-[13px] shadow-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+                className="h-8 rounded-md border border-ke-dam bg-giay-cao px-2 text-[13px] shadow-xs outline-none transition focus:border-muc/60"
               >
                 {DS_KIEU_IN.map((k) => (
                   <option key={k.khoa} value={k.khoa}>
@@ -799,26 +796,26 @@ function HangConThieu({
       </header>
 
       {onIn && (
-        <div className="border-b border-amber-100 bg-amber-50/50 px-4 py-1.5 text-[12px] text-amber-800">
+        <div className="border-b border-ke/70 bg-giay/60 px-4 py-1.5 font-mono text-[10px] tracking-[0.03em] text-muc-nhat">
           {DS_KIEU_IN.find((k) => k.khoa === kieuIn)?.moTa}
         </div>
       )}
 
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-ke/60">
         {hang.map((h) => (
           <div key={h.productId} className="px-4 py-3">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span className="font-mono text-[11px] text-slate-500">{h.ma}</span>
-              <span className="font-medium text-slate-900">{h.ten}</span>
-              <span className="text-[12px] text-slate-500">{h.donViTinh}</span>
-              <span className="ml-auto rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[12px] font-semibold text-amber-800">
-                còn thiếu {so(h.conThieu)}
+              <span className="so text-[11px] text-muc-mo">{h.ma}</span>
+              <span className="font-semibold text-muc">{h.ten}</span>
+              <span className="text-[12px] text-muc-mo">{h.donViTinh}</span>
+              <span className="ml-auto">
+                <Nhan sac="vang">còn thiếu {so(h.conThieu)}</Nhan>
               </span>
               {onChonHang && (
                 <button
                   type="button"
                   onClick={() => onChonHang(h.productId)}
-                  className="text-[12px] font-semibold text-blue-700 hover:underline"
+                  className="text-[12px] font-semibold text-muc underline decoration-ke-dam underline-offset-2 hover:decoration-muc"
                 >
                   Xem mặt hàng
                 </button>
@@ -830,11 +827,11 @@ function HangConThieu({
                 <tbody>
                   {h.phieu.map((p) => (
                     <tr key={`${h.productId}-${p.id}`} className="[&>td]:py-1">
-                      <td className="w-28 font-mono text-[12px] text-blue-700 sm:w-32">{p.soPhieu}</td>
-                      <td className="hidden w-24 text-slate-500 sm:table-cell">{ngayVN(p.ngay)}</td>
-                      <td className="text-slate-700">{p.hoTen}</td>
-                      <td className="hidden w-24 text-slate-500 sm:table-cell">{p.buongGiam || "—"}</td>
-                      <td className="w-20 text-right font-semibold text-amber-700 tabular-nums sm:w-24">
+                      <td className="so w-28 text-[11.5px] text-muc sm:w-32">{p.soPhieu}</td>
+                      <td className="hidden w-24 font-mono text-[10.5px] text-muc-mo sm:table-cell">{ngayVN(p.ngay)}</td>
+                      <td className="text-muc-nhat">{p.hoTen}</td>
+                      <td className="hidden w-24 text-muc-nhat sm:table-cell">{p.buongGiam || "—"}</td>
+                      <td className="so w-20 text-right font-semibold text-moc sm:w-24">
                         thiếu {so(p.conThieu)}
                       </td>
                     </tr>
@@ -890,20 +887,20 @@ function BangXepHang({
   };
 
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
-      <header className="flex items-baseline justify-between gap-2 border-b border-slate-200/80 bg-linear-to-r from-slate-50 to-white px-4 py-3">
+    <section className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
+      <header className="flex items-baseline justify-between gap-2 border-b border-dashed border-ke bg-giay px-4 py-3">
         <div>
-          <h2 className="text-[13.5px] font-semibold tracking-tight text-slate-800">{tieuDe}</h2>
-          <p className="mt-0.5 text-[11px] text-slate-500">{phuDe}</p>
+          <h2 className="font-serif text-[15px] leading-tight font-semibold tracking-[-0.01em] text-muc">{tieuDe}</h2>
+          <p className="mt-0.5 text-[11px] text-muc-nhat">{phuDe}</p>
         </div>
-        <span className="text-[11px] text-slate-500">
-          Hiện {hienThi.length} / {hang.length}
+        <span className="so text-[10.5px] text-muc-mo">
+          {hienThi.length} / {hang.length}
         </span>
       </header>
       <div className="mem-cuon overflow-x-auto">
         <table className="w-full border-collapse text-sm sm:min-w-[520px]">
-          <thead className="bg-slate-50/90 text-[11px] tracking-wide text-slate-500 uppercase">
-            <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:text-left [&>th]:font-semibold">
+          <thead className="bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase">
+            <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
               <th className="hidden w-10 sm:table-cell">#</th>
               <th className="hidden w-32 sm:table-cell">Mã</th>
               <th>Tên</th>
@@ -917,31 +914,31 @@ function BangXepHang({
                 key={h.id}
                 onClick={() => mo(h)}
                 title={onChon ? "Bấm để xem chi tiết" : undefined}
-                className={`[&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-1.5 ${
-                  onChon ? "cursor-pointer transition-colors hover:bg-blue-50/50" : ""
+                className={`[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5 ${
+                  onChon ? "cursor-pointer transition-colors hover:bg-giay/60" : ""
                 }`}
               >
-                <td className="hidden text-center text-[12px] text-slate-400 sm:table-cell">
-                  {i < 3 ? <span className="font-bold text-slate-600">{i + 1}</span> : i + 1}
+                <td className="hidden text-center font-mono text-[10.5px] text-muc-mo sm:table-cell">
+                  {i < 3 ? <span className="font-semibold text-muc">{i + 1}</span> : i + 1}
                 </td>
-                <td className="hidden font-mono text-[12px] text-slate-500 sm:table-cell">{h.ma}</td>
+                <td className="so hidden text-[11px] text-muc-mo sm:table-cell">{h.ma}</td>
                 <td>
-                  <div className="font-medium text-slate-800">{h.ten}</div>
-                  {h.phu && <div className="text-[11px] text-slate-500">{h.phu}</div>}
+                  <div className="font-semibold text-muc">{h.ten}</div>
+                  {h.phu && <div className="text-[10.5px] text-muc-mo">{h.phu}</div>}
                 </td>
-                <td className="text-right text-slate-600 tabular-nums">
+                <td className="so text-right text-[12.5px] text-muc-nhat">
                   {so(h.soLuong)} {h.donVi}
                 </td>
                 <td>
                   <div className="flex items-center justify-end gap-2">
                     {/* Độ dài cột mã hoá độ lớn; con số vẫn hiện đầy đủ */}
-                    <div className="hidden h-2 w-28 overflow-hidden rounded-sm bg-slate-100 sm:block">
+                    <div className="hidden h-1.5 w-28 overflow-hidden rounded-sm bg-ke/70 sm:block">
                       <div
                         className="h-full rounded-sm"
                         style={{ width: `${(h.giaTri / lonNhat) * 100}%`, background: MAU_DUONG }}
                       />
                     </div>
-                    <span className="text-right font-semibold text-slate-800 tabular-nums sm:w-20">{h.hienThi}</span>
+                    <span className="so text-right text-[12.5px] font-semibold text-muc sm:w-20">{h.hienThi}</span>
                   </div>
                 </td>
               </tr>
@@ -954,7 +951,7 @@ function BangXepHang({
           type="button"
           onClick={() => setMoRong((v) => !v)}
           aria-expanded={moRong}
-          className="flex w-full items-center justify-center gap-1.5 border-t border-slate-200 bg-slate-50/60 px-4 py-2.5 text-[12.5px] font-semibold text-blue-700 transition-colors hover:bg-blue-50"
+          className="flex w-full items-center justify-center gap-1.5 border-t border-ke bg-giay/70 px-4 py-2.5 font-mono text-[10.5px] tracking-[0.05em] text-muc uppercase transition-colors hover:bg-giay"
         >
           {moRong ? "Thu gọn danh sách" : `Xem thêm ${so(conLai)} mục`}
           <svg
@@ -1002,18 +999,21 @@ function ChiSoNhanh({
   return (
     <section className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
       <TheNhanh nhan="Nhịp bán hàng" icon="phieu">
-        <div className="text-[17px] font-bold tracking-tight text-slate-900 tabular-nums">
-          {so(tbPhieuNgay)} <span className="text-[12px] font-medium text-slate-500">phiếu/ngày</span>
+        <div className="so text-[17px] font-semibold tracking-tight text-muc">
+          {so(tbPhieuNgay)}{" "}
+          <span className="font-mono text-[10.5px] font-normal tracking-[0.02em] text-muc-mo">phiếu/ngày</span>
         </div>
-        <div className="mt-0.5 text-[11px] text-slate-500">Trung bình trên {so(soNgayCoBan)} ngày có bán</div>
+        <div className="mt-0.5 text-[11px] text-muc-nhat">Trung bình trên {so(soNgayCoBan)} ngày có bán</div>
       </TheNhanh>
 
       <TheNhanh nhan={coDungTien ? "Giá trị trung bình" : "Lượng hàng trung bình"} icon="bieu">
-        <div className="text-[17px] font-bold tracking-tight text-slate-900 tabular-nums">
+        <div className="so text-[17px] font-semibold tracking-tight text-muc">
           {coDungTien ? tien(tbGiaTri) : so(tbHang)}{" "}
-          <span className="text-[12px] font-medium text-slate-500">{coDungTien ? "mỗi phiếu" : "đơn vị/phiếu"}</span>
+          <span className="font-mono text-[10.5px] font-normal tracking-[0.02em] text-muc-mo">
+            {coDungTien ? "mỗi phiếu" : "đơn vị/phiếu"}
+          </span>
         </div>
-        <div className="mt-0.5 text-[11px] text-slate-500">
+        <div className="mt-0.5 text-[11px] text-muc-nhat">
           {coDungTien ? `TB ${so(tbHang)} đơn vị hàng mỗi phiếu` : "Tính trên các phiếu có bán trong kỳ"}
         </div>
       </TheNhanh>
@@ -1023,8 +1023,10 @@ function ChiSoNhanh({
         icon="phieu"
         onClick={ngayCao ? () => onChonNgay(ngayCao) : undefined}
       >
-        <div className="text-[17px] font-bold tracking-tight text-slate-900">{ngayCao ? ngayVN(ngayCao.ngay) : "—"}</div>
-        <div className="mt-0.5 text-[11px] text-slate-500">
+        <div className="so text-[15px] font-semibold tracking-tight text-muc">
+          {ngayCao ? ngayVN(ngayCao.ngay) : "—"}
+        </div>
+        <div className="mt-0.5 text-[11px] text-muc-nhat">
           {ngayCao
             ? `${so(ngayCao.soPhieu)} phiếu · ${coDungTien ? tien(ngayCao.doanhThu) : `${so(ngayCao.soLuongHang)} đơn vị hàng`}`
             : "Chưa có ngày nào có bán"}
@@ -1037,12 +1039,12 @@ function ChiSoNhanh({
             <button
               type="button"
               onClick={() => onChonHang(topHang)}
-              className="flex w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-left text-[12px] transition-colors hover:bg-blue-50"
+              className="flex w-full items-center gap-1.5 rounded-sm px-1 py-0.5 text-left text-[12px] transition-colors hover:bg-giay"
               title="Xem chi tiết mặt hàng"
             >
-              <span className="w-9 shrink-0 text-[10px] font-semibold tracking-wide text-slate-400 uppercase">Hàng</span>
-              <span className="min-w-0 flex-1 truncate font-medium text-slate-800">{topHang.ten}</span>
-              <span className="shrink-0 font-semibold text-slate-700 tabular-nums">
+              <span className="w-9 shrink-0 font-mono text-[9px] tracking-[0.06em] text-muc-mo uppercase">Hàng</span>
+              <span className="min-w-0 flex-1 truncate font-medium text-muc">{topHang.ten}</span>
+              <span className="so shrink-0 font-semibold text-muc">
                 {coDungTien ? tien(topHang.doanhThu) : so(topHang.soLuong)}
               </span>
             </button>
@@ -1051,12 +1053,12 @@ function ChiSoNhanh({
             <button
               type="button"
               onClick={() => onChonNguoi(topNguoi)}
-              className="flex w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-left text-[12px] transition-colors hover:bg-blue-50"
+              className="flex w-full items-center gap-1.5 rounded-sm px-1 py-0.5 text-left text-[12px] transition-colors hover:bg-giay"
               title="Xem lịch sử mua hàng"
             >
-              <span className="w-9 shrink-0 text-[10px] font-semibold tracking-wide text-slate-400 uppercase">Người</span>
-              <span className="min-w-0 flex-1 truncate font-medium text-slate-800">{topNguoi.hoTen}</span>
-              <span className="shrink-0 font-semibold text-slate-700 tabular-nums">
+              <span className="w-9 shrink-0 font-mono text-[9px] tracking-[0.06em] text-muc-mo uppercase">Người</span>
+              <span className="min-w-0 flex-1 truncate font-medium text-muc">{topNguoi.hoTen}</span>
+              <span className="so shrink-0 font-semibold text-muc">
                 {coDungTien ? tien(topNguoi.doanhThu) : so(topNguoi.soLuongHang)}
               </span>
             </button>
@@ -1081,22 +1083,22 @@ function TheNhanh({
   const noiDung = (
     <>
       <div className="flex items-center gap-2">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm border border-ke bg-giay text-muc-mo">
           <BieuTuong ten={icon} className="h-3.5 w-3.5" />
         </span>
-        <span className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">{nhan}</span>
+        <span className="nhan-muc">{nhan}</span>
       </div>
       <div className="mt-1.5">{children}</div>
     </>
   );
   const lop =
-    "rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 text-left shadow-xs transition-colors";
+    "rounded-lg border border-ke bg-giay-cao px-3 py-2.5 text-left shadow-xs transition-colors";
   if (!onClick) return <div className={lop}>{noiDung}</div>;
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`${lop} hover:border-blue-200 hover:bg-blue-50/40`}
+      className={`${lop} hover:border-ke-dam hover:bg-giay`}
       title="Bấm để xem chi tiết ngày"
     >
       {noiDung}
@@ -1108,9 +1110,9 @@ function TheNhanh({
 
 function MiniStat({ nhan, giaTri }: { nhan: string; giaTri: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2">
-      <div className="text-[11px] text-slate-500">{nhan}</div>
-      <div className="mt-0.5 text-[14px] font-semibold text-slate-900 tabular-nums">{giaTri}</div>
+    <div className="rounded-md border border-ke bg-giay px-3 py-2">
+      <div className="font-mono text-[9.5px] tracking-[0.1em] text-muc-mo uppercase">{nhan}</div>
+      <div className="so mt-1 text-[14px] font-semibold text-muc">{giaTri}</div>
     </div>
   );
 }
@@ -1134,12 +1136,12 @@ function HopChiTietHang({
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border border-ke-dam bg-giay text-muc-nhat">
             <BieuTuong ten="kho" />
           </span>
           <div className="min-w-0">
-            <div className="truncate text-[15px] font-semibold tracking-tight text-slate-900">{hang.ten}</div>
-            <div className="text-[12px] text-slate-500">
+            <div className="truncate font-serif text-[16px] font-semibold tracking-[-0.01em] text-muc">{hang.ten}</div>
+            <div className="font-mono text-[10.5px] tracking-[0.02em] text-muc-mo">
               {hang.ma} · {hang.donViTinh}
             </div>
           </div>
@@ -1155,13 +1157,13 @@ function HopChiTietHang({
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-2">
-        <h4 className="text-[13px] font-semibold text-slate-800">Các phiếu đã mua</h4>
-        <span className="text-[11px] text-slate-500">{so(hang.phieu.length)} dòng</span>
+        <h4 className="font-serif text-[15px] font-semibold text-muc">Các phiếu đã mua</h4>
+        <span className="so text-[10px] text-muc-mo">{so(hang.phieu.length)} dòng</span>
       </div>
-      <div className="mem-cuon mt-2 max-h-[38vh] overflow-auto rounded-lg border border-slate-200">
+      <div className="mem-cuon mt-2 max-h-[38vh] overflow-auto rounded-sm border border-ke">
         <table className="w-full min-w-[640px] border-collapse text-[13px]">
-          <thead className="sticky top-0 z-10 bg-slate-50 text-[11px] tracking-wide text-slate-500 uppercase">
-            <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:text-left [&>th]:font-semibold">
+          <thead className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+            <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
               <th>Ngày</th>
               <th>Số phiếu</th>
               <th>Can phạm</th>
@@ -1174,18 +1176,18 @@ function HopChiTietHang({
             {hang.phieu.map((p) => (
               <tr
                 key={`${p.id}-${p.soPhieu}`}
-                className="[&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-1.5"
+                className="[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5"
               >
-                <td className="whitespace-nowrap text-slate-600">{ngayVN(p.ngay)}</td>
-                <td className="font-mono text-[12px] text-blue-700">{p.soPhieu}</td>
+                <td className="so whitespace-nowrap text-[11px] text-muc-nhat">{ngayVN(p.ngay)}</td>
+                <td className="so text-[10.5px] text-muc-nhat">{p.soPhieu}</td>
                 <td>
-                  <div className="font-medium text-slate-800">{p.hoTen}</div>
-                  <div className="text-[11px] text-slate-500">
+                  <div className="font-medium text-muc">{p.hoTen}</div>
+                  <div className="font-mono text-[10px] tracking-[0.01em] text-muc-mo">
                     {[p.buongGiam, p.namSinh ? `SN ${p.namSinh}` : ""].filter(Boolean).join(" · ") || "—"}
                   </div>
                 </td>
-                <td className="text-right text-slate-700 tabular-nums">{so(p.soLuong)}</td>
-                {dungTien && <td className="text-right text-slate-700 tabular-nums">{tien(p.thanhTien)}</td>}
+                <td className="so text-right text-[12px] text-muc-nhat">{so(p.soLuong)}</td>
+                {dungTien && <td className="so text-right text-[12px] text-muc-nhat">{tien(p.thanhTien)}</td>}
                 <td>
                   {p.conThieu > 0 ? <Nhan sac="vang">Thiếu {so(p.conThieu)}</Nhan> : <Nhan sac="luc">Đủ hàng</Nhan>}
                 </td>
@@ -1225,12 +1227,14 @@ function HopChiTietCanPham({
       <div className="max-h-[72vh] space-y-4 overflow-y-auto pr-1">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[13px] font-bold text-slate-600">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm border border-ke-dam bg-giay font-mono text-[12px] font-semibold text-muc-nhat">
               {chuDau || <BieuTuong ten="nguoi" />}
             </span>
             <div className="min-w-0">
-              <div className="truncate text-[15px] font-semibold tracking-tight text-slate-900">{canPham.hoTen}</div>
-              <div className="text-[12px] text-slate-500">
+              <div className="truncate font-serif text-[17px] font-semibold tracking-[-0.01em] text-muc">
+                {canPham.hoTen}
+              </div>
+              <div className="font-mono text-[10.5px] tracking-[0.02em] text-muc-mo">
                 {[canPham.buongGiam, canPham.namSinh ? `SN ${canPham.namSinh}` : ""].filter(Boolean).join(" · ") ||
                   "Chưa có thông tin buồng giam"}
               </div>
@@ -1246,20 +1250,20 @@ function HopChiTietCanPham({
           {dungTien && <MiniStat nhan="Tổng tiền" giaTri={tien(canPham.doanhThu)} />}
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-2 text-[12px] text-slate-600">
-          Mua lần đầu <b className="font-semibold text-slate-800">{ngayVN(canPham.lanDau)}</b> · gần nhất{" "}
-          <b className="font-semibold text-slate-800">{ngayVN(canPham.lanCuoi)}</b>
+        <div className="rounded-sm border border-ke border-l-[3px] border-l-ke-dam bg-giay px-3 py-2 text-[12px] text-muc-nhat">
+          Mua lần đầu <b className="so font-semibold text-muc">{ngayVN(canPham.lanDau)}</b> · gần nhất{" "}
+          <b className="so font-semibold text-muc">{ngayVN(canPham.lanCuoi)}</b>
         </div>
 
         <div>
           <div className="mb-1.5 flex items-center justify-between gap-2">
-            <h4 className="text-[13px] font-semibold text-slate-800">Mặt hàng đã mua</h4>
-            <span className="text-[11px] text-slate-500">{so(canPham.hang.length)} mặt hàng</span>
+            <h4 className="font-serif text-[15px] font-semibold text-muc">Mặt hàng đã mua</h4>
+            <span className="so text-[10px] text-muc-mo">{so(canPham.hang.length)} mặt hàng</span>
           </div>
-          <div className="mem-cuon max-h-[28vh] overflow-auto rounded-lg border border-slate-200">
+          <div className="mem-cuon max-h-[28vh] overflow-auto rounded-sm border border-ke">
             <table className="w-full min-w-[560px] border-collapse text-[13px]">
-              <thead className="sticky top-0 z-10 bg-slate-50 text-[11px] tracking-wide text-slate-500 uppercase">
-                <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:text-left [&>th]:font-semibold">
+              <thead className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+                <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
                   <th className="w-28">Mã</th>
                   <th>Mặt hàng</th>
                   <th className="text-right">Số lượng</th>
@@ -1270,15 +1274,15 @@ function HopChiTietCanPham({
                 {canPham.hang.map((h) => (
                   <tr
                     key={h.productId}
-                    className="[&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-1.5"
+                    className="[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5"
                   >
-                    <td className="font-mono text-[12px] text-slate-500">{h.ma}</td>
+                    <td className="so text-[10.5px] text-muc-mo">{h.ma}</td>
                     <td>
-                      <div className="font-medium text-slate-800">{h.ten}</div>
-                      <div className="text-[11px] text-slate-500">{h.donViTinh}</div>
+                      <div className="font-medium text-muc">{h.ten}</div>
+                      <div className="font-mono text-[10px] tracking-[0.01em] text-muc-mo">{h.donViTinh}</div>
                     </td>
-                    <td className="text-right text-slate-700 tabular-nums">{so(h.soLuong)}</td>
-                    {dungTien && <td className="text-right text-slate-700 tabular-nums">{tien(h.thanhTien)}</td>}
+                    <td className="so text-right text-[12px] text-muc-nhat">{so(h.soLuong)}</td>
+                    {dungTien && <td className="so text-right text-[12px] text-muc-nhat">{tien(h.thanhTien)}</td>}
                   </tr>
                 ))}
               </tbody>
@@ -1288,8 +1292,8 @@ function HopChiTietCanPham({
 
         <div>
           <div className="mb-1.5 flex items-center justify-between gap-2">
-            <h4 className="text-[13px] font-semibold text-slate-800">Phiếu đã mua</h4>
-            <span className="text-[11px] text-slate-500">{so(canPham.phieu.length)} phiếu</span>
+            <h4 className="font-serif text-[15px] font-semibold text-muc">Phiếu đã mua</h4>
+            <span className="so text-[10px] text-muc-mo">{so(canPham.phieu.length)} phiếu</span>
           </div>
           <BangPhieuTomTat phieu={canPham.phieu} dungTien={dungTien} />
         </div>
@@ -1324,8 +1328,10 @@ function HopChiTietNgay({
       </div>
       <div className="mt-4">
         <div className="mb-1.5 flex items-center justify-between gap-2">
-          <h4 className="text-[13px] font-semibold text-slate-800">Phiếu trong ngày</h4>
-          <span className="text-[11px] text-slate-500">Bấm Đóng để quay lại báo cáo</span>
+          <h4 className="font-serif text-[15px] font-semibold text-muc">Phiếu trong ngày</h4>
+          <span className="font-mono text-[9.5px] tracking-[0.03em] text-muc-mo uppercase">
+            Bấm Đóng để quay lại báo cáo
+          </span>
         </div>
         <BangPhieuTomTat phieu={ngay.phieu} dungTien={dungTien} />
       </div>
@@ -1336,16 +1342,16 @@ function HopChiTietNgay({
 function BangPhieuTomTat({ phieu, dungTien }: { phieu: PhieuTomTat[]; dungTien: boolean }) {
   if (phieu.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-slate-200 px-3 py-6 text-center text-[12px] text-slate-500">
+      <div className="rounded-sm border border-dashed border-ke-dam px-3 py-6 text-center font-mono text-[10.5px] tracking-[0.02em] text-muc-mo">
         Chưa có phiếu nào.
       </div>
     );
   }
   return (
-    <div className="mem-cuon max-h-[38vh] overflow-auto rounded-lg border border-slate-200">
+    <div className="mem-cuon max-h-[38vh] overflow-auto rounded-sm border border-ke">
       <table className="w-full min-w-[720px] border-collapse text-[13px]">
-        <thead className="sticky top-0 z-10 bg-slate-50 text-[11px] tracking-wide text-slate-500 uppercase">
-          <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:text-left [&>th]:font-semibold">
+        <thead className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+          <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
             <th>Ngày</th>
             <th>Số phiếu</th>
             <th>Can phạm</th>
@@ -1357,18 +1363,18 @@ function BangPhieuTomTat({ phieu, dungTien }: { phieu: PhieuTomTat[]; dungTien: 
         </thead>
         <tbody>
           {phieu.map((p) => (
-            <tr key={p.id} className="[&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-1.5">
-              <td className="whitespace-nowrap text-slate-600">{ngayVN(p.ngay)}</td>
-              <td className="font-mono text-[12px] text-blue-700">{p.soPhieu}</td>
+            <tr key={p.id} className="[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5">
+              <td className="so whitespace-nowrap text-[11px] text-muc-nhat">{ngayVN(p.ngay)}</td>
+              <td className="so text-[10.5px] text-muc-nhat">{p.soPhieu}</td>
               <td>
-                <div className="font-medium text-slate-800">{p.hoTen}</div>
-                <div className="text-[11px] text-slate-500">
+                <div className="font-medium text-muc">{p.hoTen}</div>
+                <div className="font-mono text-[10px] tracking-[0.01em] text-muc-mo">
                   {[p.buongGiam, p.namSinh ? `SN ${p.namSinh}` : ""].filter(Boolean).join(" · ") || "—"}
                 </div>
               </td>
-              <td className="text-center text-slate-700 tabular-nums">{so(p.soMatHang)}</td>
-              <td className="text-right text-slate-700 tabular-nums">{so(p.soLuong)}</td>
-              {dungTien && <td className="text-right text-slate-700 tabular-nums">{tien(p.tongTien)}</td>}
+              <td className="so text-center text-[12px] text-muc-nhat">{so(p.soMatHang)}</td>
+              <td className="so text-right text-[12px] text-muc-nhat">{so(p.soLuong)}</td>
+              {dungTien && <td className="so text-right text-[12px] text-muc-nhat">{tien(p.tongTien)}</td>}
               <td>
                 <div className="flex flex-wrap gap-1">
                   {p.conThieu > 0 && <Nhan sac="vang">Thiếu {so(p.conThieu)}</Nhan>}

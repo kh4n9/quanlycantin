@@ -2,7 +2,9 @@
 
 import { useEffect, useState, type ComponentPropsWithRef, type ReactNode } from "react";
 
-/* ----------------------------- Nút ----------------------------- */
+/* ----------------------------- Nút -----------------------------
+   Nút chính là mực đặc trên giấy; viền mảnh, cạnh hơi vuông như con dấu đóng.
+   Đỏ chỉ dành cho việc không hoàn tác được. */
 
 type NutProps = ComponentPropsWithRef<"button"> & {
   kieu?: "chinh" | "phu" | "nguy" | "vien" | "mo";
@@ -11,17 +13,18 @@ type NutProps = ComponentPropsWithRef<"button"> & {
 
 export function Nut({ kieu = "vien", co = "md", className = "", ...rest }: NutProps) {
   const nen = {
-    chinh: "border-blue-700 bg-blue-700 text-white shadow-sm hover:border-blue-800 hover:bg-blue-800 hover:shadow",
-    phu: "border-slate-800 bg-slate-800 text-white shadow-sm hover:border-slate-900 hover:bg-slate-900 hover:shadow",
-    nguy: "border-rose-600 bg-rose-600 text-white shadow-sm hover:border-rose-700 hover:bg-rose-700 hover:shadow",
-    vien: "border-slate-300 bg-white text-slate-700 shadow-xs hover:border-slate-400 hover:bg-slate-50",
-    mo: "border-transparent bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+    chinh:
+      "border-muc bg-muc text-giay-cao shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_1px_2px_rgb(11_20_17/0.22)] hover:border-muc-dam hover:bg-muc-dam",
+    phu: "border-ke-dam bg-giay text-muc shadow-xs hover:border-muc-mo hover:bg-white",
+    nguy: "border-dau bg-dau text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.14)] hover:border-dau-dam hover:bg-dau-dam",
+    vien: "border-ke-dam bg-white text-muc shadow-xs hover:border-muc-mo hover:bg-giay-cao",
+    mo: "border-transparent bg-transparent text-muc-nhat hover:bg-muc/5 hover:text-muc",
   }[kieu];
   const coChu = { sm: "h-8 px-3 text-[13px]", md: "h-9 px-3.5 text-sm", lg: "h-11 px-5 text-[15px]" }[co];
   return (
     <button
       {...rest}
-      className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border font-semibold transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-1 active:translate-y-px disabled:pointer-events-none disabled:opacity-45 ${nen} ${coChu} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md border font-semibold tracking-[-0.005em] transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-muc/45 focus-visible:ring-offset-1 active:translate-y-px disabled:pointer-events-none disabled:opacity-45 ${nen} ${coChu} ${className}`}
     />
   );
 }
@@ -29,7 +32,7 @@ export function Nut({ kieu = "vien", co = "md", className = "", ...rest }: NutPr
 /* ---------------------------- Nhập liệu ---------------------------- */
 
 const oNhapChung =
-  "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs placeholder:text-slate-500 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 disabled:bg-slate-50 disabled:text-slate-400";
+  "rounded-md border border-ke-dam bg-white px-3 py-2 text-sm text-muc shadow-[inset_0_1px_2px_rgb(22_32_28/0.04)] placeholder:text-muc-mo outline-none transition focus:border-muc focus:ring-2 focus:ring-muc/20 focus-visible:outline-hidden disabled:bg-giay disabled:text-muc-mo";
 
 /**
  * Mặc định ô nhập rộng hết cỡ, nhưng nếu nơi gọi tự đặt bề rộng (w-36, w-44…)
@@ -57,9 +60,14 @@ export function OVung({ className = "", ...rest }: ComponentPropsWithRef<"textar
   return <textarea {...rest} className={lopONhap(className)} />;
 }
 
+/** Nhãn ô nhập: chữ nhỏ, in hoa, giãn — như dòng in sẵn trên phiếu giấy */
 export function ONhan({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <label className={`mb-1.5 block text-[12px] font-semibold text-slate-600 ${className}`}>{children}</label>
+    <label
+      className={`mb-1.5 block font-mono text-[10.5px] font-medium tracking-[0.1em] text-muc-nhat uppercase ${className}`}
+    >
+      {children}
+    </label>
   );
 }
 
@@ -73,22 +81,24 @@ export function Nhan({
   sac?: "xam" | "xanh" | "vang" | "do" | "luc";
 }) {
   const mau = {
-    xam: "bg-slate-100 text-slate-700 border-slate-200",
-    xanh: "bg-blue-50 text-blue-700 border-blue-200",
-    vang: "bg-amber-50 text-amber-800 border-amber-200",
-    do: "bg-rose-50 text-rose-700 border-rose-200",
-    luc: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    xam: "bg-giay text-muc-nhat border-ke-dam",
+    xanh: "bg-muc/6 text-muc border-muc/20",
+    vang: "bg-moc-nhat text-moc border-moc/25",
+    do: "bg-dau-nhat text-dau border-dau/25",
+    luc: "bg-ngoc-nhat text-ngoc border-ngoc/25",
   }[sac];
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap ${mau}`}
+      className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono text-[10px] font-medium tracking-[0.04em] whitespace-nowrap ${mau}`}
     >
       {children}
     </span>
   );
 }
 
-/* ----------------------------- Thẻ ----------------------------- */
+/* ----------------------------- Thẻ -----------------------------
+   Thẻ là một tờ phiếu: viền mảnh, không đổ bóng, dòng tiêu đề ngăn bằng đường
+   xé nét đứt. */
 
 export function The({
   tieuDe,
@@ -106,12 +116,16 @@ export function The({
   thanClassName?: string;
 }) {
   return (
-    <section className={`overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the ${className}`}>
+    <section className={`overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the ${className}`}>
       {(tieuDe || hanhDong) && (
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 bg-linear-to-r from-slate-50 to-white px-4 py-3">
+        <header className="khia flex flex-wrap items-center justify-between gap-2 px-4 py-3">
           <div className="min-w-0">
-            {tieuDe && <h2 className="truncate text-[13.5px] font-semibold tracking-tight text-slate-800">{tieuDe}</h2>}
-            {phuDe && <p className="mt-0.5 truncate text-[12px] text-slate-500">{phuDe}</p>}
+            {tieuDe && (
+              <h2 className="truncate font-serif text-[15px] leading-tight font-semibold tracking-[-0.01em] text-muc">
+                {tieuDe}
+              </h2>
+            )}
+            {phuDe && <p className="mt-1 truncate text-[12px] text-muc-nhat">{phuDe}</p>}
           </div>
           {hanhDong && <div className="flex max-w-full flex-wrap items-center justify-end gap-2">{hanhDong}</div>}
         </header>
@@ -149,13 +163,13 @@ export function HopThoai({
 
   if (!mo) return null;
   return (
-    <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/50 p-4 pt-12 backdrop-blur-[2px]">
-      <div className={`hop-noi w-full ${rong} rounded-2xl border border-slate-200 bg-white shadow-noi`}>
-        <header className="flex items-center justify-between border-b border-slate-200/80 px-5 py-3.5">
-          <h3 className="text-[15px] font-semibold tracking-tight text-slate-800">{tieuDe}</h3>
+    <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-muc/45 p-4 pt-12 backdrop-blur-[3px]">
+      <div className={`hop-noi w-full ${rong} rounded-lg border border-ke-dam bg-giay-cao shadow-noi`}>
+        <header className="khia flex items-center justify-between px-5 py-3.5">
+          <h3 className="font-serif text-[16px] leading-tight font-semibold tracking-[-0.01em] text-muc">{tieuDe}</h3>
           <button
             onClick={dong}
-            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-md p-1.5 text-muc-mo transition hover:bg-muc/6 hover:text-muc"
             aria-label="Đóng"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
@@ -165,7 +179,7 @@ export function HopThoai({
         </header>
         <div className="px-5 py-4">{children}</div>
         {chanTrang && (
-          <footer className="flex items-center justify-end gap-2 border-t border-slate-200/80 bg-slate-50/80 px-5 py-3">
+          <footer className="flex items-center justify-end gap-2 border-t border-ke bg-giay px-5 py-3">
             {chanTrang}
           </footer>
         )}
@@ -203,12 +217,12 @@ export function HopThongBao() {
   }, []);
 
   const mau = {
-    luc: "border-emerald-200 border-l-emerald-500 bg-white text-emerald-900",
-    do: "border-rose-200 border-l-rose-500 bg-white text-rose-900",
-    xanh: "border-blue-200 border-l-blue-500 bg-white text-blue-900",
+    luc: "border-ke border-l-ngoc text-muc",
+    do: "border-ke border-l-dau text-muc",
+    xanh: "border-ke border-l-muc text-muc",
   };
   const icon = { luc: "check", do: "canh", xanh: "check" } as const;
-  const iconMau = { luc: "text-emerald-600", do: "text-rose-600", xanh: "text-blue-600" };
+  const iconMau = { luc: "text-ngoc", do: "text-dau", xanh: "text-muc" };
 
   return (
     <div className="khong-in pointer-events-none fixed right-4 bottom-4 z-[60] flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2">
@@ -216,7 +230,7 @@ export function HopThongBao() {
         <div
           key={t.id}
           role="status"
-          className={`truot-vao pointer-events-auto flex items-start gap-2.5 rounded-xl border border-l-4 px-3.5 py-3 text-[13px] font-medium shadow-lg ${mau[t.sac]}`}
+          className={`truot-vao pointer-events-auto flex items-start gap-2.5 rounded-md border border-l-[3px] bg-giay-cao px-3.5 py-3 text-[13px] font-medium shadow-noi ${mau[t.sac]}`}
         >
           <BieuTuong ten={icon[t.sac]} className={`mt-0.5 h-4 w-4 shrink-0 ${iconMau[t.sac]}`} />
           <span className="leading-snug">{t.noiDung}</span>
@@ -239,13 +253,13 @@ export function Trong({
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2.5 px-6 py-14 text-center">
-      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-3.5 text-slate-400">
-        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <div className="rounded-lg border border-dashed border-ke-dam bg-giay p-3.5 text-muc-mo">
+        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.6">
           <path d="M3 7h18v13H3zM3 7l2-3h14l2 3M9 12h6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
-      <p className="text-sm font-semibold text-slate-700">{tieuDe}</p>
-      {moTa && <p className="max-w-md text-[13px] leading-relaxed text-slate-500">{moTa}</p>}
+      <p className="font-serif text-[15px] font-semibold text-muc">{tieuDe}</p>
+      {moTa && <p className="max-w-md text-[13px] leading-relaxed text-muc-nhat">{moTa}</p>}
       {hanhDong && <div className="mt-1.5">{hanhDong}</div>}
     </div>
   );

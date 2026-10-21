@@ -157,7 +157,7 @@ export function ManCaiDat() {
               {dangLuu ? "Đang lưu…" : "Lưu thông tin"}
             </Nut>
             {!duocSua && (
-              <span className="text-[12px] text-slate-500">
+              <span className="text-[12px] text-muc-mo">
                 Tài khoản của bạn không có quyền sửa cài đặt.
               </span>
             )}
@@ -182,11 +182,12 @@ export function ManCaiDat() {
               placeholder="0"
             />
           </div>
-          <p className="text-[12px] text-slate-500">
-            Để <b>0</b> nghĩa là giữ mãi, không tự xoá. Đặt số ngày cụ thể thì phiếu nằm trong thùng rác quá số
-            ngày đó sẽ bị <b>xoá vĩnh viễn, không lấy lại được</b>.
+          <p className="text-[12px] text-muc-nhat">
+            Để <b className="font-semibold text-muc">0</b> nghĩa là giữ mãi, không tự xoá. Đặt số ngày cụ thể thì
+            phiếu nằm trong thùng rác quá số ngày đó sẽ bị{" "}
+            <b className="font-semibold text-muc">xoá vĩnh viễn, không lấy lại được</b>.
           </p>
-          <p className="text-[12px] text-slate-500">
+          <p className="text-[12px] text-muc-mo">
             Việc dọn dẹp chạy khi mở thùng rác hoặc khi khởi động lại máy chủ — không cần hẹn giờ riêng.
           </p>
           <div>
@@ -199,12 +200,12 @@ export function ManCaiDat() {
 
       <The tieuDe="Dữ liệu" phuDe="Toàn bộ dữ liệu được lưu trên MongoDB, nhiều máy cùng dùng chung">
         <div className="flex flex-col gap-3 p-4">
-          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
+          <div className="flex flex-wrap items-center gap-4 text-[12.5px] text-muc-nhat">
             <span>
-              <b className="text-slate-900">{soHang}</b> mặt hàng
+              <b className="so font-semibold text-muc">{soHang}</b> mặt hàng
             </span>
             <span>
-              <b className="text-slate-900">{soPhieu}</b> phiếu bán
+              <b className="so font-semibold text-muc">{soPhieu}</b> phiếu bán
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -223,7 +224,7 @@ export function ManCaiDat() {
               </Nut>
             )}
           </div>
-          <p className="text-[12px] text-slate-500">
+          <p className="text-[12px] text-muc-mo">
             Nên sao lưu định kỳ: file tải về chứa toàn bộ mặt hàng và phiếu bán, dùng để đối chiếu hoặc khôi phục
             khi cần. Việc xoá sạch chỉ ảnh hưởng mặt hàng và phiếu bán — tài khoản và thông tin đơn vị vẫn giữ
             nguyên.
@@ -243,10 +244,10 @@ export function ManCaiDat() {
             ["Ctrl + ↵ (Kiểm phiếu)", "Xác nhận phiếu đúng và sang phiếu kế tiếp"],
           ].map(([k, v]) => (
             <div key={k} className="flex items-start gap-2">
-              <kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap text-slate-700">
+              <kbd className="rounded-sm border border-ke-dam bg-giay px-1.5 py-0.5 font-mono text-[10px] whitespace-nowrap text-muc">
                 {k}
               </kbd>
-              <span className="text-slate-600">{v}</span>
+              <span className="text-muc-nhat">{v}</span>
             </div>
           ))}
         </div>

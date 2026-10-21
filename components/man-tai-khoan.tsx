@@ -61,7 +61,7 @@ function OTichNhom({
     <input
       ref={ref}
       type="checkbox"
-      className="h-4 w-4 shrink-0 cursor-pointer accent-blue-700"
+      className="h-4 w-4 shrink-0 cursor-pointer accent-muc"
       checked={daChon}
       onChange={(e) => onChange(e.target.checked)}
     />
@@ -73,12 +73,12 @@ function NhanVaiTro({ quyen, lon = false }: { quyen: Quyen[]; lon?: boolean }) {
   const vaiTro = vaiTroCua(quyen);
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border font-semibold whitespace-nowrap ${
-        lon ? "px-2.5 py-1 text-[12px]" : "px-2 py-0.5 text-[11px]"
+      className={`inline-flex items-center gap-1 rounded-sm border font-mono font-medium tracking-[0.03em] uppercase whitespace-nowrap ${
+        lon ? "px-2 py-1 text-[10.5px]" : "px-1.5 py-0.5 text-[9.5px]"
       } ${
         vaiTro
-          ? "border-blue-200 bg-blue-50 text-blue-700"
-          : "border-slate-200 bg-slate-50 text-slate-600"
+          ? "border-muc/20 bg-muc/6 text-muc"
+          : "border-ke-dam bg-giay text-muc-nhat"
       }`}
     >
       <BieuTuong ten={vaiTro ? "nguoi" : "cai"} className={lon ? "h-3.5 w-3.5" : "h-3 w-3"} />
@@ -293,7 +293,7 @@ export function ManTaiKhoan() {
         co="sm"
         title="Xoá tài khoản"
         onClick={() => void xoa(nd)}
-        className="hover:text-rose-600"
+        className="hover:text-dau"
       >
         <BieuTuong ten="xoa" className="h-4 w-4" />
       </Nut>
@@ -301,11 +301,11 @@ export function ManTaiKhoan() {
   );
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 bg-slate-50/70 px-3 py-2.5">
+    <div className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
+      <div className="flex flex-wrap items-center gap-2 border-b border-dashed border-ke bg-giay px-3.5 py-3">
         <div className="mr-auto">
-          <div className="text-sm font-semibold text-slate-800">Tài khoản</div>
-          <div className="text-[11px] text-slate-500">
+          <div className="font-serif text-[15px] leading-tight font-semibold tracking-[-0.01em] text-muc">Tài khoản</div>
+          <div className="mt-0.5 text-[11.5px] text-muc-nhat">
             Gán vai trò mẫu hoặc bật/tắt từng quyền cho mỗi tài khoản. Mật khẩu lưu dạng đã băm,
             không xem lại được.
           </div>
@@ -320,7 +320,7 @@ export function ManTaiKhoan() {
         {ds.length === 0 ? (
           <Trong tieuDe={dangTai ? "Đang tải…" : "Chưa có tài khoản nào"} />
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-ke/60">
             {ds.map((nd) => (
               <div
                 key={nd.id}
@@ -333,55 +333,53 @@ export function ManTaiKhoan() {
                     setChiTiet(nd);
                   }
                 }}
-                className={`cursor-pointer p-3 transition-colors hover:bg-slate-50 ${
+                className={`cursor-pointer p-3 transition-colors hover:bg-giay/60 ${
                   nd.dangHoatDong ? "" : "opacity-60"
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-mono text-[13px] font-semibold text-slate-800">{nd.tenDangNhap}</span>
-                      {nd.id === toi?.id && (
-                        <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">
-                          bạn
-                        </span>
-                      )}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="so text-[12px] font-semibold text-muc">{nd.tenDangNhap}</span>
+                      {nd.id === toi?.id && <Nhan sac="xanh">bạn</Nhan>}
                     </div>
-                    <div className="mt-0.5 font-medium text-slate-800">{nd.hoTen}</div>
+                    <div className="mt-0.5 font-semibold text-muc">{nd.hoTen}</div>
                     {nd.phaiDoiMatKhau && (
-                      <div className="text-[11px] text-amber-600">Chưa đổi mật khẩu ban đầu</div>
+                      <div className="mt-0.5 font-mono text-[9.5px] tracking-[0.02em] text-moc uppercase">
+                        chưa đổi mật khẩu
+                      </div>
                     )}
                   </div>
                   <span
-                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-[10px] font-medium tracking-[0.03em] uppercase ${
                       nd.dangHoatDong
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                        : "border-slate-300 bg-slate-100 text-slate-500"
+                        ? "border-ngoc/30 bg-ngoc-nhat text-ngoc"
+                        : "border-ke-dam bg-giay text-muc-mo"
                     }`}
                   >
                     <span
-                      className={`h-1.5 w-1.5 rounded-full ${nd.dangHoatDong ? "bg-emerald-500" : "bg-slate-400"}`}
+                      className={`h-1.5 w-1.5 rounded-full ${nd.dangHoatDong ? "bg-ngoc" : "bg-ke-dam"}`}
                     />
                     {nd.dangHoatDong ? "Hoạt động" : "Đã khoá"}
                   </span>
                 </div>
 
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] tracking-[0.01em]">
                   {dangOnline(nd) ? (
-                    <span className="inline-flex items-center gap-1 font-semibold text-emerald-700">
-                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-                      Đang truy cập
-                      {nd.trangDangXem && <span className="font-normal text-slate-600">· {nd.trangDangXem}</span>}
+                    <span className="inline-flex items-center gap-1 font-medium text-ngoc">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ngoc" />
+                      Trực tuyến
+                      {nd.trangDangXem && <span className="font-normal text-muc-nhat">· {nd.trangDangXem}</span>}
                     </span>
                   ) : (
-                    <span className="text-slate-500">
+                    <span className="text-muc-mo">
                       {nd.lanHoatDong ? `Truy cập ${thoiGianTruoc(nd.lanHoatDong, bayGio)}` : "Chưa có tín hiệu truy cập"}
                     </span>
                   )}
-                  {nd.thietBi && <span className="text-slate-400">· {nd.thietBi}</span>}
+                  {nd.thietBi && <span className="text-muc-mo/70">· {nd.thietBi}</span>}
                 </div>
 
-                <div className="mt-1 text-[11px] text-slate-500">
+                <div className="mt-1 font-mono text-[10px] tracking-[0.01em] text-muc-mo">
                   {nd.lanDangNhapCuoi
                     ? `Đăng nhập cuối ${new Date(nd.lanDangNhapCuoi).toLocaleString("vi-VN")}`
                     : "Chưa đăng nhập"}
@@ -389,18 +387,18 @@ export function ManTaiKhoan() {
 
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                   <NhanVaiTro quyen={nd.quyen} />
-                  <span className="text-[10px] text-slate-400">
+                  <span className="so text-[9.5px] text-muc-mo">
                     {nd.quyen.length}/{DS_QUYEN.length} quyền
                   </span>
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-1">
                   {nd.quyen.length === 0 ? (
-                    <span className="text-[11px] text-slate-500">Chưa được cấp quyền nào</span>
+                    <span className="font-mono text-[10.5px] text-muc-mo">Chưa được cấp quyền nào</span>
                   ) : (
                     nd.quyen.map((q) => (
                       <span
                         key={q}
-                        className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] text-slate-600"
+                        className="rounded-sm border border-ke-dam/70 bg-giay px-1.5 py-0.5 font-mono text-[9.5px] tracking-[0.01em] text-muc-nhat"
                       >
                         {TEN_QUYEN[q]}
                       </span>
@@ -408,7 +406,7 @@ export function ManTaiKhoan() {
                   )}
                 </div>
 
-                <div className="mt-2 flex justify-end border-t border-slate-100 pt-2">{thaoTacNd(nd)}</div>
+                <div className="mt-2 flex justify-end border-t border-ke/60 pt-2">{thaoTacNd(nd)}</div>
               </div>
             ))}
           </div>
@@ -416,16 +414,16 @@ export function ManTaiKhoan() {
       </div>
 
       <div className="mem-cuon hidden max-h-[66vh] overflow-auto sm:block">
-        <table className="w-full min-w-[1240px] border-collapse text-sm">
-          <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
-            <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:text-left [&>th]:font-semibold">
-              <th className="w-40">Tên đăng nhập</th>
-              <th className="w-48">Họ tên</th>
+        <table className="w-full min-w-[1080px] table-fixed border-collapse text-sm">
+          <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+            <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
+              <th className="w-[140px]">Tên đăng nhập</th>
+              <th className="w-[160px]">Họ tên</th>
               <th>Quyền được cấp</th>
-              <th className="w-28">Trạng thái</th>
-              <th className="w-64">Đang truy cập</th>
-              <th className="w-36">Đăng nhập cuối</th>
-              <th className="w-28" />
+              <th className="w-[120px]">Trạng thái</th>
+              <th className="w-[180px]">Đang truy cập</th>
+              <th className="w-[140px]">Đăng nhập cuối</th>
+              <th className="w-[116px]" />
             </tr>
           </thead>
           <tbody>
@@ -440,37 +438,39 @@ export function ManTaiKhoan() {
               <tr
                 key={nd.id}
                 onClick={() => setChiTiet(nd)}
-                className={`cursor-pointer align-top transition-colors hover:bg-slate-50 [&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-2 ${
+                className={`cursor-pointer transition-colors hover:bg-giay/60 [&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-2.5 [&>td]:align-middle ${
                   nd.dangHoatDong ? "" : "opacity-55"
                 }`}
               >
-                <td className="font-mono text-[13px] text-slate-700">
-                  {nd.tenDangNhap}
-                  {nd.id === toi?.id && (
-                    <span className="ml-1.5 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">
-                      bạn
-                    </span>
-                  )}
-                </td>
-                <td className="font-medium text-slate-800">
-                  {nd.hoTen}
-                  {nd.phaiDoiMatKhau && (
-                    <div className="text-[11px] font-normal text-amber-600">Chưa đổi mật khẩu ban đầu</div>
-                  )}
+                <td>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="so text-[12px] font-medium text-muc">{nd.tenDangNhap}</span>
+                    {nd.id === toi?.id && <Nhan sac="xanh">bạn</Nhan>}
+                  </div>
                 </td>
                 <td>
-                  <div className="mb-1.5 flex items-center gap-1.5">
+                  <div className="font-semibold text-muc">{nd.hoTen}</div>
+                  {nd.phaiDoiMatKhau && (
+                    <div className="mt-0.5 font-mono text-[9.5px] tracking-[0.02em] text-moc uppercase">
+                      chưa đổi mật khẩu
+                    </div>
+                  )}
+                </td>
+                <td className="align-top">
+                  <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                     <NhanVaiTro quyen={nd.quyen} />
-                    <span className="text-[10px] text-slate-400">{nd.quyen.length}/{DS_QUYEN.length}</span>
+                    <span className="so text-[9.5px] text-muc-mo">
+                      {nd.quyen.length}/{DS_QUYEN.length}
+                    </span>
                   </div>
                   {nd.quyen.length === 0 ? (
-                    <span className="text-[12px] text-slate-500">Chưa được cấp quyền nào</span>
+                    <span className="font-mono text-[10.5px] text-muc-mo">Chưa được cấp quyền nào</span>
                   ) : (
                     <div className="flex flex-wrap gap-1">
                       {nd.quyen.map((q) => (
                         <span
                           key={q}
-                          className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] text-slate-600"
+                          className="rounded-sm border border-ke-dam/70 bg-giay px-1.5 py-0.5 font-mono text-[9.5px] tracking-[0.01em] text-muc-nhat"
                         >
                           {TEN_QUYEN[q]}
                         </span>
@@ -480,39 +480,49 @@ export function ManTaiKhoan() {
                 </td>
                 <td>
                   <span
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${
+                    className={`inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-[10px] font-medium tracking-[0.03em] uppercase ${
                       nd.dangHoatDong
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                        : "border-slate-300 bg-slate-100 text-slate-500"
+                        ? "border-ngoc/30 bg-ngoc-nhat text-ngoc"
+                        : "border-ke-dam bg-giay text-muc-mo"
                     }`}
                   >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${nd.dangHoatDong ? "bg-emerald-500" : "bg-slate-400"}`}
-                    />
+                    <span className={`h-1.5 w-1.5 rounded-full ${nd.dangHoatDong ? "bg-ngoc" : "bg-ke-dam"}`} />
                     {nd.dangHoatDong ? "Hoạt động" : "Đã khoá"}
                   </span>
                   {dangOnline(nd) && (
-                    <div className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
-                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-                      Đang truy cập
+                    <div className="mt-1 inline-flex items-center gap-1 font-mono text-[9.5px] tracking-[0.03em] text-ngoc uppercase">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ngoc" />
+                      Trực tuyến
                     </div>
                   )}
                 </td>
                 <td>
                   {dangOnline(nd) ? (
-                    <div className="text-[12px] font-medium text-slate-800">{nd.trangDangXem || "Đang truy cập"}</div>
+                    <div className="text-[12px] font-semibold text-muc">{nd.trangDangXem || "Đang truy cập"}</div>
                   ) : (
-                    <div className="text-[12px] text-slate-500">
+                    <div className="text-[12px] text-muc-nhat">
                       {nd.trangDangXem ? `Lần cuối: ${nd.trangDangXem}` : "Chưa có tín hiệu"}
                     </div>
                   )}
-                  <div className="mt-0.5 text-[11px] text-slate-500">
+                  <div className="mt-0.5 font-mono text-[10px] tracking-[0.01em] text-muc-mo">
                     {nd.lanHoatDong ? thoiGianTruoc(nd.lanHoatDong, bayGio) : "—"}
-                    {nd.thietBi && <span className="text-slate-400"> · {nd.thietBi}</span>}
+                    {nd.thietBi && <span className="text-muc-mo/70"> · {nd.thietBi}</span>}
                   </div>
                 </td>
-                <td className="text-[12px] text-slate-500">
-                  {nd.lanDangNhapCuoi ? new Date(nd.lanDangNhapCuoi).toLocaleString("vi-VN") : "Chưa đăng nhập"}
+                <td>
+                  {nd.lanDangNhapCuoi ? (
+                    (() => {
+                      const luc = new Date(nd.lanDangNhapCuoi);
+                      return (
+                        <div className="font-mono text-[10.5px] leading-snug text-muc-nhat">
+                          <div className="whitespace-nowrap">{luc.toLocaleDateString("vi-VN")}</div>
+                          <div className="so whitespace-nowrap text-muc-mo">{luc.toLocaleTimeString("vi-VN")}</div>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <span className="font-mono text-[10.5px] text-muc-mo">Chưa đăng nhập</span>
+                  )}
                 </td>
                 <td>{thaoTacNd(nd)}</td>
               </tr>
@@ -551,7 +561,11 @@ export function ManTaiKhoan() {
                   placeholder="canbo1"
                   className="font-mono"
                 />
-                {form.id && <p className="mt-1 text-[11px] text-slate-500">Không đổi được tên đăng nhập</p>}
+                {form.id && (
+                  <p className="mt-1 font-mono text-[10px] tracking-[0.02em] text-muc-mo">
+                    Không đổi được tên đăng nhập
+                  </p>
+                )}
               </div>
               <div>
                 <ONhan>Họ tên *</ONhan>
@@ -577,10 +591,8 @@ export function ManTaiKhoan() {
 
             <div>
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <span className="text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
-                  Vai trò mẫu
-                </span>
-                <span className="text-[11px] text-slate-500">
+                <span className="nhan-muc">Vai trò mẫu</span>
+                <span className="font-mono text-[10px] tracking-[0.02em] text-muc-nhat">
                   {vaiTroDangChon
                     ? `Khớp vai trò: ${vaiTroDangChon.ten}`
                     : `Bộ quyền tuỳ chỉnh · ${quyenHieuLuc.length}/${DS_QUYEN.length} quyền`}
@@ -594,18 +606,22 @@ export function ManTaiKhoan() {
                       key={vaiTro.ma}
                       type="button"
                       onClick={() => chonVaiTro(vaiTro)}
-                      className={`rounded-lg border p-2.5 text-left transition ${
+                      className={`rounded-md border p-2.5 text-left transition ${
                         dangChon
-                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/15"
-                          : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/40"
+                          ? "border-muc/40 bg-giay"
+                          : "border-ke bg-giay-cao hover:border-ke-dam hover:bg-giay/60"
                       }`}
                     >
                       <span className="flex items-center justify-between gap-2">
-                        <span className="text-[13px] font-semibold text-slate-800">{vaiTro.ten}</span>
-                        {dangChon && <span className="text-[10px] font-bold text-blue-700">ĐANG DÙNG</span>}
+                        <span className="text-[13px] font-semibold text-muc">{vaiTro.ten}</span>
+                        {dangChon && (
+                          <span className="font-mono text-[9px] tracking-[0.06em] text-muc uppercase">
+                            Đang dùng
+                          </span>
+                        )}
                       </span>
-                      <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">{vaiTro.moTa}</span>
-                      <span className="mt-1 block text-[10px] text-slate-400">{vaiTro.quyen.length} quyền</span>
+                      <span className="mt-0.5 block text-[11px] leading-snug text-muc-nhat">{vaiTro.moTa}</span>
+                      <span className="so mt-1 block text-[9.5px] text-muc-mo">{vaiTro.quyen.length} quyền</span>
                     </button>
                   );
                 })}
@@ -614,24 +630,22 @@ export function ManTaiKhoan() {
 
             <div>
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <span className="text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
+                <span className="nhan-muc">
                   Quyền chi tiết{" "}
-                  <span className="font-normal text-slate-400 normal-case">
-                    ({quyenHieuLuc.length}/{DS_QUYEN.length})
-                  </span>
+                  <span className="font-normal text-muc-mo">({quyenHieuLuc.length}/{DS_QUYEN.length})</span>
                 </span>
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={() => capNhatQuyen(DS_QUYEN)}
-                    className="text-[12px] font-medium text-blue-700 hover:underline"
+                    className="font-mono text-[10px] tracking-[0.02em] text-muc underline decoration-ke-dam underline-offset-2 hover:decoration-muc"
                   >
                     Chọn tất cả
                   </button>
                   <button
                     type="button"
                     onClick={() => capNhatQuyen([])}
-                    className="text-[12px] font-medium text-slate-500 hover:underline"
+                    className="font-mono text-[10px] tracking-[0.02em] text-muc-nhat underline decoration-ke-dam underline-offset-2 hover:decoration-muc"
                   >
                     Bỏ chọn
                   </button>
@@ -642,17 +656,15 @@ export function ManTaiKhoan() {
                   const soBat = nhom.quyen.filter((q) => quyenHieuLuc.includes(q)).length;
                   const daChon = soBat === nhom.quyen.length;
                   return (
-                    <div key={nhom.nhom} className="rounded-lg border border-slate-200 bg-white p-2.5">
+                    <div key={nhom.nhom} className="rounded-md border border-ke bg-giay/40 p-2.5">
                       <label className="mb-1.5 flex cursor-pointer items-center gap-2">
                         <OTichNhom
                           daChon={daChon}
                           nuaChon={soBat > 0 && !daChon}
                           onChange={(chon) => batTatNhom(nhom.quyen, chon)}
                         />
-                        <span className="text-[11px] font-semibold tracking-wide text-slate-600 uppercase">
-                          {nhom.nhom}
-                        </span>
-                        <span className="ml-auto text-[10px] font-medium text-slate-400">
+                        <span className="nhan-muc text-muc-nhat">{nhom.nhom}</span>
+                        <span className="so ml-auto text-[9.5px] text-muc-mo">
                           {soBat}/{nhom.quyen.length}
                         </span>
                       </label>
@@ -664,27 +676,27 @@ export function ManTaiKhoan() {
                           return (
                             <label
                               key={q}
-                              className={`flex items-start gap-2 rounded px-1 py-1 ${
-                                biKhoa ? "cursor-default" : "cursor-pointer hover:bg-slate-50"
+                              className={`flex items-start gap-2 rounded-sm px-1 py-1 ${
+                                biKhoa ? "cursor-default" : "cursor-pointer hover:bg-giay"
                               }`}
                             >
                               <input
                                 type="checkbox"
-                                className="mt-0.5 h-4 w-4 shrink-0 accent-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="mt-0.5 h-4 w-4 shrink-0 accent-muc disabled:cursor-not-allowed disabled:opacity-60"
                                 checked={daBat}
                                 disabled={biKhoa}
                                 onChange={(e) => batTatQuyen(q, e.target.checked)}
                               />
                               <span className="min-w-0">
-                                <span className="flex flex-wrap items-center gap-1.5 text-[13px] font-medium text-slate-800">
+                                <span className="flex flex-wrap items-center gap-1.5 text-[13px] font-medium text-muc">
                                   {TEN_QUYEN[q]}
                                   {biKhoa && (
-                                    <span className="rounded bg-slate-100 px-1 py-0.5 text-[10px] font-normal text-slate-500">
+                                    <span className="rounded-sm border border-ke-dam/70 bg-giay px-1 py-0.5 font-mono text-[9px] tracking-[0.02em] text-muc-mo">
                                       tự động
                                     </span>
                                   )}
                                 </span>
-                                <span className="block text-[11px] text-slate-500">
+                                <span className="block text-[10.5px] text-muc-nhat">
                                   {biKhoa
                                     ? `Bật theo: ${khoaBoi.map((k) => TEN_QUYEN[k]).join(", ")}`
                                     : MO_TA_QUYEN[q]}
@@ -703,12 +715,12 @@ export function ManTaiKhoan() {
             <label className="flex cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
-                className="h-4 w-4 accent-blue-700"
+                className="h-4 w-4 accent-muc"
                 checked={form.dangHoatDong}
                 onChange={(e) => setForm({ ...form, dangHoatDong: e.target.checked })}
               />
-              <span className="text-sm text-slate-700">
-                Cho phép đăng nhập <span className="text-slate-500">(bỏ chọn để khoá tài khoản)</span>
+              <span className="text-sm text-muc">
+                Cho phép đăng nhập <span className="text-muc-nhat">(bỏ chọn để khoá tài khoản)</span>
               </span>
             </label>
           </div>
@@ -732,7 +744,7 @@ export function ManTaiKhoan() {
         }
       >
         <div className="flex flex-col gap-3">
-          <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-800">
+          <p className="rounded-sm border border-moc/30 border-l-[3px] border-l-moc bg-moc-nhat px-3 py-2 text-[12.5px] text-muc">
             Mật khẩu cũ không xem lại được. Đặt mật khẩu mới rồi gửi cho người dùng; họ sẽ được nhắc đổi khi đăng
             nhập.
           </p>
@@ -764,8 +776,10 @@ export function ManTaiKhoan() {
           <div className="space-y-4">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
-                <div className="text-[16px] font-semibold tracking-tight text-slate-900">{chiTiet.hoTen}</div>
-                <div className="font-mono text-[12px] text-slate-500">{chiTiet.tenDangNhap}</div>
+                <div className="font-serif text-[17px] font-semibold tracking-[-0.01em] text-muc">
+                  {chiTiet.hoTen}
+                </div>
+                <div className="so text-[11.5px] text-muc-nhat">{chiTiet.tenDangNhap}</div>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 <Nhan sac={chiTiet.dangHoatDong ? "luc" : "xam"}>
@@ -777,58 +791,58 @@ export function ManTaiKhoan() {
               </div>
             </div>
 
-            <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3 sm:grid-cols-2">
+            <div className="grid gap-3 rounded-md border border-ke bg-giay/60 p-3 sm:grid-cols-2">
               <div>
-                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Họ tên</div>
-                <div className="mt-0.5 text-[13px] font-medium text-slate-800">{chiTiet.hoTen}</div>
+                <div className="nhan-muc">Họ tên</div>
+                <div className="mt-0.5 text-[13px] font-semibold text-muc">{chiTiet.hoTen}</div>
               </div>
               <div>
-                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Tên đăng nhập</div>
-                <div className="mt-0.5 font-mono text-[13px] text-slate-800">{chiTiet.tenDangNhap}</div>
+                <div className="nhan-muc">Tên đăng nhập</div>
+                <div className="so mt-0.5 text-[12.5px] text-muc">{chiTiet.tenDangNhap}</div>
               </div>
               <div>
-                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Đăng nhập cuối</div>
-                <div className="mt-0.5 text-[13px] text-slate-800">
+                <div className="nhan-muc">Đăng nhập cuối</div>
+                <div className="so mt-0.5 text-[12px] text-muc">
                   {chiTiet.lanDangNhapCuoi
                     ? new Date(chiTiet.lanDangNhapCuoi).toLocaleString("vi-VN")
                     : "Chưa đăng nhập lần nào"}
                 </div>
               </div>
               <div>
-                <div className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Mật khẩu</div>
-                <div className="mt-0.5 text-[13px] text-slate-800">
+                <div className="nhan-muc">Mật khẩu</div>
+                <div className="mt-0.5 text-[13px] text-muc">
                   {chiTiet.phaiDoiMatKhau ? "Đang dùng mật khẩu ban đầu" : "Đã đổi mật khẩu"}
                 </div>
               </div>
             </div>
 
             <div
-              className={`rounded-xl border p-3 ${
-                dangOnline(chiTiet) ? "border-emerald-200 bg-emerald-50/60" : "border-slate-200 bg-white"
+              className={`rounded-md border p-3 ${
+                dangOnline(chiTiet) ? "border-ngoc/30 bg-ngoc-nhat" : "border-ke bg-giay-cao"
               }`}
             >
               <div className="flex items-center gap-2">
                 <span
-                  className={`h-2 w-2 rounded-full ${
-                    dangOnline(chiTiet) ? "animate-pulse bg-emerald-500" : "bg-slate-300"
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    dangOnline(chiTiet) ? "animate-pulse bg-ngoc" : "bg-ke-dam"
                   }`}
                 />
-                <span className="text-[13px] font-semibold text-slate-800">
+                <span className="font-mono text-[10px] font-medium tracking-[0.04em] text-muc uppercase">
                   {dangOnline(chiTiet) ? "Đang truy cập hệ thống" : "Không có tín hiệu truy cập"}
                 </span>
               </div>
               <div className="mt-2 grid gap-2 text-[12px] sm:grid-cols-2">
                 <div>
-                  <span className="text-slate-500">Màn hình: </span>
-                  <span className="font-medium text-slate-800">{chiTiet.trangDangXem || "—"}</span>
+                  <span className="text-muc-nhat">Màn hình: </span>
+                  <span className="font-medium text-muc">{chiTiet.trangDangXem || "—"}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500">Thiết bị: </span>
-                  <span className="font-medium text-slate-800">{chiTiet.thietBi || "—"}</span>
+                  <span className="text-muc-nhat">Thiết bị: </span>
+                  <span className="font-medium text-muc">{chiTiet.thietBi || "—"}</span>
                 </div>
                 <div className="sm:col-span-2">
-                  <span className="text-slate-500">Hoạt động gần nhất: </span>
-                  <span className="font-medium text-slate-800">
+                  <span className="text-muc-nhat">Hoạt động gần nhất: </span>
+                  <span className="font-mono text-[10.5px] text-muc">
                     {chiTiet.lanHoatDong
                       ? `${thoiGianTruoc(chiTiet.lanHoatDong, bayGio)} · ${new Date(chiTiet.lanHoatDong).toLocaleString("vi-VN")}`
                       : "Chưa có tín hiệu"}
@@ -839,20 +853,16 @@ export function ManTaiKhoan() {
 
             <div>
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
-                  Quyền được cấp
-                </span>
+                <span className="nhan-muc">Quyền được cấp</span>
                 <NhanVaiTro quyen={chiTiet.quyen} lon />
-                <span className="ml-auto text-[11px] text-slate-400">
+                <span className="so ml-auto text-[9.5px] text-muc-mo">
                   {chiTiet.quyen.length}/{DS_QUYEN.length} quyền
                 </span>
               </div>
               <div className="grid gap-2 sm:grid-cols-2">
                 {NHOM_QUYEN.map((nhom) => (
-                  <div key={nhom.nhom} className="rounded-lg border border-slate-200 bg-slate-50/40 p-2.5">
-                    <div className="text-[10px] font-semibold tracking-wide text-slate-500 uppercase">
-                      {nhom.nhom}
-                    </div>
+                  <div key={nhom.nhom} className="rounded-md border border-ke bg-giay/40 p-2.5">
+                    <div className="nhan-muc text-muc-nhat">{nhom.nhom}</div>
                     <div className="mt-1 flex flex-col gap-1">
                       {nhom.quyen.map((q) => {
                         const co = chiTiet.quyen.includes(q);
@@ -860,16 +870,18 @@ export function ManTaiKhoan() {
                           <div
                             key={q}
                             className={`flex items-center gap-1.5 text-[12px] ${
-                              co ? "text-slate-800" : "text-slate-400"
+                              co ? "text-muc" : "text-muc-mo"
                             }`}
                           >
                             <span
                               className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-                                co ? "bg-emerald-500" : "bg-slate-300"
+                                co ? "bg-ngoc" : "bg-ke-dam"
                               }`}
                             />
                             <span className={co ? "font-medium" : ""}>{TEN_QUYEN[q]}</span>
-                            {!co && <span className="text-[10px] text-slate-400">chưa cấp</span>}
+                            {!co && (
+                              <span className="font-mono text-[9px] tracking-[0.02em] text-muc-mo">chưa cấp</span>
+                            )}
                           </div>
                         );
                       })}
@@ -948,9 +960,9 @@ export function HopDoiMatKhau({ mo, dong }: { mo: boolean; dong: () => void }) {
     >
       <div className="flex flex-col gap-3">
         {nguoiDung && (
-          <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[13px] text-slate-600">
+          <div className="rounded-sm border border-ke bg-giay px-3 py-2 text-[12.5px] text-muc-nhat">
             Đang đổi mật khẩu cho tài khoản{" "}
-            <b className="font-mono text-slate-900">{nguoiDung.tenDangNhap}</b>
+            <b className="so font-semibold text-muc">{nguoiDung.tenDangNhap}</b>
             {nguoiDung.hoTen ? ` — ${nguoiDung.hoTen}` : ""}
           </div>
         )}
@@ -987,10 +999,10 @@ export function HopDoiMatKhau({ mo, dong }: { mo: boolean; dong: () => void }) {
         </div>
 
         {loi && (
-          <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-[13px] text-rose-700">
+          <div className="rounded-sm border border-dau/25 border-l-[3px] border-l-dau bg-dau-nhat px-3 py-2 text-[12.5px] text-dau">
             {loi}
             {loi.includes("hiện tại") && (
-              <span className="mt-1 block text-rose-600/90">
+              <span className="mt-1 block text-dau/85">
                 Ô mật khẩu hiện tại đã được xoá. Gõ lại thật chậm, chú ý không để dấu cách ở đầu
                 hoặc cuối.
               </span>

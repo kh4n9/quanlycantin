@@ -58,7 +58,7 @@ function xuLyPhimO(
 }
 
 const lopOTim =
-  "h-11 w-full rounded-lg border border-slate-300 bg-white pr-3 pl-9 text-[15px] text-slate-900 shadow-xs placeholder:text-slate-500 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10";
+  "h-11 w-full rounded-sm border border-ke-dam bg-white pr-3 pl-9 text-[15px] text-muc shadow-xs placeholder:text-muc-mo outline-none transition focus:border-muc";
 
 const ICON_TIM = (
   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
@@ -123,7 +123,7 @@ export function ChonHang({
   return (
     <div className="relative">
       <div className="relative">
-        <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-slate-400">
+        <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muc-mo">
           {ICON_TIM}
         </span>
         <input
@@ -144,14 +144,14 @@ export function ChonHang({
           className={`${lopOTim} pr-24`}
         />
         {soLuong !== null && (
-          <span className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-[12px] font-semibold text-blue-700">
-            SL: {soLuong}
+          <span className="absolute top-1/2 right-3 -translate-y-1/2 rounded-sm border border-muc/20 bg-muc/5 px-2 py-0.5 font-mono text-[10.5px] font-semibold tracking-[0.02em] text-muc">
+            SL {soLuong}
           </span>
         )}
       </div>
 
       {mo && ketQua.length > 0 && (
-        <ul className="mem-cuon absolute z-30 mt-1 max-h-80 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-noi">
+        <ul className="mem-cuon absolute z-30 mt-1 max-h-80 w-full overflow-y-auto rounded-sm border border-ke bg-giay-cao py-1 shadow-noi">
           {ketQua.map((p, i) => (
             <li key={p.id}>
               <button
@@ -159,18 +159,18 @@ export function ChonHang({
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => chon(i)}
                 onMouseEnter={() => setViTri(i)}
-                className={`flex w-full items-center gap-3 px-3 py-2 text-left transition ${
-                  i === viTri ? "bg-blue-50" : "hover:bg-slate-50"
+                className={`flex w-full items-center gap-3 border-b border-ke/40 px-3 py-2 text-left transition last:border-b-0 ${
+                  i === viTri ? "bg-giay" : "hover:bg-giay/60"
                 }`}
               >
-                <span className="w-20 shrink-0 truncate font-mono text-[12px] text-slate-500">{p.ma}</span>
+                <span className="so w-20 shrink-0 truncate text-[10.5px] text-muc-mo">{p.ma}</span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-slate-800">{p.ten}</span>
-                  <span className="block text-[11px] text-slate-500">
+                  <span className="block truncate text-sm font-medium text-muc">{p.ten}</span>
+                  <span className="block font-mono text-[10px] tracking-[0.01em] text-muc-mo">
                     {p.nhom} · {p.donViTinh}
                   </span>
                 </span>
-                <span className="shrink-0 text-sm font-semibold text-slate-700">
+                <span className="so shrink-0 text-[12px] font-semibold text-muc">
                   {p.giaBan > 0 ? tien(p.giaBan) : "—"}
                 </span>
               </button>
@@ -180,7 +180,7 @@ export function ChonHang({
       )}
 
       {mo && tuKhoa.length > 0 && ketQua.length === 0 && (
-        <div className="absolute z-30 mt-1 w-full rounded-xl border border-slate-200/80 bg-white px-3 py-3 text-sm text-slate-500 shadow-noi">
+        <div className="absolute z-30 mt-1 w-full rounded-sm border border-ke bg-giay-cao px-3 py-3 text-[12.5px] text-muc-nhat shadow-noi">
           Không tìm thấy mặt hàng nào khớp “{tuKhoa}”.
         </div>
       )}
@@ -246,12 +246,12 @@ export function ChonMonLoc({
   // Đã chọn món rồi thì hiện chip, bấm × để bỏ lọc
   if (daChon) {
     return (
-      <div className="flex h-9 items-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-2 text-[13px]">
-        <span className="text-slate-500">Món:</span>
-        <span className="max-w-52 truncate font-medium text-blue-800">{daChon.ten}</span>
+      <div className="flex h-9 items-center gap-1.5 rounded-sm border border-ke-dam bg-giay px-2 text-[13px]">
+        <span className="font-mono text-[9.5px] tracking-[0.05em] text-muc-mo uppercase">Món</span>
+        <span className="max-w-52 truncate font-medium text-muc">{daChon.ten}</span>
         <button
           onClick={onBo}
-          className="rounded p-0.5 text-blue-600 transition hover:bg-blue-100"
+          className="rounded-sm p-0.5 text-muc-nhat transition hover:bg-muc/5 hover:text-muc"
           title="Bỏ lọc theo món này"
         >
           <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -264,7 +264,7 @@ export function ChonMonLoc({
 
   return (
     <div className="relative">
-      <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400">
+      <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muc-mo">
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -285,11 +285,11 @@ export function ChonMonLoc({
         onKeyDown={onKey}
         placeholder="Lọc theo món hàng…"
         title="Chỉ liệt kê những món có bán trong khoảng ngày đang xem"
-        className="h-9 w-52 rounded-lg border border-slate-300 bg-white pr-2 pl-8 text-sm text-slate-900 shadow-xs placeholder:text-slate-500 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+        className="h-9 w-52 rounded-sm border border-ke-dam bg-white pr-2 pl-8 text-[13px] text-muc shadow-xs placeholder:text-muc-mo outline-none transition focus:border-muc"
       />
 
       {mo && ketQua.length > 0 && (
-        <ul className="mem-cuon absolute z-30 mt-1 max-h-72 w-72 overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-noi">
+        <ul className="mem-cuon absolute z-30 mt-1 max-h-72 w-72 overflow-y-auto rounded-sm border border-ke bg-giay-cao py-1 shadow-noi">
           {ketQua.map((p, i) => (
             <li key={p.id}>
               <button
@@ -297,13 +297,17 @@ export function ChonMonLoc({
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => chon(i)}
                 onMouseEnter={() => setViTri(i)}
-                className={`flex w-full items-center gap-2 px-3 py-2 text-left transition ${
-                  i === viTri ? "bg-blue-50" : "hover:bg-slate-50"
+                className={`flex w-full items-center gap-2 border-b border-ke/40 px-3 py-2 text-left transition last:border-b-0 ${
+                  i === viTri ? "bg-giay" : "hover:bg-giay/60"
                 }`}
               >
-                <span className="w-16 shrink-0 truncate font-mono text-[11px] text-slate-500">{p.ma}</span>
-                <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-slate-800">{p.ten}</span>
-                {!p.dangDung && <span className="shrink-0 text-[10px] text-slate-500">ngừng bán</span>}
+                <span className="so w-16 shrink-0 truncate text-[10px] text-muc-mo">{p.ma}</span>
+                <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-muc">{p.ten}</span>
+                {!p.dangDung && (
+                  <span className="shrink-0 font-mono text-[9px] tracking-[0.03em] text-muc-mo uppercase">
+                    ngừng bán
+                  </span>
+                )}
               </button>
             </li>
           ))}
@@ -311,7 +315,7 @@ export function ChonMonLoc({
       )}
 
       {mo && q.length > 0 && ketQua.length === 0 && (
-        <div className="absolute z-30 mt-1 w-72 rounded-xl border border-slate-200/80 bg-white px-3 py-3 text-sm text-slate-500 shadow-noi">
+        <div className="absolute z-30 mt-1 w-72 rounded-sm border border-ke bg-giay-cao px-3 py-3 text-[12.5px] text-muc-nhat shadow-noi">
           Không có món nào khớp “{q}”.
         </div>
       )}
@@ -388,7 +392,7 @@ export function OTenCanPham({
 
   return (
     <div className="relative">
-      <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-slate-400">
+      <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muc-mo">
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21a8 8 0 0 1 16 0" strokeLinecap="round" />
         </svg>
@@ -412,8 +416,8 @@ export function OTenCanPham({
       />
 
       {hienBang && (
-        <ul className="mem-cuon absolute z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-slate-200/80 bg-white py-1 shadow-noi">
-          <li className="px-3 py-1 text-[11px] font-medium tracking-wide text-slate-500 uppercase">
+        <ul className="mem-cuon absolute z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-sm border border-ke bg-giay-cao py-1 shadow-noi">
+          <li className="nhan-muc border-b border-ke/60 px-3 py-1.5">
             Đã mua trước đây — chọn để điền luôn năm sinh, buồng giam
           </li>
           {ketQua.map((c, i) => (
@@ -423,16 +427,16 @@ export function OTenCanPham({
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => chon(i)}
                 onMouseEnter={() => setViTri(i)}
-                className={`flex w-full items-center gap-3 px-3 py-2 text-left transition ${
-                  i === viTri ? "bg-blue-50" : "hover:bg-slate-50"
+                className={`flex w-full items-center gap-3 border-b border-ke/40 px-3 py-2 text-left transition last:border-b-0 ${
+                  i === viTri ? "bg-giay" : "hover:bg-giay/60"
                 }`}
               >
-                <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">{c.hoTen}</span>
-                <span className="shrink-0 text-[12px] text-slate-500">
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold text-muc">{c.hoTen}</span>
+                <span className="shrink-0 font-mono text-[10px] tracking-[0.01em] text-muc-nhat">
                   {c.namSinh ? `SN ${c.namSinh}` : "Chưa rõ năm sinh"}
                   {c.buongGiam ? ` · ${c.buongGiam}` : ""}
                 </span>
-                <span className="shrink-0 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] text-slate-500">
+                <span className="so shrink-0 rounded-sm border border-ke-dam bg-giay px-1.5 py-0.5 text-[9.5px] text-muc-nhat">
                   {c.soLan} lần
                 </span>
               </button>

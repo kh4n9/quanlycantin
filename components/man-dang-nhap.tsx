@@ -36,74 +36,79 @@ export function ManDangNhap() {
   };
 
   return (
-    <div className="khong-in relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0b1526] p-4 sm:p-6">
+    <div className="khong-in relative flex min-h-screen items-center justify-center overflow-hidden bg-giay p-4 sm:p-6">
+      {/* Nền giấy kẻ dòng, rất nhạt — chỉ để mặt phẳng không trơn như màn hình */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_520px_at_12%_-10%,#1e3a8a_0%,transparent_60%),radial-gradient(760px_480px_at_100%_110%,#1d4ed8_0%,transparent_58%)] opacity-80"
+        className="pointer-events-none absolute inset-0 opacity-40 [background-image:repeating-linear-gradient(180deg,transparent_0_33px,#dfe3d8_33px_34px)]"
       />
 
-      <div className="hop-noi relative grid w-full max-w-4xl overflow-hidden rounded-3xl border border-white/10 bg-white shadow-noi md:grid-cols-[1.05fr_1fr]">
+      <div className="hop-noi relative grid w-full max-w-5xl overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-noi md:grid-cols-[1.05fr_1fr]">
         {/* Cột giới thiệu — chỉ hiện trên màn hình rộng */}
-        <aside className="relative hidden flex-col justify-between overflow-hidden bg-linear-to-br from-[#0d1b31] via-[#122a52] to-[#1e40af] p-8 text-white md:flex">
+        <aside className="relative hidden flex-col justify-between overflow-hidden bg-muc p-9 text-giay/70 md:flex md:border-r md:border-dashed md:border-giay/20">
+          {/* Vân chấm mờ, như giấy in bảo an */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 opacity-[0.14] [background-image:radial-gradient(circle_at_1px_1px,#fff_1px,transparent_0)] [background-size:18px_18px]"
+            className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:radial-gradient(circle_at_1px_1px,#fff_1px,transparent_0)] [background-size:16px_16px]"
           />
-          <div className="relative">
-            <div className="flex items-center gap-3">
-              <Logo className="h-11 w-11 drop-shadow" />
-              <div>
-                <div className="text-[10px] font-semibold tracking-[0.2em] text-blue-200 uppercase">Căn tin</div>
-                <div className="text-sm font-semibold">Quản lý căn tin</div>
+
+          <div className="relative flex items-center gap-3">
+            <Logo className="h-11 w-11" />
+            <div>
+              <div className="font-mono text-[9.5px] tracking-[0.18em] text-giay/45 uppercase">Sổ cấp phát</div>
+              <div className="mt-1 font-serif text-[15px] leading-tight font-semibold text-giay-cao">
+                Quản lý căn tin
               </div>
             </div>
+          </div>
 
-            <h2 className="mt-10 max-w-xs text-[26px] leading-tight font-semibold tracking-tight">
-              Bán hàng nhanh,
+          <div className="relative mt-10">
+            <div className="font-mono text-[9.5px] tracking-[0.18em] text-giay/40 uppercase">Ghi nhận tại quầy</div>
+            <h2 className="mt-3 font-serif text-[30px] leading-[1.18] font-semibold tracking-[-0.02em] text-giay-cao">
+              Mỗi phiếu một dòng sổ,
               <br />
-              sổ sách rõ ràng.
+              mỗi đồng đều rõ.
             </h2>
-            <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-blue-100/80">
-              Lập phiếu, kiểm phiếu và theo dõi hàng còn thiếu cho can phạm trong cùng một màn hình.
+            <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-giay/55">
+              Lập phiếu, in phiếu và đối soát hàng còn thiếu cho can phạm trong cùng một chỗ.
             </p>
           </div>
 
-          <ul className="relative mt-10 space-y-3 text-[13px] text-blue-50/90">
+          <ul className="relative mt-10 space-y-2.5 border-t border-white/10 pt-5 text-[12.5px] text-giay/60">
             {[
               "Lập phiếu bằng bàn phím, không cần rê chuột",
               "Tự điền thông tin can phạm đã mua trước",
               "Báo cáo doanh thu và hàng còn thiếu theo ngày",
             ].map((dong) => (
-              <li key={dong} className="flex items-start gap-2.5">
-                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/15 text-blue-100">
-                  <BieuTuong ten="check" className="h-3 w-3" />
-                </span>
+              <li key={dong} className="flex items-baseline gap-2.5">
+                <span aria-hidden className="h-px w-3 shrink-0 translate-y-[-2px] bg-dau" />
                 {dong}
               </li>
             ))}
           </ul>
-
-          <div className="relative mt-8 border-t border-white/10 pt-4 text-[11px] text-blue-200/70">
-            Dành cho cán bộ quản lý căn tin
-          </div>
         </aside>
 
         {/* Cột đăng nhập */}
-        <div className="p-6 sm:p-8">
-          <div className="mb-6 flex items-center gap-3 md:hidden">
+        <div className="p-6 sm:p-8 md:p-10">
+          <div className="mb-7 flex items-center gap-3 md:hidden">
             <Logo className="h-11 w-11" />
             <div>
-              <h1 className="text-[15px] font-semibold text-slate-900">Quản lý căn tin phạm nhân</h1>
-              <p className="text-[12px] text-slate-500">Đăng nhập để tiếp tục</p>
+              <div className="font-mono text-[9px] tracking-[0.18em] text-muc-mo uppercase">Sổ cấp phát</div>
+              <h1 className="mt-0.5 font-serif text-[16px] leading-tight font-semibold text-muc">
+                Quản lý căn tin phạm nhân
+              </h1>
             </div>
           </div>
 
           <div className="hidden md:block">
-            <h1 className="text-xl font-semibold tracking-tight text-slate-900">Đăng nhập</h1>
-            <p className="mt-1 text-[13px] text-slate-500">Dùng tài khoản được cấp để vào hệ thống.</p>
+            <div className="font-mono text-[9.5px] tracking-[0.18em] text-muc-mo uppercase">Đăng nhập</div>
+            <h1 className="mt-2 font-serif text-[26px] leading-tight font-semibold tracking-[-0.02em] text-muc">
+              Vào hệ thống
+            </h1>
+            <p className="mt-1.5 text-[13px] text-muc-nhat">Dùng tài khoản được cấp để tiếp tục.</p>
           </div>
 
-          <form onSubmit={dangNhap} className="mt-6 flex flex-col gap-4">
+          <form onSubmit={dangNhap} className="mt-7 flex flex-col gap-4">
             <div>
               <ONhan>Tên đăng nhập</ONhan>
               <OText
@@ -129,7 +134,7 @@ export function ManDangNhap() {
                 <button
                   type="button"
                   onClick={() => setHienMatKhau((v) => !v)}
-                  className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                  className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-sm p-1.5 text-muc-mo transition hover:bg-muc/6 hover:text-muc"
                   aria-label={hienMatKhau ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                   title={hienMatKhau ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 >
@@ -148,7 +153,7 @@ export function ManDangNhap() {
             </div>
 
             {loi && (
-              <div className="flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-[13px] text-rose-700">
+              <div className="flex items-start gap-2 rounded-sm border border-dau/25 border-l-[3px] border-l-dau bg-dau-nhat px-3 py-2.5 text-[13px] text-dau">
                 <BieuTuong ten="canh" className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{loi}</span>
               </div>
@@ -159,10 +164,11 @@ export function ManDangNhap() {
             </Nut>
           </form>
 
-          <p className="mt-5 text-center text-[12px] leading-relaxed text-slate-500">
-            Lần đầu sử dụng, đăng nhập bằng tài khoản <b className="text-slate-700">admin</b> với mật khẩu{" "}
-            <b className="text-slate-700">admin</b>, rồi đổi mật khẩu ngay.
-          </p>
+          <div className="mt-6 border-t border-ke pt-4 text-[12px] leading-relaxed text-muc-nhat">
+            Lần đầu sử dụng, đăng nhập bằng tài khoản{" "}
+            <b className="font-mono font-medium text-muc">admin</b> với mật khẩu{" "}
+            <b className="font-mono font-medium text-muc">admin</b>, rồi đổi mật khẩu ngay.
+          </div>
         </div>
       </div>
     </div>

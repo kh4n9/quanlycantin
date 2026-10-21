@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/client";
 import { homNay, ngayVN, so } from "@/lib/format";
 import { conThieu, daBu } from "@/lib/thieu-hang";
 import type { Order } from "@/lib/types";
-import { bao, baoLoi, BieuTuong, HopThoai, Nut, ONhan, OText } from "./ui";
+import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, ONhan, OText } from "./ui";
 
 type CheDo = "thieu" | "bu";
 
@@ -132,38 +132,44 @@ export function HopThieuHang({
             <Nut kieu="chinh" onClick={() => void luuThieu()} disabled={dangLuu}>
               <BieuTuong ten="check" className="h-4 w-4" />
               {dangLuu ? "Đang lưu…" : "Lưu số lượng thiếu"}
-              <span className="ml-1 rounded bg-blue-600/60 px-1.5 py-0.5 text-[10px] font-normal">Ctrl+↵</span>
+              <span className="ml-1 rounded-sm border border-giay-cao/25 px-1.5 py-0.5 font-mono text-[9.5px] font-normal tracking-[0.02em]">
+                Ctrl+↵
+              </span>
             </Nut>
           ) : (
             <Nut kieu="chinh" onClick={() => void luuBu()} disabled={dangLuu || !coGiDeBu}>
               <BieuTuong ten="check" className="h-4 w-4" />
               {dangLuu ? "Đang lưu…" : "Xác nhận bù hàng"}
-              <span className="ml-1 rounded bg-blue-600/60 px-1.5 py-0.5 text-[10px] font-normal">Ctrl+↵</span>
+              <span className="ml-1 rounded-sm border border-giay-cao/25 px-1.5 py-0.5 font-mono text-[9.5px] font-normal tracking-[0.02em]">
+                Ctrl+↵
+              </span>
             </Nut>
           )}
         </>
       }
     >
       <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[13px]">
-          <span className="font-medium text-slate-800">{phieu.hoTen}</span>
-          <span className="text-slate-500">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-sm border border-ke bg-giay px-3 py-2 text-[12.5px]">
+          <span className="font-semibold text-muc">{phieu.hoTen}</span>
+          <span className="font-mono text-[10.5px] tracking-[0.01em] text-muc-nhat">
             {phieu.namSinh ? `SN ${phieu.namSinh}` : "—"} · {phieu.buongGiam || "—"}
           </span>
-          <span className="text-slate-500">Ngày bán {ngayVN(phieu.ngay)}</span>
+          <span className="font-mono text-[10.5px] tracking-[0.01em] text-muc-nhat">
+            Ngày bán {ngayVN(phieu.ngay)}
+          </span>
           {tongConThieu > 0 ? (
-            <span className="ml-auto rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 font-medium text-amber-700">
-              Còn thiếu {so(tongConThieu)} đơn vị
+            <span className="ml-auto">
+              <Nhan sac="vang">Còn thiếu {so(tongConThieu)} đơn vị</Nhan>
             </span>
           ) : (
-            <span className="ml-auto rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
-              Đã giao đủ
+            <span className="ml-auto">
+              <Nhan sac="luc">Đã giao đủ</Nhan>
             </span>
           )}
         </div>
 
         {/* Chọn chế độ */}
-        <div className="flex gap-1 rounded-md bg-slate-100 p-1">
+        <div className="flex gap-1 rounded-sm border border-ke bg-giay p-1">
           {(
             [
               ["thieu", "Ghi hàng thiếu"],
@@ -173,8 +179,10 @@ export function HopThieuHang({
             <button
               key={k}
               onClick={() => setCheDo(k)}
-              className={`flex-1 rounded px-3 py-1.5 text-[13px] font-medium transition ${
-                cheDo === k ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+              className={`flex-1 rounded-sm px-3 py-1.5 font-mono text-[10.5px] tracking-[0.04em] uppercase transition ${
+                cheDo === k
+                  ? "bg-muc text-giay-cao"
+                  : "text-muc-nhat hover:bg-muc/5 hover:text-muc"
               }`}
             >
               {nhan}
@@ -183,23 +191,23 @@ export function HopThieuHang({
         </div>
 
         {cheDo === "thieu" && (
-          <p className="text-[12px] text-slate-500">
+          <p className="text-[12px] text-muc-nhat">
             Ghi số lượng chưa giao được cho can phạm vì chưa có hàng. Để 0 nếu đã giao đủ. Lưu xong hộp thoại
             tự đóng.
           </p>
         )}
         {cheDo === "bu" && (
-          <p className="text-[12px] text-slate-500">
+          <p className="text-[12px] text-muc-nhat">
             {coGiDeBu
               ? "Nhập số lượng bù cho lần giao này. Chỉ nhập được tối đa bằng số còn thiếu."
               : "Phiếu này hiện không còn thiếu mặt hàng nào."}
           </p>
         )}
 
-        <div className="mem-cuon max-h-[42vh] overflow-auto rounded-md border border-slate-200">
+        <div className="mem-cuon max-h-[42vh] overflow-auto rounded-sm border border-ke">
           <table className="w-full min-w-[620px] border-collapse text-sm">
-            <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
-              <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:font-semibold">
+            <thead className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+              <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
                 <th className="text-left">Mặt hàng</th>
                 <th className="w-16">ĐVT</th>
                 <th className="w-20 text-center">Trên phiếu</th>
@@ -214,16 +222,18 @@ export function HopThieuHang({
                 // Khi bù hàng chỉ hiện những mặt hàng còn thiếu
                 if (cheDo === "bu" && con <= 0) return null;
                 return (
-                  <tr key={i.productId} className="[&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-1.5">
-                    <td className="font-medium text-slate-800">{i.ten}</td>
-                    <td className="text-center text-slate-600">{i.donViTinh}</td>
-                    <td className="text-center tabular-nums text-slate-600">{so(i.soLuong)}</td>
-                    <td className="text-center tabular-nums text-slate-600">{daBu(i) || "—"}</td>
+                  <tr key={i.productId} className="[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5">
+                    <td className="font-medium text-muc">{i.ten}</td>
+                    <td className="text-center text-[12px] text-muc-nhat">{i.donViTinh}</td>
+                    <td className="so text-center text-[12.5px] text-muc-nhat">{so(i.soLuong)}</td>
+                    <td className="so text-center text-[12.5px] text-muc-nhat">{daBu(i) || "—"}</td>
                     <td className="text-center">
                       <span
-                        className={`inline-block min-w-10 rounded px-1.5 py-0.5 tabular-nums ${
-                          con > 0 ? "bg-amber-50 font-semibold text-amber-700" : "text-slate-500"
-                        }`}
+                        className={
+                          con > 0
+                            ? "inline-block min-w-10 rounded-sm border border-moc/30 bg-moc-nhat px-1.5 py-0.5 font-mono text-[12px] font-semibold text-moc"
+                            : "so text-[12.5px] text-muc-mo"
+                        }
                       >
                         {con || "—"}
                       </span>
@@ -237,7 +247,7 @@ export function HopThieuHang({
                           value={dsThieu[i.productId] ?? "0"}
                           onChange={(e) => setDsThieu({ ...dsThieu, [i.productId]: e.target.value })}
                           onFocus={(e) => e.target.select()}
-                          className="h-8 w-20 rounded border border-slate-300 px-2 text-center text-sm outline-none focus:ring-2 focus:ring-blue-100"
+                          className="h-8 w-20 rounded-sm border border-ke-dam bg-white px-2 text-center font-mono text-[12.5px] text-muc outline-none focus:border-muc"
                         />
                       ) : (
                         <input
@@ -248,7 +258,7 @@ export function HopThieuHang({
                           onChange={(e) => setDsBu({ ...dsBu, [i.productId]: e.target.value })}
                           onFocus={(e) => e.target.select()}
                           placeholder="0"
-                          className="h-8 w-20 rounded border border-slate-300 px-2 text-center text-sm outline-none focus:ring-2 focus:ring-blue-100"
+                          className="h-8 w-20 rounded-sm border border-ke-dam bg-white px-2 text-center font-mono text-[12.5px] text-muc outline-none placeholder:text-muc-mo focus:border-muc"
                         />
                       )}
                     </td>
@@ -291,23 +301,21 @@ export function HopThieuHang({
         {/* Lịch sử bù hàng */}
         {phieu.items.some((i) => (i.bu ?? []).length > 0) && (
           <div>
-            <div className="mb-1.5 text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
-              Đã bù những gì
-            </div>
+            <div className="nhan-muc mb-1.5">Đã bù những gì</div>
             <div className="flex flex-col gap-1">
               {phieu.items.flatMap((i) =>
                 (i.bu ?? []).map((b, idx) => (
                   <div
                     key={`${i.productId}-${idx}`}
-                    className="flex flex-wrap items-center gap-x-3 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-[12px]"
+                    className="flex flex-wrap items-center gap-x-3 rounded-sm border border-ke bg-giay px-3 py-1.5 text-[12px]"
                   >
-                    <span className="font-medium text-slate-800">{i.ten}</span>
-                    <span className="text-emerald-700">
+                    <span className="font-medium text-muc">{i.ten}</span>
+                    <span className="font-mono text-[11px] text-ngoc">
                       bù {so(b.soLuong)} {i.donViTinh}
                     </span>
-                    <span className="text-slate-500">{ngayVN(b.ngay)}</span>
-                    {b.ghiChu && <span className="text-slate-500">· {b.ghiChu}</span>}
-                    {b.boi && <span className="ml-auto text-slate-500">bởi {b.boi}</span>}
+                    <span className="font-mono text-[10.5px] text-muc-nhat">{ngayVN(b.ngay)}</span>
+                    {b.ghiChu && <span className="text-muc-nhat">· {b.ghiChu}</span>}
+                    {b.boi && <span className="ml-auto text-[11px] text-muc-mo">bởi {b.boi}</span>}
                   </div>
                 )),
               )}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "@/lib/client";
-import type { Quyen } from "@/lib/quyen";
+import { vaiTroCua, type Quyen } from "@/lib/quyen";
 import { StoreProvider, useStore } from "@/lib/store";
 import { ManBanHang } from "./man-ban-hang";
 import { ManBaoCao } from "./man-bao-cao";
@@ -153,11 +153,11 @@ function Khung() {
 
   if (dangKhoiDong) {
     return (
-      <div className="khong-in flex min-h-screen flex-col items-center justify-center gap-4 bg-[#0b1526] text-slate-400">
+      <div className="khong-in flex min-h-screen flex-col items-center justify-center gap-5 bg-muc text-giay/60">
         <Logo className="h-12 w-12 opacity-90" />
-        <div className="flex items-center gap-2 text-[13px]">
-          <span className="h-1.5 w-1.5 animate-ping rounded-full bg-blue-400" />
-          Đang tải dữ liệu…
+        <div className="flex items-center gap-2.5 font-mono text-[10.5px] tracking-[0.16em] uppercase">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-dau" />
+          Đang mở sổ dữ liệu…
         </div>
       </div>
     );
@@ -165,13 +165,14 @@ function Khung() {
 
   if (loi) {
     return (
-      <div className="khong-in flex min-h-screen items-center justify-center bg-[#0b1526] p-4">
-        <div className="hop-noi max-w-md rounded-2xl border border-rose-900/60 bg-rose-950/50 p-5 text-sm text-rose-200 shadow-noi">
-          <div className="mb-1.5 font-semibold text-rose-100">Không kết nối được máy chủ dữ liệu</div>
-          <p className="leading-relaxed">{loi}</p>
-          <p className="mt-2 text-rose-300/80">
-            Kiểm tra lại <code className="rounded bg-black/30 px-1">MONGODB_URI</code> trong file{" "}
-            <code className="rounded bg-black/30 px-1">.env</code> và kết nối mạng.
+      <div className="khong-in flex min-h-screen items-center justify-center bg-giay p-4">
+        <div className="hop-noi max-w-md rounded-lg border border-ke bg-giay-cao p-5 text-sm text-muc shadow-noi">
+          <div className="nhan-muc text-dau">Không kết nối được máy chủ dữ liệu</div>
+          <p className="mt-2 leading-relaxed">{loi}</p>
+          <p className="mt-2 text-muc-nhat">
+            Kiểm tra lại <code className="rounded-sm border border-ke bg-giay px-1 font-mono text-[12px]">MONGODB_URI</code>{" "}
+            trong file <code className="rounded-sm border border-ke bg-giay px-1 font-mono text-[12px]">.env</code> và kết nối
+            mạng.
           </p>
         </div>
       </div>
@@ -195,22 +196,32 @@ function Khung() {
     .map((tu) => tu.charAt(0))
     .join("")
     .toUpperCase();
+  const vaiTro = vaiTroCua(nguoiDung.quyen)?.ten ?? "Quyền tuỳ chỉnh";
+  const viTriMuc = mucChoPhep.findIndex((m) => m.khoa === mucHienTai) + 1;
 
   return (
     <>
       <div className="khong-in flex h-screen flex-col bg-transparent lg:flex-row">
         <aside
-          className={`flex shrink-0 flex-col border-white/5 bg-[#0b1526] text-slate-300 shadow-[8px_0_30px_-24px_rgba(2,6,23,.9)] transition-[width] duration-200 lg:border-r ${
-            thuGonSidebar ? "lg:w-[4.5rem]" : "lg:w-64"
+          className={`flex shrink-0 flex-col bg-muc text-giay/70 transition-[width] duration-200 lg:border-r lg:border-black/30 ${
+            thuGonSidebar ? "lg:w-[4.75rem]" : "lg:w-64"
           }`}
         >
-          <div className="flex items-center justify-between gap-2 border-b border-white/5 px-3 py-3 lg:px-4 lg:py-4">
+          <div
+            className={`flex items-center justify-between gap-2 border-b border-white/10 px-3 py-3 lg:py-4 ${
+              thuGonSidebar ? "lg:px-2" : "lg:px-4"
+            }`}
+          >
             <div className="flex min-w-0 items-center gap-2.5">
-              <Logo className="h-9 w-9 shrink-0 drop-shadow" />
+              <Logo className="h-9 w-9 shrink-0" />
               {!thuGonSidebar && (
                 <div className="min-w-0">
-                  <div className="truncate text-[13px] font-semibold tracking-tight text-white">Quản lý căn tin</div>
-                  <div className="truncate text-[11px] text-slate-400">{nguoiDung.hoTen}</div>
+                  <div className="truncate font-serif text-[14px] leading-tight font-semibold text-giay-cao">
+                    Quản lý căn tin
+                  </div>
+                  <div className="mt-1 truncate font-mono text-[9.5px] tracking-[0.18em] text-giay/40 uppercase">
+                    Sổ cấp phát
+                  </div>
                 </div>
               )}
             </div>
@@ -219,7 +230,7 @@ function Khung() {
             <button
               type="button"
               onClick={() => setThuGonSidebar((v) => !v)}
-              className="hidden rounded p-1 text-slate-400 transition hover:bg-slate-800 hover:text-white lg:flex"
+              className="hidden rounded-md p-1 text-giay/40 transition hover:bg-white/8 hover:text-giay lg:flex"
               title={thuGonSidebar ? "Mở rộng thanh menu" : "Thu gọn thanh menu"}
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
@@ -235,14 +246,14 @@ function Khung() {
             <div className="flex items-center gap-1 lg:hidden">
               <button
                 onClick={() => setDoiMatKhau(true)}
-                className="rounded p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                className="rounded-md p-1.5 text-giay/50 transition hover:bg-white/8 hover:text-giay"
                 title="Đổi mật khẩu"
               >
                 <BieuTuong ten="khoa" className="h-4 w-4" />
               </button>
               <button
                 onClick={() => void dangXuat()}
-                className="rounded p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                className="rounded-md p-1.5 text-giay/50 transition hover:bg-white/8 hover:text-giay"
                 title="Đăng xuất"
               >
                 <BieuTuong ten="xuat" className="h-4 w-4" />
@@ -251,12 +262,12 @@ function Khung() {
           </div>
 
           {!thuGonSidebar && (
-            <div className="hidden px-4 pt-4 pb-1.5 text-[10px] font-semibold tracking-[0.14em] text-slate-500 uppercase lg:block">
-              Điều hướng
+            <div className="hidden px-4 pt-4 pb-2 font-mono text-[9.5px] tracking-[0.18em] text-giay/35 uppercase lg:block">
+              Mục lục
             </div>
           )}
 
-          <nav className="mem-cuon flex gap-1 overflow-x-auto px-2.5 py-2 lg:flex-1 lg:flex-col lg:gap-0.5 lg:overflow-x-visible lg:pb-3">
+          <nav className="mem-cuon flex gap-1 overflow-x-auto px-2.5 py-2 lg:flex-1 lg:flex-col lg:gap-1 lg:overflow-x-visible lg:pb-3">
             {mucChoPhep.map((m, i) => {
               const chon = m.khoa === mucHienTai;
               return (
@@ -265,29 +276,36 @@ function Khung() {
                   onClick={() => chonMuc(m.khoa)}
                   title={thuGonSidebar ? `${m.nhan}: ${m.moTa}` : m.moTa}
                   aria-current={chon ? "page" : undefined}
-                  className={`relative flex shrink-0 items-center gap-2.5 rounded-lg text-left text-[13px] transition-colors lg:w-full ${
+                  className={`relative flex shrink-0 items-center gap-2.5 rounded-md text-left text-[13px] transition-colors lg:w-full ${
                     thuGonSidebar ? "lg:justify-center lg:px-2 lg:py-2.5" : "px-2.5 py-2"
                   } ${
                     chon
-                      ? "bg-blue-500/15 font-semibold text-white ring-1 ring-blue-400/20"
-                      : "text-slate-400 hover:bg-white/5 hover:text-white"
+                      ? "bg-giay-cao font-semibold text-muc shadow-[0_1px_2px_rgb(0_0_0/0.35)]"
+                      : "text-giay/60 hover:bg-white/6 hover:text-giay"
                   }`}
                 >
                   {chon && !thuGonSidebar && (
-                    <span className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-blue-400" aria-hidden />
+                    <span className="absolute inset-y-2 left-0 w-[2px] rounded-full bg-dau" aria-hidden />
                   )}
-                  <BieuTuong
-                    ten={m.icon}
-                    className={`h-4 w-4 shrink-0 ${chon ? "text-blue-300" : "text-slate-500"}`}
-                  />
+                  {!thuGonSidebar && (
+                    <span
+                      className={`so w-5 shrink-0 text-[10px] ${
+                        chon ? "text-dau" : "text-giay/30"
+                      }`}
+                      aria-hidden
+                    >
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                  )}
+                  <BieuTuong ten={m.icon} className={`h-4 w-4 shrink-0 ${chon ? "text-muc" : "text-giay/35"}`} />
                   {!thuGonSidebar && <span className="whitespace-nowrap">{m.nhan}</span>}
                   {!thuGonSidebar && (
                     <span
-                      className={`ml-auto hidden rounded px-1.5 py-0.5 text-[10px] font-medium lg:inline ${
-                        chon ? "bg-white/10 text-slate-300" : "text-slate-600"
+                      className={`ml-auto hidden font-mono text-[9.5px] tracking-wider lg:inline ${
+                        chon ? "text-muc-mo" : "text-giay/25"
                       }`}
                     >
-                      Alt+{i + 1}
+                      Alt {i + 1}
                     </span>
                   )}
                 </button>
@@ -295,22 +313,24 @@ function Khung() {
             })}
           </nav>
 
-          <div className="hidden flex-col gap-1 border-t border-white/5 px-2.5 py-3 lg:flex">
+          <div className="hidden flex-col gap-1 border-t border-white/10 px-2.5 py-3 lg:flex">
             {!thuGonSidebar && (
-              <div className="mb-1 flex items-center gap-2.5 rounded-xl bg-white/5 px-2.5 py-2">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-[11px] font-bold text-blue-200 ring-1 ring-blue-400/30">
+              <div className="mb-1 flex items-center gap-2.5 rounded-sm bg-white/5 px-2.5 py-2">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-giay/25 font-mono text-[10.5px] font-semibold tracking-[0.02em] text-giay-cao">
                   {chuDau || "?"}
                 </div>
                 <div className="min-w-0">
-                  <div className="truncate text-[12px] font-semibold text-slate-100">{nguoiDung.hoTen}</div>
-                  <div className="truncate text-[10px] text-slate-400">Đang đăng nhập</div>
+                  <div className="truncate text-[12px] font-semibold text-giay-cao">{nguoiDung.hoTen}</div>
+                  <div className="truncate font-mono text-[9.5px] tracking-[0.12em] text-giay/55 uppercase">
+                    {vaiTro}
+                  </div>
                 </div>
               </div>
             )}
             <button
               onClick={() => setDoiMatKhau(true)}
               title="Đổi mật khẩu"
-              className={`flex items-center gap-2 rounded-lg py-2 text-left text-[12.5px] text-slate-400 transition-colors hover:bg-white/5 hover:text-white ${
+              className={`flex items-center gap-2 rounded-md py-2 text-left text-[12.5px] text-giay/55 transition-colors hover:bg-white/6 hover:text-giay ${
                 thuGonSidebar ? "justify-center px-1" : "px-2.5"
               }`}
             >
@@ -320,7 +340,7 @@ function Khung() {
             <button
               onClick={() => void dangXuat()}
               title="Đăng xuất"
-              className={`flex items-center gap-2 rounded-lg py-2 text-left text-[12.5px] text-slate-400 transition-colors hover:bg-rose-500/10 hover:text-rose-200 ${
+              className={`flex items-center gap-2 rounded-sm py-2 text-left text-[12.5px] text-giay/55 transition-colors hover:bg-dau/20 hover:text-giay ${
                 thuGonSidebar ? "justify-center px-1" : "px-2.5"
               }`}
             >
@@ -331,31 +351,33 @@ function Khung() {
         </aside>
 
         <main className="mem-cuon flex min-w-0 flex-1 flex-col overflow-y-auto">
-          <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/85 px-4 py-3 backdrop-blur-md lg:px-6">
-            <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-3">
+          <header className="sticky top-0 z-20 border-b border-ke bg-giay/85 px-4 py-3.5 backdrop-blur-md lg:px-7">
+            <div className="mx-auto flex w-full max-w-[1600px] items-end justify-between gap-4">
               <div className="min-w-0">
-                <h1 className="truncate text-[17px] font-semibold tracking-tight text-slate-900">
+                <div className="font-mono text-[9.5px] tracking-[0.18em] text-muc-mo uppercase">
+                  Sổ cấp phát · Mục {String(viTriMuc).padStart(2, "0")}/{String(mucChoPhep.length).padStart(2, "0")}
+                </div>
+                <h1 className="mt-1.5 truncate font-serif text-[21px] leading-tight font-semibold tracking-[-0.015em] text-muc">
                   {dangChon?.nhan ?? "Căn tin"}
                 </h1>
-                <p className="mt-0.5 truncate text-[12px] text-slate-500">{dangChon?.moTa}</p>
+                <p className="mt-1 truncate text-[12.5px] text-muc-nhat">{dangChon?.moTa}</p>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pr-3 pl-1 shadow-xs sm:flex">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
-                    {chuDau || "?"}
-                  </div>
-                  <div className="text-[11px] leading-tight">
-                    <div className="font-semibold text-slate-800">{nguoiDung.hoTen}</div>
-                    <div className="text-[10px] text-slate-500">Đang đăng nhập</div>
-                  </div>
+
+              <div className="hidden shrink-0 items-center gap-3 border-l border-ke pl-4 sm:flex">
+                <div className="text-right">
+                  <div className="text-[12.5px] leading-tight font-semibold text-muc">{nguoiDung.hoTen}</div>
+                  <div className="mt-1 font-mono text-[9.5px] tracking-[0.12em] text-muc-mo uppercase">{vaiTro}</div>
+                </div>
+                <div className="flex h-9 w-9 items-center justify-center rounded-sm border border-muc/30 bg-giay font-mono text-[11px] font-semibold tracking-[0.02em] text-muc">
+                  {chuDau || "?"}
                 </div>
               </div>
             </div>
           </header>
 
           {nguoiDung.phaiDoiMatKhau && (
-            <div className="mx-auto mt-3 flex w-[calc(100%-2rem)] max-w-[1600px] flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-amber-200 bg-amber-50/90 px-3.5 py-2.5 text-[13px] text-amber-800 shadow-xs lg:w-[calc(100%-3rem)]">
-              <BieuTuong ten="canh" className="h-4 w-4 shrink-0" />
+            <div className="mx-auto mt-4 flex w-[calc(100%-2rem)] max-w-[1600px] flex-wrap items-center gap-x-3 gap-y-2 rounded-md border border-moc/25 border-l-[3px] border-l-moc bg-moc-nhat px-3.5 py-2.5 text-[13px] text-muc shadow-xs lg:w-[calc(100%-3.5rem)]">
+              <BieuTuong ten="canh" className="h-4 w-4 shrink-0 text-moc" />
               <span className="flex-1">
                 Tài khoản của bạn đang dùng mật khẩu ban đầu. Nên đổi ngay để bảo đảm an toàn.
               </span>
@@ -365,10 +387,10 @@ function Khung() {
             </div>
           )}
 
-          <div className="flex-1 px-4 py-4 lg:px-6 lg:py-5">
+          <div className="flex-1 px-4 py-4 lg:px-7 lg:py-5">
             <div className="mx-auto w-full max-w-[1600px]">
               {mucChoPhep.length === 0 ? (
-                <div className="rounded-xl border border-slate-200/80 bg-white shadow-the">
+                <div className="rounded-lg border border-ke bg-giay-cao shadow-the">
                   <Trong
                     tieuDe="Tài khoản chưa được cấp quyền nào"
                     moTa="Liên hệ quản trị viên để được cấp quyền sử dụng."

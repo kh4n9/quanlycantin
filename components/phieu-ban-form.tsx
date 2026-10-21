@@ -126,7 +126,7 @@ export function PhieuBanForm({
   /** Ô số lượng dùng chung cho bảng trên máy tính và thẻ trên điện thoại */
   const oSoLuong = (d: LineItem, i: number, rong = false) => (
     <div
-      className={`flex items-center overflow-hidden rounded-lg border border-slate-300 bg-white shadow-xs ${
+      className={`flex items-center overflow-hidden rounded-md border border-ke-dam bg-white shadow-xs ${
         rong ? "w-full" : "inline-flex"
       }`}
     >
@@ -134,7 +134,7 @@ export function PhieuBanForm({
         type="button"
         onClick={() => suaDong(i, { soLuong: Math.max(0, d.soLuong - 1) })}
         disabled={d.soLuong <= 0}
-        className={`flex shrink-0 items-center justify-center text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-30 ${
+        className={`flex shrink-0 items-center justify-center text-muc-nhat transition hover:bg-giay hover:text-muc disabled:cursor-not-allowed disabled:opacity-30 ${
           rong ? "h-9 w-9" : "h-8 w-7"
         }`}
         title="Giảm 1"
@@ -159,14 +159,14 @@ export function PhieuBanForm({
             suaDong(i, { soLuong: Math.max(0, d.soLuong - 1) });
           }
         }}
-        className={`border-x border-slate-200 px-1 text-center text-sm font-semibold tabular-nums outline-none focus:bg-blue-50/60 ${
+        className={`border-x border-ke px-1 text-center font-mono text-[12.5px] font-semibold tabular-nums outline-none focus:bg-giay ${
           rong ? "h-9 min-w-0 flex-1" : "h-8 w-12"
         }`}
       />
       <button
         type="button"
         onClick={() => suaDong(i, { soLuong: d.soLuong + 1 })}
-        className={`flex shrink-0 items-center justify-center text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 ${
+        className={`flex shrink-0 items-center justify-center text-muc-nhat transition hover:bg-giay hover:text-muc ${
           rong ? "h-9 w-9" : "h-8 w-7"
         }`}
         title="Tăng 1"
@@ -185,7 +185,7 @@ export function PhieuBanForm({
       onChange={(e) => suaDong(i, { donGia: Number(e.target.value) })}
       onFocus={(e) => e.target.select()}
       placeholder="0"
-      className={`rounded-lg border border-slate-300 px-2 text-right text-sm tabular-nums shadow-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 ${
+      className={`rounded-sm border border-ke-dam px-2 text-right font-mono text-[13px] tabular-nums shadow-[inset_0_1px_2px_rgb(22_32_28/0.04)] outline-none transition focus:border-muc ${
         rong ? "h-9 w-full" : "h-8 w-24"
       }`}
     />
@@ -194,7 +194,7 @@ export function PhieuBanForm({
   const nutXoaDong = (d: LineItem, i: number) => (
     <button
       onClick={() => setDsDong((cu) => cu.filter((_, idx) => idx !== i))}
-      className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+      className="rounded-sm p-1.5 text-muc-mo transition hover:bg-dau-nhat hover:text-dau"
       title="Xoá dòng"
       aria-label={`Xoá ${d.ten}`}
     >
@@ -271,19 +271,17 @@ export function PhieuBanForm({
   return (
     <div className="flex flex-col gap-3">
       {/* --- Thông tin can phạm, ghi thẳng trên phiếu --- */}
-      <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-the">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-700 ring-1 ring-blue-100">
-              1
-            </span>
-            <span className="text-[13px] font-semibold tracking-tight text-slate-800">Thông tin can phạm</span>
+      <section className="rounded-lg border border-ke bg-giay-cao shadow-the">
+        <header className="khia flex flex-wrap items-baseline justify-between gap-2 px-4 py-3">
+          <div className="flex items-baseline gap-3">
+            <span className="so text-[10.5px] text-muc-mo">01</span>
+            <h2 className="font-serif text-[15px] font-semibold tracking-[-0.01em] text-muc">Thông tin can phạm</h2>
           </div>
-          <span className="hidden text-[11px] text-slate-500 sm:block">
+          <span className="hidden text-[11.5px] text-muc-nhat sm:block">
             Gõ tên đã mua trước đây để tự điền năm sinh và buồng giam
           </span>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_7rem_minmax(0,1fr)]">
+        </header>
+        <div className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_7rem_minmax(0,1fr)]">
           <div>
             <ONhan>Họ và tên *</ONhan>
             <OTenCanPham
@@ -332,27 +330,34 @@ export function PhieuBanForm({
             />
           </div>
         </div>
-      </div>
+      </section>
 
       {/* --- Thêm mặt hàng --- */}
-      <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-the">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-700 ring-1 ring-blue-100">
-              2
-            </span>
-            <span className="text-[13px] font-semibold tracking-tight text-slate-800">Thêm mặt hàng</span>
+      <section className="rounded-lg border border-ke bg-giay-cao shadow-the">
+        <header className="khia flex flex-wrap items-baseline justify-between gap-2 px-4 py-3">
+          <div className="flex items-baseline gap-3">
+            <span className="so text-[10.5px] text-muc-mo">02</span>
+            <h2 className="font-serif text-[15px] font-semibold tracking-[-0.01em] text-muc">Thêm mặt hàng</h2>
           </div>
-          <span className="hidden text-[11px] text-slate-500 sm:block">
-            Mẹo: gõ <b className="font-semibold text-slate-600">số lượng + dấu cách + tên hàng</b>, ví dụ “5 mì”.
+          <span className="hidden text-[11.5px] text-muc-nhat sm:block">
+            Mẹo: gõ <b className="font-mono font-medium text-muc">số lượng + dấu cách + tên hàng</b>, ví dụ “5 mì”.
             Enter để thêm dòng.
           </span>
+        </header>
+        <div className="p-4">
+          <ChonHang products={sanPham} onChon={themHang} inputRef={oTimHang} />
         </div>
-        <ChonHang products={sanPham} onChon={themHang} inputRef={oTimHang} />
-      </div>
+      </section>
 
       {/* --- Danh sách mặt hàng đã chọn --- */}
-      <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
+      <div className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
+        <header className="khia flex flex-wrap items-baseline justify-between gap-2 px-4 py-3">
+          <div className="flex items-baseline gap-3">
+            <span className="so text-[10.5px] text-muc-mo">03</span>
+            <h2 className="font-serif text-[15px] font-semibold tracking-[-0.01em] text-muc">Mặt hàng trên phiếu</h2>
+          </div>
+          <span className="so text-[10.5px] text-muc-mo">{dsDong.length} dòng</span>
+        </header>
         {dsDong.length === 0 ? (
           <Trong
             tieuDe="Chưa có mặt hàng nào trên phiếu"
@@ -361,13 +366,13 @@ export function PhieuBanForm({
         ) : (
           <>
             {/* Trên điện thoại, mỗi dòng hàng là một thẻ để thao tác đủ số lượng và đơn giá */}
-            <div className="divide-y divide-slate-100 sm:hidden">
+            <div className="divide-y divide-ke/60 sm:hidden">
               {dsDong.map((d, i) => (
                 <div key={d.productId} className="p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="font-semibold text-slate-800">{d.ten}</div>
-                      <div className="font-mono text-[11px] text-slate-500">
+                      <div className="font-semibold text-muc">{d.ten}</div>
+                      <div className="font-mono text-[10.5px] text-muc-mo">
                         {d.ma} · {d.donViTinh}
                       </div>
                     </div>
@@ -375,17 +380,17 @@ export function PhieuBanForm({
                   </div>
                   <div className="mt-2 grid grid-cols-2 gap-3">
                     <div>
-                      <div className="mb-1 text-[11px] font-medium text-slate-500">Số lượng</div>
+                      <div className="nhan-muc mb-1">Số lượng</div>
                       {oSoLuong(d, i, true)}
                     </div>
                     <div>
-                      <div className="mb-1 text-[11px] font-medium text-slate-500">Đơn giá</div>
+                      <div className="nhan-muc mb-1">Đơn giá</div>
                       {oDonGia(d, i, true)}
                     </div>
                   </div>
                   <div className="mt-2 flex items-baseline justify-between text-[12px]">
-                    <span className="text-slate-500">Thành tiền</span>
-                    <span className="font-semibold text-slate-900 tabular-nums">{so(d.thanhTien)}</span>
+                    <span className="text-muc-nhat">Thành tiền</span>
+                    <span className="so font-semibold text-muc">{so(d.thanhTien)}</span>
                   </div>
                 </div>
               ))}
@@ -393,8 +398,8 @@ export function PhieuBanForm({
 
             <div className="mem-cuon hidden max-h-[50vh] min-h-[180px] overflow-auto sm:block">
               <table className="w-full min-w-[680px] border-collapse text-sm">
-                <thead className="sticky top-0 z-10 bg-slate-50/95 text-[11px] tracking-wide text-slate-500 uppercase backdrop-blur">
-                  <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-semibold">
+                <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+                  <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
                     <th className="w-10">#</th>
                     <th className="text-left">Tên mặt hàng</th>
                     <th className="w-16">ĐVT</th>
@@ -408,17 +413,17 @@ export function PhieuBanForm({
                   {dsDong.map((d, i) => (
                     <tr
                       key={d.productId}
-                      className="group [&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-2.5 hover:bg-blue-50/40"
+                      className="group [&>td]:border-b [&>td]:border-ke/70 [&>td]:px-3 [&>td]:py-2.5 hover:bg-giay/70"
                     >
-                      <td className="text-center text-[12px] text-slate-400">{i + 1}</td>
+                      <td className="so text-center text-[10.5px] text-muc-mo">{i + 1}</td>
                       <td>
-                        <div className="font-semibold text-slate-800">{d.ten}</div>
-                        <div className="font-mono text-[11px] text-slate-500">{d.ma}</div>
+                        <div className="font-semibold text-muc">{d.ten}</div>
+                        <div className="font-mono text-[10.5px] text-muc-mo">{d.ma}</div>
                       </td>
-                      <td className="text-center text-slate-600">{d.donViTinh}</td>
+                      <td className="text-center text-[12px] text-muc-nhat">{d.donViTinh}</td>
                       <td className="text-center">{oSoLuong(d, i)}</td>
                       <td>{oDonGia(d, i)}</td>
-                      <td className="text-right font-semibold text-slate-800 tabular-nums">{so(d.thanhTien)}</td>
+                      <td className="so text-right font-semibold text-muc">{so(d.thanhTien)}</td>
                       <td className="text-center">{nutXoaDong(d, i)}</td>
                     </tr>
                   ))}
@@ -431,11 +436,11 @@ export function PhieuBanForm({
 
       {/* --- Thanh tổng kết --- */}
       <div
-        className={`rounded-xl border border-slate-200/80 bg-white/95 p-4 shadow-the backdrop-blur ${
+        className={`overflow-hidden rounded-lg border border-ke bg-giay-cao/95 shadow-the backdrop-blur ${
           trongHopThoai ? "" : "z-10 lg:sticky lg:bottom-0"
         }`}
       >
-        <div className="flex flex-wrap items-end gap-x-5 gap-y-4">
+        <div className="flex flex-wrap items-end gap-x-5 gap-y-4 p-4">
           <div className="w-40 shrink-0">
             <ONhan>Ngày bán</ONhan>
             <OText type="date" value={ngay} onChange={(e) => setNgay(e.target.value)} />
@@ -447,17 +452,15 @@ export function PhieuBanForm({
 
           <div className="flex w-full flex-col gap-3 sm:ml-auto sm:w-auto sm:flex-row sm:items-center">
             <div className="text-right">
-              <div className="text-[10px] font-semibold tracking-[0.12em] text-slate-500 uppercase">Tổng thu</div>
+              <div className="nhan-muc">Tổng thu</div>
               {tongTien > 0 ? (
-                <div className="mt-0.5 text-3xl font-bold tracking-tight text-slate-900 tabular-nums">
-                  {tien(tongTien)}
-                </div>
+                <div className="so mt-1.5 text-[30px] leading-none font-semibold text-muc">{tien(tongTien)}</div>
               ) : dsDong.length > 0 ? (
-                <div className="mt-1 text-xl font-bold text-slate-500">Chưa ghi giá</div>
+                <div className="mt-2 font-serif text-xl font-semibold text-muc-nhat">Chưa ghi giá</div>
               ) : (
-                <div className="mt-0.5 text-3xl font-bold tracking-tight text-slate-500 tabular-nums">0 đ</div>
+                <div className="so mt-1.5 text-[30px] leading-none font-semibold text-muc-mo">0 đ</div>
               )}
-              <div className="mt-0.5 text-[11px] text-slate-500">
+              <div className="mt-2 font-mono text-[10.5px] tracking-[0.04em] text-muc-mo">
                 {dsDong.length} mặt hàng · {so(tongDonVi)} đơn vị
               </div>
             </div>
@@ -481,7 +484,7 @@ export function PhieuBanForm({
               >
                 <BieuTuong ten="check" className="h-4 w-4" />
                 {dangLuu ? "Đang lưu…" : (nhanLuu ?? (suaDoi ? "Lưu thay đổi" : "Lưu phiếu"))}
-                <span className="ml-1 hidden rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-medium text-blue-50 sm:inline">
+                <span className="ml-1 hidden rounded-sm bg-white/12 px-1.5 py-0.5 font-mono text-[9.5px] font-medium text-giay/75 sm:inline">
                   Ctrl+↵
                 </span>
               </Nut>

@@ -189,9 +189,9 @@ export function ManKiemPhieu() {
   return (
     <div className="flex flex-col gap-3">
       {/* --- Bộ lọc và tiến độ --- */}
-      <div className="rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 shadow-the">
+      <div className="rounded-lg border border-ke bg-giay-cao px-3.5 py-3 shadow-the">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="mr-1 text-sm font-semibold text-slate-800">Kiểm phiếu</span>
+          <span className="mr-1 font-serif text-[15px] font-semibold tracking-[-0.01em] text-muc">Kiểm phiếu</span>
           <Nut co="sm" onClick={() => datNhanh("homnay")}>
             Hôm nay
           </Nut>
@@ -206,14 +206,14 @@ export function ManKiemPhieu() {
               type="date"
               value={tu}
               onChange={(e) => setTu(e.target.value)}
-              className="h-8 rounded-md border border-slate-300 bg-white px-2 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              className="h-8 rounded-sm border border-ke-dam bg-white px-2 font-mono text-[11.5px] text-muc outline-none transition focus:border-muc"
             />
-            <span className="text-slate-400">→</span>
+            <span className="text-muc-mo">→</span>
             <input
               type="date"
               value={den}
               onChange={(e) => setDen(e.target.value)}
-              className="h-8 rounded-md border border-slate-300 bg-white px-2 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              className="h-8 rounded-sm border border-ke-dam bg-white px-2 font-mono text-[11.5px] text-muc outline-none transition focus:border-muc"
             />
           </div>
           <OText
@@ -225,7 +225,7 @@ export function ManKiemPhieu() {
           <select
             value={loc}
             onChange={(e) => setLoc(e.target.value as LocKiem)}
-            className="h-9 w-40 rounded-md border border-slate-300 bg-white px-2 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+            className="h-9 w-40 rounded-sm border border-ke-dam bg-white px-2 text-[13px] text-muc outline-none transition focus:border-muc"
           >
             <option value="chua_kiem">Chưa kiểm ({tienDo.con})</option>
             <option value="da_kiem">Đã kiểm ({tienDo.daKiem})</option>
@@ -234,15 +234,15 @@ export function ManKiemPhieu() {
         </div>
 
         {tienDo.tong > 0 && (
-          <div className="mt-2.5 flex items-center gap-3">
-            <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+          <div className="mt-3 flex items-center gap-3">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-sm bg-ke/70">
               <div
-                className="h-full rounded-full bg-emerald-500 transition-all"
+                className="h-full rounded-sm bg-ngoc transition-all"
                 style={{ width: `${phanTram}%` }}
               />
             </div>
-            <span className="shrink-0 text-[12px] text-slate-600">
-              Đã kiểm <b className="text-slate-900">{so(tienDo.daKiem)}</b> / {so(tienDo.tong)} phiếu
+            <span className="shrink-0 font-mono text-[10.5px] tracking-[0.03em] text-muc-nhat uppercase">
+              Đã kiểm <b className="text-muc">{so(tienDo.daKiem)}</b> / {so(tienDo.tong)} phiếu
               {tienDo.con > 0 ? ` · còn ${so(tienDo.con)}` : " · đã kiểm hết"}
             </span>
           </div>
@@ -250,7 +250,7 @@ export function ManKiemPhieu() {
       </div>
 
       {tienDo.tong === 0 && !dangTai ? (
-        <div className="rounded-xl border border-slate-200/80 bg-white shadow-the">
+        <div className="rounded-lg border border-ke bg-giay-cao shadow-the">
           <Trong
             tieuDe="Không có phiếu nào trong khoảng ngày này"
             moTa="Chọn khoảng ngày khác để bắt đầu kiểm."
@@ -259,13 +259,14 @@ export function ManKiemPhieu() {
       ) : (
         <div className="grid min-h-0 min-w-0 gap-3 lg:grid-cols-[20rem_1fr]">
           {/* --- Danh sách phiếu --- */}
-          <div className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
-            <div className="border-b border-slate-200 bg-slate-50/70 px-3 py-2 text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
-              Danh sách ({so(hienThi.length)})
+          <div className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
+            <div className="nhan-muc flex items-center justify-between border-b border-dashed border-ke bg-giay px-3 py-2">
+              <span>Danh sách</span>
+              <span className="so text-muc">{so(hienThi.length)}</span>
             </div>
             <div className="mem-cuon max-h-[calc(100vh-230px)] min-h-[350px] overflow-y-auto">
               {hienThi.length === 0 && (
-                <p className="px-3 py-6 text-center text-[13px] text-slate-500">
+                <p className="px-3 py-6 text-center font-mono text-[10.5px] tracking-[0.02em] text-muc-mo">
                   Không còn phiếu nào khớp bộ lọc.
                 </p>
               )}
@@ -276,26 +277,28 @@ export function ManKiemPhieu() {
                   <button
                     key={o.id}
                     onClick={() => chonPhieu(o)}
-                    className={`flex w-full items-start gap-2 border-b border-slate-100 px-3 py-2 text-left transition ${
-                      dangXem ? "bg-blue-50 ring-1 ring-blue-200 ring-inset" : "hover:bg-slate-50"
+                    className={`flex w-full items-start gap-2.5 border-b border-ke/60 border-l-2 px-3 py-2.5 text-left transition ${
+                      dangXem
+                        ? "border-l-dau bg-giay"
+                        : "border-l-transparent hover:bg-giay/60"
                     }`}
                   >
                     <span
-                      className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+                      className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border text-[9px] font-bold ${
                         !o.kiemLuc
-                          ? "border border-slate-300 text-transparent"
+                          ? "border-ke-dam text-transparent"
                           : coSaiSot
-                            ? "bg-amber-500 text-white"
-                            : "bg-emerald-500 text-white"
+                            ? "border-moc bg-moc text-giay-cao"
+                            : "border-ngoc bg-ngoc text-giay-cao"
                       }`}
                       title={!o.kiemLuc ? "Chưa kiểm" : coSaiSot ? "Đã kiểm, có ghi chú sai sót" : "Đã kiểm"}
                     >
                       ✓
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block font-mono text-[12px] font-medium text-blue-700">{o.soPhieu}</span>
-                      <span className="block truncate text-[13px] font-medium text-slate-800">{o.hoTen}</span>
-                      <span className="block text-[11px] text-slate-500">
+                      <span className="so block text-[11.5px] font-medium text-muc">{o.soPhieu}</span>
+                      <span className="mt-0.5 block truncate text-[13px] font-semibold text-muc">{o.hoTen}</span>
+                      <span className="mt-0.5 block font-mono text-[10.5px] tracking-[0.02em] text-muc-nhat">
                         {o.buongGiam || "—"} · {o.items.length} món
                         {o.tongTien > 0 ? ` · ${so(o.tongTien)}` : ""}
                       </span>
@@ -309,37 +312,39 @@ export function ManKiemPhieu() {
           {/* --- Chi tiết phiếu đang kiểm --- */}
           {dangChon ? (
             <div className="flex min-w-0 flex-col gap-3">
-              <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-the">
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-slate-200 bg-slate-50/70 px-4 py-2.5">
+              <div className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-dashed border-ke bg-giay px-4 py-2.5">
                   <div>
-                    <div className="font-mono text-sm font-semibold text-blue-700">{dangChon.soPhieu}</div>
-                    <div className="text-[11px] text-slate-500">Ngày bán {ngayVN(dangChon.ngay)}</div>
+                    <div className="so text-[12px] font-semibold text-muc">{dangChon.soPhieu}</div>
+                    <div className="mt-0.5 font-mono text-[10px] tracking-[0.03em] text-muc-mo uppercase">
+                      Ngày bán {ngayVN(dangChon.ngay)}
+                    </div>
                   </div>
                   <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold text-slate-900">{dangChon.hoTen}</div>
-                    <div className="text-[11px] text-slate-500">
+                    <div className="truncate font-serif text-[15px] font-semibold text-muc">{dangChon.hoTen}</div>
+                    <div className="mt-0.5 text-[11px] text-muc-nhat">
                       SN {dangChon.namSinh || "—"} · {dangChon.buongGiam || "—"}
                     </div>
                   </div>
                   {dangChon.kiemLuc ? (
                     <span
-                      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-medium ${
+                      className={`inline-flex items-center gap-1.5 rounded-sm border px-2 py-1 font-mono text-[10px] font-medium tracking-[0.04em] uppercase ${
                         dangChon.kiemGhiChu
-                          ? "border-amber-200 bg-amber-50 text-amber-700"
-                          : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          ? "border-moc/30 bg-moc-nhat text-moc"
+                          : "border-ngoc/30 bg-ngoc-nhat text-ngoc"
                       }`}
                     >
                       <span
                         className={`h-1.5 w-1.5 rounded-full ${
-                          dangChon.kiemGhiChu ? "bg-amber-500" : "bg-emerald-500"
+                          dangChon.kiemGhiChu ? "bg-moc" : "bg-ngoc"
                         }`}
                       />
                       {dangChon.kiemGhiChu ? "Đã kiểm — có sai sót" : "Đã kiểm"}
                       {dangChon.kiemBoi ? ` · ${dangChon.kiemBoi}` : ""}
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-2.5 py-1 text-[12px] font-medium text-slate-600">
-                      <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                    <span className="inline-flex items-center gap-1.5 rounded-sm border border-ke-dam bg-giay-cao px-2 py-1 font-mono text-[10px] font-medium tracking-[0.04em] text-muc-nhat uppercase">
+                      <span className="h-1.5 w-1.5 rounded-full bg-ke-dam" />
                       Chưa kiểm
                     </span>
                   )}
@@ -347,8 +352,8 @@ export function ManKiemPhieu() {
 
                 <div className="mem-cuon max-h-[calc(100vh-340px)] min-h-[220px] overflow-auto">
                   <table className="w-full min-w-[760px] border-collapse text-sm">
-                    <thead className="sticky top-0 z-10 bg-slate-50 text-[12px] text-slate-600">
-                      <tr className="[&>th]:border-b [&>th]:border-slate-200 [&>th]:px-3 [&>th]:py-2 [&>th]:font-semibold">
+                    <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+                      <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
                         <th className="w-10">#</th>
                         <th className="text-left">Tên mặt hàng</th>
                         <th className="w-16">ĐVT</th>
@@ -364,28 +369,28 @@ export function ManKiemPhieu() {
                         return (
                           <tr
                             key={d.productId}
-                            className={`[&>td]:border-b [&>td]:border-slate-100 [&>td]:px-3 [&>td]:py-1.5 ${
-                              lech ? "bg-amber-50/70" : ""
+                            className={`[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5 ${
+                              lech ? "bg-moc-nhat/60" : ""
                             }`}
                           >
-                            <td className="text-center text-slate-400">{i + 1}</td>
-                            <td className="font-medium text-slate-800">
+                            <td className="text-center font-mono text-[10.5px] text-muc-mo">{i + 1}</td>
+                            <td className="font-medium text-muc">
                               {d.ten}
                               {lech && (
-                                <span className="ml-2 text-[11px] font-normal text-amber-700">
+                                <span className="ml-2 font-mono text-[10px] font-normal tracking-[0.02em] text-moc">
                                   sổ ghi {so(goc.soLuong)} → sửa thành {so(d.soLuong)}
                                 </span>
                               )}
                             </td>
-                            <td className="text-center text-slate-600">{d.donViTinh}</td>
+                            <td className="text-center text-[12.5px] text-muc-nhat">{d.donViTinh}</td>
                             <td className="text-center">
                               {duocSua ? (
-                                <div className="inline-flex items-center rounded border border-slate-300 bg-white shadow-xs">
+                                <div className="inline-flex items-center rounded-sm border border-ke-dam bg-giay-cao shadow-xs">
                                   <button
                                     type="button"
                                     onClick={() => suaDong(i, Math.max(0, d.soLuong - 1))}
                                     disabled={d.soLuong <= 0}
-                                    className="flex h-8 w-6 items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-30"
+                                    className="flex h-7 w-6 items-center justify-center text-muc-nhat hover:bg-giay hover:text-muc disabled:cursor-not-allowed disabled:opacity-30"
                                     title="Giảm 1"
                                   >
                                     <span className="text-base font-semibold leading-none">−</span>
@@ -405,35 +410,35 @@ export function ManKiemPhieu() {
                                         suaDong(i, Math.max(0, d.soLuong - 1));
                                       }
                                     }}
-                                    className={`h-8 w-12 border-x border-slate-200 px-1 text-center text-sm font-medium outline-none focus:bg-blue-50/50 ${
-                                      lech ? "border-amber-400 bg-amber-50 font-bold text-amber-800" : ""
+                                    className={`so h-7 w-12 border-x border-ke px-1 text-center text-[13px] font-semibold outline-none focus:bg-giay ${
+                                      lech ? "border-moc/40 bg-moc-nhat font-bold text-moc" : "text-muc"
                                     }`}
                                   />
                                   <button
                                     type="button"
                                     onClick={() => suaDong(i, d.soLuong + 1)}
-                                    className="flex h-8 w-6 items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                                    className="flex h-7 w-6 items-center justify-center text-muc-nhat hover:bg-giay hover:text-muc"
                                     title="Tăng 1"
                                   >
                                     <span className="text-base font-semibold leading-none">+</span>
                                   </button>
                                 </div>
                               ) : (
-                                <span className="block text-center tabular-nums">{so(d.soLuong)}</span>
+                                <span className="so block text-center text-[13px] text-muc">{so(d.soLuong)}</span>
                               )}
                             </td>
-                            <td className="text-right text-slate-600 tabular-nums">{so(d.donGia)}</td>
-                            <td className="text-right font-semibold text-slate-800 tabular-nums">{so(d.thanhTien)}</td>
+                            <td className="so text-right text-[12.5px] text-muc-nhat">{so(d.donGia)}</td>
+                            <td className="so text-right text-[13px] font-semibold text-muc">{so(d.thanhTien)}</td>
                           </tr>
                         );
                       })}
                     </tbody>
-                    <tfoot className="bg-slate-50">
-                      <tr className="[&>td]:border-t [&>td]:border-slate-200 [&>td]:px-3 [&>td]:py-2">
-                        <td colSpan={5} className="text-right text-[12px] font-medium text-slate-600">
-                          TỔNG CỘNG
+                    <tfoot className="bg-giay">
+                      <tr className="[&>td]:border-t [&>td]:border-ke [&>td]:px-3 [&>td]:py-2.5">
+                        <td colSpan={5} className="nhan-muc text-right">
+                          Tổng cộng
                         </td>
-                        <td className="text-right text-base font-bold text-slate-900 tabular-nums">
+                        <td className="so text-right text-[15px] font-semibold text-muc">
                           {tongSauSua > 0 ? so(tongSauSua) : "—"}
                         </td>
                       </tr>
@@ -443,12 +448,10 @@ export function ManKiemPhieu() {
               </div>
 
               {/* --- Ghi chú và hành động --- */}
-              <div className="rounded-xl border border-slate-200/80 bg-white p-3 shadow-the">
+              <div className="rounded-lg border border-ke bg-giay-cao p-3.5 shadow-the">
                 <div className="mb-2 flex flex-wrap items-end gap-3">
                   <div className="min-w-64 flex-1">
-                    <label className="mb-1 block text-[12px] font-medium text-slate-600">
-                      Ghi chú kiểm — ghi lại sai sót nếu có
-                    </label>
+                    <label className="nhan-muc mb-1.5 block">Ghi chú kiểm — ghi lại sai sót nếu có</label>
                     <OText
                       value={ghiChu}
                       onChange={(e) => setGhiChuSua({ id: dangChon.id, value: e.target.value })}
@@ -467,7 +470,7 @@ export function ManKiemPhieu() {
                     <Nut kieu="chinh" co="lg" onClick={() => void xacNhan(true)} disabled={dangLuu}>
                       <BieuTuong ten="check" className="h-4 w-4" />
                       {dangLuu ? "Đang lưu…" : dangChon.kiemLuc ? "Lưu & tiếp theo" : "Đúng, tiếp theo"}
-                      <span className="ml-1 rounded bg-blue-600/60 px-1.5 py-0.5 text-[10px] font-normal">
+                      <span className="ml-1 rounded-sm bg-white/15 px-1.5 py-0.5 font-mono text-[9.5px] font-normal tracking-[0.02em]">
                         Ctrl+↵
                       </span>
                     </Nut>
@@ -475,13 +478,13 @@ export function ManKiemPhieu() {
                 </div>
 
                 {coThayDoi && (
-                  <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-800">
-                    <BieuTuong ten="canh" className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div className="flex items-start gap-2 rounded-sm border border-moc/30 border-l-[3px] border-l-moc bg-moc-nhat px-3 py-2 text-[12px] text-muc">
+                    <BieuTuong ten="canh" className="mt-0.5 h-4 w-4 shrink-0 text-moc" />
                     <span>
                       {duocSua ? (
                         <>
-                          Số lượng đã sửa, tiền tính lại thành <b>{so(tongSauSua)}</b>. Bấm “Đúng, tiếp theo” để
-                          lưu và đánh dấu đã kiểm.
+                          Số lượng đã sửa, tiền tính lại thành <b className="so font-semibold">{so(tongSauSua)}</b>. Bấm
+                          “Đúng, tiếp theo” để lưu và đánh dấu đã kiểm.
                         </>
                       ) : (
                         <>Tài khoản của bạn không có quyền sửa phiếu, chỉ đánh dấu kiểm được.</>
@@ -490,14 +493,14 @@ export function ManKiemPhieu() {
                   </div>
                 )}
                 {!coThayDoi && dangChon.kiemLuc && ghiChu !== dangChon.kiemGhiChu && (
-                  <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] text-slate-600">
+                  <div className="rounded-md border border-dashed border-ke-dam bg-giay px-3 py-2 font-mono text-[10.5px] tracking-[0.02em] text-muc-nhat">
                     Ghi chú đã thay đổi — bấm “Lưu &amp; tiếp theo” để cập nhật.
                   </div>
                 )}
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-slate-200/80 bg-white shadow-the">
+            <div className="rounded-lg border border-ke bg-giay-cao shadow-the">
               <Trong
                 tieuDe="Đã kiểm hết phiếu trong khoảng này"
                 moTa="Đổi bộ lọc sang “Đã kiểm” hoặc “Tất cả” để xem lại, hoặc chọn khoảng ngày khác."

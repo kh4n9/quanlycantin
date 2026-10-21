@@ -112,7 +112,7 @@ export function ManMauInThieu() {
               value={mau.kieuIn}
               disabled={!duocSua}
               onChange={(e) => setMau({ ...mau, kieuIn: e.target.value as KieuInThieu })}
-              className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+              className="w-full rounded-sm border border-ke-dam bg-white px-2.5 py-1.5 text-[13px] text-muc outline-none transition focus:border-muc disabled:bg-giay disabled:text-muc-mo"
             >
               {DS_KIEU_IN.map((k) => (
                 <option key={k.khoa} value={k.khoa}>
@@ -120,29 +120,27 @@ export function ManMauInThieu() {
                 </option>
               ))}
             </select>
-            {kieuDangChon && <p className="mt-1 text-[11px] text-slate-500">{kieuDangChon.moTa}</p>}
+            {kieuDangChon && <p className="mt-1 text-[11px] text-muc-nhat">{kieuDangChon.moTa}</p>}
           </div>
 
           <div>
-            <div className="mb-1.5 text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
-              Hiện trên bản in
-            </div>
+            <div className="nhan-muc mb-1.5">Hiện trên bản in</div>
             <div className="grid gap-1.5 sm:grid-cols-2">
               {DS_BAT_TAT_THIEU.map((muc) => (
                 <label
                   key={muc.khoa}
-                  className="flex cursor-pointer items-start gap-2 rounded px-1 py-1 hover:bg-slate-50"
+                  className="flex cursor-pointer items-start gap-2 rounded-sm px-1 py-1 hover:bg-giay"
                 >
                   <input
                     type="checkbox"
-                    className="mt-0.5 h-4 w-4 shrink-0 accent-blue-700"
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-muc"
                     checked={mau.hien[muc.khoa]}
                     disabled={!duocSua}
                     onChange={(e) => doiBat(muc.khoa, e.target.checked)}
                   />
                   <span className="min-w-0">
-                    <span className="block text-[13px] font-medium text-slate-800">{muc.nhan}</span>
-                    {muc.moTa && <span className="block text-[11px] text-slate-500">{muc.moTa}</span>}
+                    <span className="block text-[13px] font-medium text-muc">{muc.nhan}</span>
+                    {muc.moTa && <span className="block text-[11px] text-muc-nhat">{muc.moTa}</span>}
                   </span>
                 </label>
               ))}
@@ -150,13 +148,11 @@ export function ManMauInThieu() {
           </div>
 
           <div>
-            <div className="mb-1.5 text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
-              Chữ hiện trên bản in
-            </div>
+            <div className="nhan-muc mb-1.5">Chữ hiện trên bản in</div>
             <div className="grid gap-2 sm:grid-cols-2">
               {DS_NHAN_THIEU.map((n) => (
                 <div key={n.khoa}>
-                  <label className="mb-0.5 block text-[11px] text-slate-500">{n.nhan}</label>
+                  <label className="mb-0.5 block text-[11px] text-muc-nhat">{n.nhan}</label>
                   <OText value={mau.nhan[n.khoa]} onChange={(e) => doiNhan(n.khoa, e.target.value)} disabled={!duocSua} />
                 </div>
               ))}
@@ -165,16 +161,14 @@ export function ManMauInThieu() {
 
           <div>
             <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-              <span className="text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
-                Chữ ký cuối bản in
-              </span>
+              <span className="nhan-muc">Chữ ký cuối bản in</span>
               <div className="flex items-center gap-2">
-                <label className="text-[12px] text-slate-600">Số chữ ký mỗi hàng</label>
+                <label className="text-[12px] text-muc-nhat">Số chữ ký mỗi hàng</label>
                 <select
                   value={mau.soCotChuKy}
                   disabled={!duocSua}
                   onChange={(e) => setMau({ ...mau, soCotChuKy: Number(e.target.value) })}
-                  className="h-8 rounded-md border border-slate-300 bg-white px-2 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+                  className="h-8 rounded-sm border border-ke-dam bg-white px-2 font-mono text-[12px] text-muc outline-none transition focus:border-muc disabled:bg-giay"
                 >
                   {[1, 2, 3, 4].map((n) => (
                     <option key={n} value={n}>
@@ -188,11 +182,11 @@ export function ManMauInThieu() {
               {mau.chuKy.map((c, i) => (
                 <div key={i} className="flex items-end gap-2">
                   <div className="flex-1">
-                    <label className="mb-0.5 block text-[11px] text-slate-500">Tên ô chữ ký {i + 1}</label>
+                    <label className="mb-0.5 block text-[11px] text-muc-nhat">Tên ô chữ ký {i + 1}</label>
                     <OText value={c.nhan} onChange={(e) => doiChuKy(i, { nhan: e.target.value })} disabled={!duocSua} />
                   </div>
                   <div className="flex-1">
-                    <label className="mb-0.5 block text-[11px] text-slate-500">Dòng phụ</label>
+                    <label className="mb-0.5 block text-[11px] text-muc-nhat">Dòng phụ</label>
                     <OText value={c.ghiChu} onChange={(e) => doiChuKy(i, { ghiChu: e.target.value })} disabled={!duocSua} />
                   </div>
                   <Nut
@@ -201,7 +195,7 @@ export function ManMauInThieu() {
                     onClick={() => setMau((m) => ({ ...m, chuKy: m.chuKy.filter((_, idx) => idx !== i) }))}
                     disabled={!duocSua || mau.chuKy.length <= 0}
                     title="Bỏ ô chữ ký này"
-                    className="hover:text-rose-600"
+                    className="hover:text-dau"
                   >
                     <BieuTuong ten="xoa" className="h-4 w-4" />
                   </Nut>
@@ -223,27 +217,29 @@ export function ManMauInThieu() {
         </div>
 
         <div className="lg:sticky lg:top-4 lg:self-start">
-          <div className="mb-1.5 text-[12px] font-semibold tracking-wide text-slate-500 uppercase">Xem trước</div>
-          <div className="mem-cuon max-h-[36rem] overflow-auto rounded-md border border-slate-300 bg-white p-3 shadow-inner">
+          <div className="nhan-muc mb-1.5">Xem trước</div>
+          <div className="mem-cuon max-h-[36rem] overflow-auto rounded-sm border border-ke-dam bg-white p-3 shadow-[inset_0_1px_3px_rgb(22_32_28/0.05)]">
             <div style={{ transform: "scale(0.55)", transformOrigin: "top left", width: "182%" }}>
               <PhieuThieu du={BAOCAO_MAU} settings={settings} tu={homNay()} den={homNay()} mau={mau} />
             </div>
           </div>
-          <p className="mt-1.5 text-[11px] text-slate-500">Bản in khổ A4. Bấm “Xem trước” để xem đúng cỡ.</p>
+          <p className="mt-1.5 text-[11px] text-muc-nhat">Bản in khổ A4. Bấm “Xem trước” để xem bản in đầy đủ.</p>
         </div>
       </div>
 
       {xemTruoc && (
-        <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/45 p-4 pt-10">
-          <div className="hop-noi w-full max-w-4xl rounded-2xl border border-slate-200 bg-white shadow-noi">
-            <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-              <h3 className="text-sm font-semibold text-slate-800">Xem trước phiếu trả đồ thiếu</h3>
+        <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-muc/45 p-4 pt-10">
+          <div className="hop-noi w-full max-w-4xl rounded-lg border border-ke bg-white shadow-noi">
+            <header className="flex items-center justify-between border-b border-ke px-4 py-3">
+              <h3 className="font-serif text-[15px] font-semibold text-muc">Xem trước phiếu trả đồ thiếu</h3>
               <Nut co="sm" onClick={() => setXemTruoc(false)}>
                 Đóng
               </Nut>
             </header>
-            <div className="mem-cuon max-h-[76vh] overflow-auto p-6">
-              <PhieuThieu du={BAOCAO_MAU} settings={settings} tu={homNay()} den={homNay()} mau={mau} />
+            <div className="mem-cuon max-h-[76vh] overflow-auto bg-giay p-5">
+              <div className="mx-auto w-[794px] max-w-full bg-white px-[45px] py-9 shadow-the ring-1 ring-ke/70">
+                <PhieuThieu du={BAOCAO_MAU} settings={settings} tu={homNay()} den={homNay()} mau={mau} />
+              </div>
             </div>
           </div>
         </div>

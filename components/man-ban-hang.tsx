@@ -41,7 +41,7 @@ export function ManBanHang() {
 
   if (!dangTai && products.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-200/80 bg-white shadow-the">
+      <div className="rounded-lg border border-ke bg-giay-cao shadow-the">
         <Trong
           tieuDe="Chưa có mặt hàng nào để bán"
           moTa="Vào mục “Mặt hàng” để thêm mặt hàng, hoặc nạp danh mục mẫu trong “Cài đặt” để dùng thử ngay."
