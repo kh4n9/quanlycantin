@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { dongPhien, nguoiDungHienTai } from "@/lib/auth";
 import { COL, getDb } from "@/lib/mongo";
+import { ghiNhatKy } from "@/lib/nhat-ky-server";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,12 @@ export async function POST() {
         { id: nd.id },
         { $set: { lanHoatDong: "", trangDangXem: "" } },
       );
+      await ghiNhatKy(nd, {
+        hanhDong: "Đăng xuất",
+        loai: "dang_nhap",
+        doiTuong: `${nd.hoTen} (${nd.tenDangNhap})`,
+        moTa: "Kết thúc phiên làm việc",
+      });
     }
   } catch {
     // Dù không ghi được trạng thái thì vẫn phải xoá phiên đăng nhập.

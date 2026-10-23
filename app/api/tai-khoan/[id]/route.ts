@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { bamMatKhau, timNguoiDungTheoId, yeuCau } from "@/lib/auth";
 import { khoiTao } from "@/lib/db";
 import { COL, KHONG_LAY_ID, getDb } from "@/lib/mongo";
+import { soSanhTruong, tenQuyen } from "@/lib/nhat-ky";
+import { ghiNhatKy } from "@/lib/nhat-ky-server";
 import { chuanHoaQuyen, type Quyen } from "@/lib/quyen";
 
 export const dynamic = "force-dynamic";
@@ -85,6 +87,34 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     const sau = await timNguoiDungTheoId(id);
     if (!sau) return NextResponse.json({ error: "Không tìm thấy tài khoản" }, { status: 404 });
+
+    const thayDoi = soSanhTruong(
+      nd as unknown as Record<string, unknown>,
+      sau as unknown as Record<string, unknown>,
+      { hoTen: "Họ tên", quyen: "Quyền", dangHoatDong: "Trạng thái" },
+      {
+        quyen: tenQuyen,
+        dangHoatDong: (v) => (v ? "Đang hoạt động" : "Đã khoá"),
+      },
+    );
+    if (body.matKhauMoi !== undefined) {
+      thayDoi.push({ truong: "Mật khẩu", truoc: "—", sau: "Đã đặt lại" });
+    }
+    const chiDatLaiMatKhau =
+      body.matKhauMoi !== undefined &&
+      body.hoTen === undefined &&
+      body.quyen === undefined &&
+      body.dangHoatDong === undefined;
+
+    await ghiNhatKy(kq.nd, {
+      hanhDong: chiDatLaiMatKhau ? "Đặt lại mật khẩu" : "Sửa tài khoản",
+      loai: "tai_khoan",
+      doiTuongId: sau.id,
+      doiTuong: `${sau.hoTen} (${sau.tenDangNhap})`,
+      moTa: chiDatLaiMatKhau ? "Người dùng phải đổi mật khẩu ở lần đăng nhập tới" : `Cập nhật ${thayDoi.length} mục`,
+      thayDoi,
+    });
+
     const { matKhauHash: _bo, ...congKhai } = sau;
     return NextResponse.json({ nguoiDung: congKhai });
   } catch (e) {
@@ -110,6 +140,13 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
     const db = await getDb();
     await db.collection(COL.nguoiDung).deleteOne({ id });
+    await ghiNhatKy(kq.nd, {
+      hanhDong: "Xoá tài khoản",
+      loai: "tai_khoan",
+      doiTuongId: nd.id,
+      doiTuong: `${nd.hoTen} (${nd.tenDangNhap})`,
+      moTa: "Tài khoản đã bị xoá khỏi hệ thống",
+    });
     return NextResponse.json({ ok: true, hoTen: nd.hoTen });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });

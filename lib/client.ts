@@ -1,6 +1,7 @@
 "use client";
 
 import type { Quyen } from "./quyen";
+import type { NhatKy } from "./nhat-ky";
 import type { CanPhamGoiY, LineInput, NguoiDungCongKhai, Order, Product, Settings } from "./types";
 
 /** Lỗi trả về từ API kèm mã trạng thái, để chỗ gọi biết là 401 hay 403. */
@@ -236,6 +237,11 @@ export const apiClient = {
 
   baoCao: (tu: string, den: string) =>
     api<BaoCao>(`/api/reports?tu=${encodeURIComponent(tu)}&den=${encodeURIComponent(den)}`),
+
+  nhatKy: (q = "") =>
+    api<{ nhatKy: NhatKy[]; tong: number; trang: number; coTrang: number; soTrang: number }>(
+      `/api/nhat-ky${q ? `?${q}` : ""}`,
+    ),
 
   settings: () => api<{ settings: Settings }>("/api/settings"),
   luuSettings: (body: Partial<Settings>) =>

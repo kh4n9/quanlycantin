@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { yeuCau } from "@/lib/auth";
 import { khoiTao, laySanPham, newId, themSanPham } from "@/lib/db";
+import { tien } from "@/lib/format";
+import { ghiNhatKy } from "@/lib/nhat-ky-server";
 import type { Product } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +46,13 @@ export async function POST(req: Request) {
       createdAt: new Date().toISOString(),
     };
     await themSanPham(sp);
+    await ghiNhatKy(kq.nd, {
+      hanhDong: "Thêm mặt hàng",
+      loai: "mat_hang",
+      doiTuongId: sp.id,
+      doiTuong: `${sp.ten} (${sp.ma})`,
+      moTa: `${sp.nhom} · ${sp.giaBan > 0 ? `${tien(sp.giaBan)}/${sp.donViTinh}` : `chưa đặt giá · ${sp.donViTinh}`}`,
+    });
     return NextResponse.json({ product: sp }, { status: 201 });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });

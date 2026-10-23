@@ -285,6 +285,9 @@ const DUONG_DAN: Record<string, string> = {
   tai: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3",
   canh: "M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z",
   check: "M20 6 9 17l-5-5",
+  lich: "M12 8v4l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z",
+  lammoi: "M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7",
+  xem: "M9 18l6-6-6-6",
 };
 
 export function BieuTuong({ ten, className = "h-4 w-4" }: { ten: string; className?: string }) {

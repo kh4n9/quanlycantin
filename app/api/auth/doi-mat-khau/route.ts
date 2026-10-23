@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { bamMatKhau, kiemMatKhau, yeuCau } from "@/lib/auth";
 import { khoiTao } from "@/lib/db";
 import { COL, getDb } from "@/lib/mongo";
+import { ghiNhatKy } from "@/lib/nhat-ky-server";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,12 @@ export async function POST(req: Request) {
       { id: kq.nd.id },
       { $set: { matKhauHash: await bamMatKhau(matKhauMoi), phaiDoiMatKhau: false } },
     );
+    await ghiNhatKy(kq.nd, {
+      hanhDong: "Đổi mật khẩu",
+      loai: "dang_nhap",
+      doiTuong: `${kq.nd.hoTen} (${kq.nd.tenDangNhap})`,
+      moTa: "Tự đổi mật khẩu đăng nhập",
+    });
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });

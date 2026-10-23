@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { yeuCau } from "@/lib/auth";
 import { dungDongHang, khoiTao, suaPhieuBan, timPhieuBan, xoaPhieuBan } from "@/lib/db";
+import { ngayVN, so, tien } from "@/lib/format";
+import { soSanhTruong } from "@/lib/nhat-ky";
+import { ghiNhatKy } from "@/lib/nhat-ky-server";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +60,38 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
 
     const phieu = await suaPhieuBan(id, patch as never);
+    if (!phieu) {
+      return NextResponse.json({ error: "Không tìm thấy phiếu bán" }, { status: 404 });
+    }
+
+    const sau = { ...truoc, ...patch } as typeof truoc;
+    const thayDoi = soSanhTruong(
+      truoc as unknown as Record<string, unknown>,
+      sau as unknown as Record<string, unknown>,
+      {
+        hoTen: "Họ tên",
+        namSinh: "Năm sinh",
+        buongGiam: "Buồng giam",
+        ngay: "Ngày bán",
+        ghiChu: "Ghi chú",
+      },
+      { ngay: (v) => ngayVN(String(v)) || "—" },
+    );
+    if (JSON.stringify(truoc.items) !== JSON.stringify(sau.items)) {
+      thayDoi.push({
+        truong: "Hàng bán",
+        truoc: `${so(truoc.items.length)} dòng · ${tien(truoc.tongTien)}`,
+        sau: `${so(sau.items.length)} dòng · ${tien(sau.tongTien)}`,
+      });
+    }
+    await ghiNhatKy(kq.nd, {
+      hanhDong: "Sửa phiếu bán",
+      loai: "phieu",
+      doiTuongId: phieu.id,
+      doiTuong: `Phiếu ${phieu.soPhieu}`,
+      moTa: `${phieu.hoTen}${thayDoi.length ? ` · ${so(thayDoi.length)} mục thay đổi` : ""}`,
+      thayDoi,
+    });
     return NextResponse.json({ order: phieu });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });
@@ -74,8 +109,16 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     const body = await req.json().catch(() => ({}));
 
     const { id } = await params;
-    const phieu = await xoaPhieuBan(id, kq.nd.hoTen || kq.nd.tenDangNhap, String(body.lyDo ?? "").trim());
+    const lyDo = String(body.lyDo ?? "").trim();
+    const phieu = await xoaPhieuBan(id, kq.nd.hoTen || kq.nd.tenDangNhap, lyDo);
     if (!phieu) return NextResponse.json({ error: "Không tìm thấy phiếu bán" }, { status: 404 });
+    await ghiNhatKy(kq.nd, {
+      hanhDong: "Xoá phiếu (thùng rác)",
+      loai: "phieu",
+      doiTuongId: phieu.id,
+      doiTuong: `Phiếu ${phieu.soPhieu}`,
+      moTa: [phieu.hoTen, lyDo ? `Lý do: ${lyDo}` : ""].filter(Boolean).join(" · "),
+    });
     return NextResponse.json({ ok: true, soPhieu: phieu.soPhieu });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });

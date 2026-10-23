@@ -36,6 +36,10 @@ async function chayKhoiTao(): Promise<void> {
     db.collection(COL.phieuBan).createIndex({ id: 1 }, { unique: true }),
     db.collection(COL.phieuBan).createIndex({ ngay: -1 }),
     db.collection(COL.phieuBan).createIndex({ hoTen: 1 }),
+    db.collection(COL.nhatKy).createIndex({ id: 1 }, { unique: true }),
+    db.collection(COL.nhatKy).createIndex({ luc: -1 }),
+    db.collection(COL.nhatKy).createIndex({ ngay: -1 }),
+    db.collection(COL.nhatKy).createIndex({ loai: 1 }),
   ]);
 
   await taoQuanTriDauTien();

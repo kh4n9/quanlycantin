@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { kiemMatKhau, moPhien, timNguoiDung } from "@/lib/auth";
 import { COL, getDb } from "@/lib/mongo";
 import { khoiTao } from "@/lib/db";
+import { ghiNhatKy } from "@/lib/nhat-ky-server";
 
 export const dynamic = "force-dynamic";
 
@@ -39,11 +40,23 @@ export async function POST(req: Request) {
         dem,
         khoaDen: dem >= TOI_DA ? Date.now() + THOI_GIAN_KHOA : 0,
       });
+      await ghiNhatKy(null, {
+        hanhDong: "Đăng nhập thất bại",
+        loai: "dang_nhap",
+        doiTuong: tenDangNhap || "—",
+        moTa: "Sai tên đăng nhập hoặc mật khẩu",
+      });
       // Cố tình không nói rõ sai tên hay sai mật khẩu
       return NextResponse.json({ error: "Tên đăng nhập hoặc mật khẩu không đúng" }, { status: 401 });
     }
 
     if (!nd.dangHoatDong) {
+      await ghiNhatKy(nd, {
+        hanhDong: "Đăng nhập bị chặn",
+        loai: "dang_nhap",
+        doiTuong: `${nd.hoTen} (${nd.tenDangNhap})`,
+        moTa: "Tài khoản đang bị khoá",
+      });
       return NextResponse.json({ error: "Tài khoản đã bị khoá" }, { status: 403 });
     }
 
@@ -58,6 +71,12 @@ export async function POST(req: Request) {
     );
 
     const { matKhauHash: _bo, ...congKhai } = nd;
+    await ghiNhatKy(nd, {
+      hanhDong: "Đăng nhập",
+      loai: "dang_nhap",
+      doiTuong: `${nd.hoTen} (${nd.tenDangNhap})`,
+      moTa: "Đăng nhập thành công",
+    });
     return NextResponse.json({ nguoiDung: congKhai });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });

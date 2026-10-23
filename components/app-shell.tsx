@@ -11,6 +11,7 @@ import { ManCanPham } from "./man-can-pham";
 import { ManDangNhap } from "./man-dang-nhap";
 import { ManKiemPhieu } from "./man-kiem-phieu";
 import { ManMatHang } from "./man-mat-hang";
+import { ManNhatKy } from "./man-nhat-ky";
 import { HopDoiMatKhau, ManTaiKhoan } from "./man-tai-khoan";
 import { HopXemTruocPhieu, ManPhieuBan } from "./man-phieu-ban";
 import { Logo } from "./logo";
@@ -18,7 +19,7 @@ import { PhieuInProvider, useInPhieu } from "./print";
 import { useHienDien } from "@/lib/use-hien-dien";
 import { bao, BieuTuong, HopThongBao, Nut, Trong } from "./ui";
 
-type Khoa = "ban" | "phieu" | "kiem" | "mathang" | "canpham" | "baocao" | "taikhoan" | "cai";
+type Khoa = "ban" | "phieu" | "kiem" | "mathang" | "canpham" | "baocao" | "nhatky" | "taikhoan" | "cai";
 
 type Muc = {
   khoa: Khoa;
@@ -48,6 +49,13 @@ const MUC: Muc[] = [
     quyen: "xem_can_pham",
   },
   { khoa: "baocao", nhan: "Báo cáo", icon: "bieu", moTa: "Số phiếu, mặt hàng và can phạm mua nhiều", quyen: "xem_bao_cao" },
+  {
+    khoa: "nhatky",
+    nhan: "Nhật ký",
+    icon: "lich",
+    moTa: "Lịch sử thao tác: ai đã thêm, sửa, xoá và khi nào",
+    quyen: "xem_nhat_ky",
+  },
   { khoa: "taikhoan", nhan: "Tài khoản", icon: "nguoi", moTa: "Tạo tài khoản, phân quyền, đặt lại mật khẩu", quyen: "quan_ly_tai_khoan" },
   {
     khoa: "cai",
@@ -128,7 +136,7 @@ function Khung() {
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [coDuLieuChuaLuu]);
 
-  // Alt + 1…6 chuyển nhanh giữa các mục đang thấy
+  // Alt + 1…9 chuyển nhanh giữa các mục đang thấy
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!e.altKey) return;
@@ -406,6 +414,7 @@ function Khung() {
                   {mucHienTai === "mathang" && coQuyen("quan_ly_mat_hang") && <ManMatHang />}
                   {mucHienTai === "canpham" && coQuyen("xem_can_pham") && <ManCanPham />}
                   {mucHienTai === "baocao" && coQuyen("xem_bao_cao") && <ManBaoCao />}
+                  {mucHienTai === "nhatky" && coQuyen("xem_nhat_ky") && <ManNhatKy />}
                   {mucHienTai === "taikhoan" && coQuyen("quan_ly_tai_khoan") && <ManTaiKhoan />}
                   {mucHienTai === "cai" && coQuyen("sua_cai_dat") && <ManCaiDat />}
                 </>

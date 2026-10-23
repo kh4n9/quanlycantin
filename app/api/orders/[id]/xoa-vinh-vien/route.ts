@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { yeuCau } from "@/lib/auth";
 import { khoiTao, timPhieuBan, xoaVinhVienPhieuBan } from "@/lib/db";
+import { ghiNhatKy } from "@/lib/nhat-ky-server";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,13 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     }
 
     await xoaVinhVienPhieuBan(id);
+    await ghiNhatKy(kq.nd, {
+      hanhDong: "Xoá vĩnh viễn phiếu",
+      loai: "phieu",
+      doiTuongId: phieu.id,
+      doiTuong: `Phiếu ${phieu.soPhieu}`,
+      moTa: `${phieu.hoTen} · không thể phục hồi`,
+    });
     return NextResponse.json({ ok: true, soPhieu: phieu.soPhieu });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });

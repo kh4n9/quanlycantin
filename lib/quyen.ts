@@ -8,6 +8,7 @@ export const TEN_QUYEN = {
   quan_ly_mat_hang: "Quản lý mặt hàng",
   xem_can_pham: "Xem can phạm",
   xem_bao_cao: "Xem báo cáo",
+  xem_nhat_ky: "Xem nhật ký hoạt động",
   sua_cai_dat: "Sửa cài đặt và dữ liệu",
   quan_ly_tai_khoan: "Quản lý tài khoản",
 } as const;
@@ -25,6 +26,7 @@ export const MO_TA_QUYEN: Record<Quyen, string> = {
   quan_ly_mat_hang: "Thêm, sửa, xoá và tắt/bật bán mặt hàng",
   xem_can_pham: "Tra cứu can phạm, lịch sử mua hàng và mặt hàng thường mua",
   xem_bao_cao: "Xem báo cáo và xuất Excel",
+  xem_nhat_ky: "Xem lịch sử thao tác của mọi người trên hệ thống",
   sua_cai_dat: "Sửa thông tin đơn vị, sao lưu và xoá dữ liệu",
   quan_ly_tai_khoan: "Tạo tài khoản, phân quyền, đặt lại mật khẩu",
 };
@@ -34,7 +36,7 @@ export const NHOM_QUYEN: { nhom: string; quyen: Quyen[] }[] = [
   { nhom: "Phiếu bán", quyen: ["xem_phieu", "ban_hang", "sua_phieu", "kiem_phieu", "xoa_phieu"] },
   { nhom: "Tra cứu và báo cáo", quyen: ["xem_can_pham", "xem_bao_cao"] },
   { nhom: "Danh mục", quyen: ["quan_ly_mat_hang"] },
-  { nhom: "Hệ thống", quyen: ["sua_cai_dat", "quan_ly_tai_khoan"] },
+  { nhom: "Hệ thống", quyen: ["xem_nhat_ky", "sua_cai_dat", "quan_ly_tai_khoan"] },
 ];
 
 export const QUYEN_DAY_DU: Quyen[] = [...DS_QUYEN];
@@ -52,6 +54,8 @@ export const QUYEN_KEM_THEO: Partial<Record<Quyen, Quyen[]>> = {
   kiem_phieu: ["xem_phieu"],
   xoa_phieu: ["xem_phieu"],
   xem_can_pham: ["xem_phieu"],
+  quan_ly_tai_khoan: ["xem_nhat_ky"],
+  sua_cai_dat: ["xem_nhat_ky"],
 };
 
 /** Mở rộng danh sách quyền, thêm mọi quyền đi kèm (tính cả dây chuyền). */
@@ -131,6 +135,7 @@ const VAI_TRO_GOC: VaiTro[] = [
       "quan_ly_mat_hang",
       "xem_can_pham",
       "xem_bao_cao",
+      "xem_nhat_ky",
       "sua_cai_dat",
     ],
   },

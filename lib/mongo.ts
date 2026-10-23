@@ -70,6 +70,7 @@ export const COL = {
   nguoiDung: "nguoi_dung",
   sanPham: "san_pham",
   phieuBan: "phieu_ban",
+  nhatKy: "nhat_ky",
   dem: "bo_dem",
   cauHinh: "cau_hinh",
 } as const;

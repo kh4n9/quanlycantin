@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { bamMatKhau, chuanHoaNguoiDung, yeuCau } from "@/lib/auth";
 import { khoiTao, newId } from "@/lib/db";
 import { COL, KHONG_LAY_ID, getDb } from "@/lib/mongo";
+import { tenQuyen } from "@/lib/nhat-ky";
+import { ghiNhatKy } from "@/lib/nhat-ky-server";
 import { chuanHoaQuyen } from "@/lib/quyen";
 
 export const dynamic = "force-dynamic";
@@ -68,6 +70,13 @@ export async function POST(req: Request) {
     await db.collection(COL.nguoiDung).insertOne({ ...moi });
 
     const { matKhauHash: _bo, ...congKhai } = moi;
+    await ghiNhatKy(kq.nd, {
+      hanhDong: "Tạo tài khoản",
+      loai: "tai_khoan",
+      doiTuongId: moi.id,
+      doiTuong: `${moi.hoTen} (${moi.tenDangNhap})`,
+      moTa: `Quyền: ${tenQuyen(moi.quyen)}`,
+    });
     return NextResponse.json({ nguoiDung: congKhai }, { status: 201 });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });

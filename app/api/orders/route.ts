@@ -10,6 +10,8 @@ import {
   type LocPhieu,
 } from "@/lib/db";
 import type { Order } from "@/lib/types";
+import { so, tien } from "@/lib/format";
+import { ghiNhatKy } from "@/lib/nhat-ky-server";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +81,20 @@ export async function POST(req: Request) {
       lyDoXoa: "",
     };
     await themPhieuBan(moi);
+    await ghiNhatKy(kq.nd, {
+      hanhDong: "Tạo phiếu bán",
+      loai: "phieu",
+      doiTuongId: moi.id,
+      doiTuong: `Phiếu ${moi.soPhieu}`,
+      moTa: [
+        moi.hoTen,
+        moi.buongGiam,
+        `${so(moi.items.length)} mặt hàng`,
+        moi.tongTien > 0 ? tien(moi.tongTien) : "",
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    });
     return NextResponse.json({ order: moi }, { status: 201 });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });

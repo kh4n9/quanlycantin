@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { yeuCau } from "@/lib/auth";
 import { khoiTao, laySanPham, sanPhamDaLenPhieu, suaSanPham, timSanPham, xoaSanPham } from "@/lib/db";
+import { so } from "@/lib/format";
+import { soSanhTruong } from "@/lib/nhat-ky";
+import { ghiNhatKy } from "@/lib/nhat-ky-server";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +39,36 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (body.ghiChu !== undefined) patch.ghiChu = String(body.ghiChu);
 
     const sp = await suaSanPham(id, patch);
+    if (!sp) return NextResponse.json({ error: "Không tìm thấy mặt hàng" }, { status: 404 });
+
+    const thayDoi = soSanhTruong(
+      hienTai as unknown as Record<string, unknown>,
+      { ...hienTai, ...patch } as unknown as Record<string, unknown>,
+      {
+        ma: "Mã hàng",
+        ten: "Tên hàng",
+        nhom: "Nhóm hàng",
+        donViTinh: "Đơn vị tính",
+        giaBan: "Giá bán",
+        dangDung: "Trạng thái",
+        ghiChu: "Ghi chú",
+      },
+      {
+        giaBan: (v) => `${so(Number(v) || 0)} đ`,
+        dangDung: (v) => (v ? "Đang bán" : "Tạm dừng bán"),
+      },
+    );
+    const chiDoiTrangThai =
+      body.dangDung !== undefined && Object.keys(patch).length === 1 && patch.dangDung !== hienTai.dangDung;
+
+    await ghiNhatKy(kq.nd, {
+      hanhDong: chiDoiTrangThai ? (patch.dangDung ? "Mở bán mặt hàng" : "Tạm dừng bán") : "Sửa mặt hàng",
+      loai: "mat_hang",
+      doiTuongId: sp.id,
+      doiTuong: `${sp.ten} (${sp.ma})`,
+      moTa: chiDoiTrangThai ? `${sp.ten} · ${patch.dangDung ? "mở bán lại" : "ngừng bán"}` : `Cập nhật ${so(thayDoi.length)} mục`,
+      thayDoi,
+    });
     return NextResponse.json({ product: sp });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });
@@ -55,9 +88,23 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     // Đã lên phiếu bán thì không xoá cứng, chỉ ngừng dùng để giữ lịch sử
     if (await sanPhamDaLenPhieu(id)) {
       await suaSanPham(id, { dangDung: false });
+      await ghiNhatKy(kq.nd, {
+        hanhDong: "Ngừng dùng mặt hàng",
+        loai: "mat_hang",
+        doiTuongId: sp.id,
+        doiTuong: `${sp.ten} (${sp.ma})`,
+        moTa: "Mặt hàng đã lên phiếu bán nên chỉ chuyển sang ngừng dùng, không xoá dữ liệu",
+      });
       return NextResponse.json({ daAn: true, ten: sp.ten });
     }
     await xoaSanPham(id);
+    await ghiNhatKy(kq.nd, {
+      hanhDong: "Xoá mặt hàng",
+      loai: "mat_hang",
+      doiTuongId: sp.id,
+      doiTuong: `${sp.ten} (${sp.ma})`,
+      moTa: "Xoá khỏi danh mục mặt hàng",
+    });
     return NextResponse.json({ daAn: false, ten: sp.ten });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });
