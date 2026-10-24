@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiClient } from "@/lib/client";
 import { taiExcel } from "@/lib/excel";
 import { homNay, ngayVN, so } from "@/lib/format";
 import { NHAN_LOAI_NHAT_KY, type LoaiNhatKy, type NhatKy } from "@/lib/nhat-ky";
-import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, OChon, OText, Trong } from "./ui";
+import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, OChon, OChonKhoang, OKhoangNgay, OPhanTrang, OTim, Trong } from "./ui";
 
 function ngayCach(soNgay: number): string {
   const d = new Date();
@@ -132,7 +132,6 @@ export function ManNhatKy() {
           : tu === thangNay && den === hn
             ? "thang_nay"
             : "";
-  const khoangNhan = tu && den ? `${ngayVN(tu)} – ${ngayVN(den)}` : tu ? `từ ${ngayVN(tu)}` : "tất cả các ngày";
 
   const datKhoang = (t: string, d: string) => {
     setTu(t);
@@ -202,9 +201,9 @@ export function ManNhatKy() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <section className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
-        <div className="border-b border-dashed border-ke bg-giay px-3.5 py-3">
+        <div className="khia bg-giay px-3.5 py-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <div className="font-serif text-[15px] leading-tight font-semibold tracking-[-0.01em] text-muc">
@@ -225,59 +224,40 @@ export function ManNhatKy() {
           </div>
 
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-            <span className="nhan-muc w-full sm:mr-1 sm:w-auto">Khoảng ngày</span>
-            <OText
-              type="date"
-              value={tu}
-              onChange={(e) => {
-                setTu(e.target.value);
+            <OChonKhoang
+              giaTri={preset}
+              onDoi={(k) => {
+                if (k === "hom_nay") datKhoang(hn, hn);
+                else if (k === "bay_ngay") datKhoang(bayNgay, hn);
+                else if (k === "thang_nay") datKhoang(thangNay, hn);
+                else datKhoang("", "");
+              }}
+              chon={[
+                { khoa: "hom_nay", nhan: "Hôm nay" },
+                { khoa: "bay_ngay", nhan: "7 ngày" },
+                { khoa: "thang_nay", nhan: "Tháng này" },
+                { khoa: "tat_ca", nhan: "Tất cả" },
+              ]}
+            />
+            <OKhoangNgay
+              tu={tu}
+              den={den}
+              onTu={(v) => {
+                setTu(v);
                 setTrang(1);
               }}
-              aria-label="Từ ngày"
-              title="Từ ngày"
-              className="w-36"
-            />
-            <span className="text-muc-mo">→</span>
-            <OText
-              type="date"
-              value={den}
-              onChange={(e) => {
-                setDen(e.target.value);
+              onDen={(v) => {
+                setDen(v);
                 setTrang(1);
               }}
-              aria-label="Đến ngày"
-              title="Đến ngày"
-              className="w-36"
             />
-            <div className="flex flex-wrap items-center gap-1">
-              <NutKy active={preset === "hom_nay"} onClick={() => datKhoang(hn, hn)}>
-                Hôm nay
-              </NutKy>
-              <NutKy active={preset === "bay_ngay"} onClick={() => datKhoang(bayNgay, hn)}>
-                7 ngày
-              </NutKy>
-              <NutKy active={preset === "thang_nay"} onClick={() => datKhoang(thangNay, hn)}>
-                Tháng này
-              </NutKy>
-              <NutKy active={preset === "tat_ca"} onClick={() => datKhoang("", "")}>
-                Tất cả
-              </NutKy>
-            </div>
-          </div>
-
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <div className="relative min-w-64 flex-1">
-              <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muc-mo">
-                <BieuTuong ten="tim" className="h-4 w-4" />
-              </span>
-              <OText
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Tìm theo người, đối tượng hoặc nội dung…"
-                aria-label="Tìm trong nhật ký"
-                className="pl-8"
-              />
-            </div>
+            <OTim
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Tìm theo người, đối tượng hoặc nội dung…"
+              aria-label="Tìm trong nhật ký"
+              className="min-w-56"
+            />
             <OChon
               value={loai}
               onChange={(e) => {
@@ -294,18 +274,17 @@ export function ManNhatKy() {
                 </option>
               ))}
             </OChon>
-          </div>
-
-          <div className="-mx-3.5 mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-ke/60 px-3.5 pt-2 font-mono text-[9.5px] tracking-[0.03em] text-muc-mo uppercase">
-            <span>
-              Đang xem {so(nhatKy.length)} / {so(tong)} thao tác
+            <span className="ml-auto font-mono text-[9.5px] tracking-[0.03em] text-muc-mo uppercase">
+              {dangTai ? (
+                <span className="font-semibold text-muc normal-case">Đang tải nhật ký…</span>
+              ) : (
+                <>
+                  {so(nhatKy.length)} / {so(tong)} thao tác
+                </>
+              )}
+              {tu && den && tu > den && <span className="ml-2 text-dau normal-case">Khoảng ngày đang ngược</span>}
+              {loi && <span className="ml-2 text-dau normal-case">{loi}</span>}
             </span>
-            <span className="normal-case">Khoảng: {khoangNhan}</span>
-            {dangTai && <span className="font-semibold text-muc">Đang tải nhật ký…</span>}
-            {tu && den && tu > den && (
-              <span className="normal-case text-dau">Khoảng ngày đang ngược (từ sau đến)</span>
-            )}
-            {loi && <span className="normal-case text-dau">Lỗi: {loi}</span>}
           </div>
         </div>
 
@@ -405,23 +384,7 @@ export function ManNhatKy() {
           </table>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ke bg-giay px-3.5 py-2.5">
-          <span className="font-mono text-[9.5px] tracking-[0.03em] text-muc-mo uppercase">
-            Trang {so(trang)} / {so(soTrang)} · {so(tong)} thao tác
-          </span>
-          <div className="flex items-center gap-1.5">
-            <Nut co="sm" disabled={trang <= 1 || dangTai} onClick={() => setTrang((t) => Math.max(1, t - 1))}>
-              Trang trước
-            </Nut>
-            <Nut
-              co="sm"
-              disabled={trang >= soTrang || dangTai}
-              onClick={() => setTrang((t) => Math.min(soTrang, t + 1))}
-            >
-              Trang sau
-            </Nut>
-          </div>
-        </div>
+        <OPhanTrang trang={trang} soTrang={soTrang} tong={tong} onTrang={setTrang} nhan="thao tác" disabled={dangTai} />
       </section>
 
       <HopThoai
@@ -487,31 +450,5 @@ export function ManNhatKy() {
         )}
       </HopThoai>
     </div>
-  );
-}
-
-/** Chip lọc ngày: nhỏ, gọn để bốn lựa chọn vẫn nằm chung một hàng trên điện thoại. */
-function NutKy({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`inline-flex h-8 items-center justify-center rounded-sm border px-2 font-mono text-[10.5px] font-medium tracking-[0.03em] uppercase transition ${
-        active
-          ? "border-muc bg-muc text-giay-cao"
-          : "border-ke-dam bg-white text-muc-nhat hover:border-muc-mo hover:text-muc"
-      }`}
-    >
-      {children}
-    </button>
   );
 }

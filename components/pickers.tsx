@@ -58,7 +58,15 @@ function xuLyPhimO(
 }
 
 const lopOTim =
-  "h-11 w-full rounded-sm border border-ke-dam bg-white pr-3 pl-9 text-[15px] text-muc shadow-xs placeholder:text-muc-mo outline-none transition focus:border-muc";
+  "h-11 w-full rounded-md border border-ke-dam bg-white pr-3 pl-9 text-[15px] text-muc shadow-xs placeholder:text-muc-mo outline-none transition focus:border-muc focus:ring-2 focus:ring-muc/20";
+
+/**
+ * Chỉ bung danh sách gợi ý khi người dùng đã gõ. Trước đây ô mở ngay khi được
+ * focus, nên vừa vào màn hình Bán hàng danh sách "đã mua trước đây" đã che
+ * mất nửa biểu mẫu và người dùng phải bấm ra ngoài mới đọc tiếp được.
+ */
+const lopGoiY =
+  "mem-cuon absolute z-30 mt-1 w-full overflow-y-auto rounded-md border border-ke bg-giay-cao py-1 shadow-noi";
 
 const ICON_TIM = (
   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
@@ -132,12 +140,17 @@ export function ChonHang({
           onChange={(e) => {
             setQ(e.target.value);
             setViTri(0);
-            setMo(true);
+            setMo(e.target.value.trim().length > 0);
           }}
-          onFocus={() => setMo(true)}
+          onFocus={() => {
+            // Chỉ bung lại danh sách khi ô đã có chữ đang gõ dở
+            if (q.trim().length > 0) setMo(true);
+          }}
           // Bấm lại vào ô đang focus không phát sinh sự kiện focus — xem chú thích
           // ở ô lọc theo món.
-          onClick={() => setMo(true)}
+          onClick={() => {
+            if (q.trim().length > 0) setMo(true);
+          }}
           onBlur={() => setTimeout(() => setMo(false), 150)}
           onKeyDown={onKey}
           placeholder={placeholder}
@@ -151,11 +164,12 @@ export function ChonHang({
       </div>
 
       {mo && ketQua.length > 0 && (
-        <ul className="mem-cuon absolute z-30 mt-1 max-h-80 w-full overflow-y-auto rounded-sm border border-ke bg-giay-cao py-1 shadow-noi">
+        <ul className={`${lopGoiY} max-h-80`} role="listbox" aria-label="Gợi ý mặt hàng">
           {ketQua.map((p, i) => (
-            <li key={p.id}>
+            <li key={p.id} role="option" aria-selected={i === viTri}>
               <button
                 type="button"
+                tabIndex={-1}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => chon(i)}
                 onMouseEnter={() => setViTri(i)}
@@ -180,7 +194,7 @@ export function ChonHang({
       )}
 
       {mo && tuKhoa.length > 0 && ketQua.length === 0 && (
-        <div className="absolute z-30 mt-1 w-full rounded-sm border border-ke bg-giay-cao px-3 py-3 text-[12.5px] text-muc-nhat shadow-noi">
+        <div className="absolute z-30 mt-1 w-full rounded-md border border-ke bg-giay-cao px-3 py-3 text-[12.5px] text-muc-nhat shadow-noi">
           Không tìm thấy mặt hàng nào khớp “{tuKhoa}”.
         </div>
       )}
@@ -246,13 +260,14 @@ export function ChonMonLoc({
   // Đã chọn món rồi thì hiện chip, bấm × để bỏ lọc
   if (daChon) {
     return (
-      <div className="flex h-9 items-center gap-1.5 rounded-sm border border-ke-dam bg-giay px-2 text-[13px]">
+      <div className="flex h-9 items-center gap-1.5 rounded-md border border-muc/25 bg-giay px-2 text-[13px]">
         <span className="font-mono text-[9.5px] tracking-[0.05em] text-muc-mo uppercase">Món</span>
         <span className="max-w-52 truncate font-medium text-muc">{daChon.ten}</span>
         <button
           onClick={onBo}
-          className="rounded-sm p-0.5 text-muc-nhat transition hover:bg-muc/5 hover:text-muc"
+          className="rounded-sm p-0.5 text-muc-nhat transition hover:bg-muc/8 hover:text-muc"
           title="Bỏ lọc theo món này"
+          aria-label={`Bỏ lọc theo món ${daChon.ten}`}
         >
           <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
@@ -274,26 +289,29 @@ export function ChonMonLoc({
         value={q}
         onChange={(e) => {
           setQ(e.target.value);
-          setMo(true);
+          setMo(e.target.value.trim().length > 0);
         }}
-        onFocus={() => setMo(true)}
-        // Bấm lại vào ô đang được focus thì trình duyệt không phát sự kiện focus
-        // nữa, nên sau khi Esc đóng danh sách sẽ không mở lại được nếu chỉ dựa
-        // vào onFocus. Mở luôn khi bấm chuột.
-        onClick={() => setMo(true)}
+        // Danh sách chỉ mở khi có chữ, để thanh lọc không bị che khi vừa mở màn hình
+        onFocus={() => {
+          if (q.trim().length > 0) setMo(true);
+        }}
+        onClick={() => {
+          if (q.trim().length > 0) setMo(true);
+        }}
         onBlur={() => setTimeout(() => setMo(false), 150)}
         onKeyDown={onKey}
         placeholder="Lọc theo món hàng…"
         title="Chỉ liệt kê những món có bán trong khoảng ngày đang xem"
-        className="h-9 w-52 rounded-sm border border-ke-dam bg-white pr-2 pl-8 text-[13px] text-muc shadow-xs placeholder:text-muc-mo outline-none transition focus:border-muc"
+        className="h-9 w-52 rounded-md border border-ke-dam bg-white pr-2 pl-8 text-[13px] text-muc shadow-xs placeholder:text-muc-mo outline-none transition focus:border-muc focus:ring-2 focus:ring-muc/20"
       />
 
       {mo && ketQua.length > 0 && (
-        <ul className="mem-cuon absolute z-30 mt-1 max-h-72 w-72 overflow-y-auto rounded-sm border border-ke bg-giay-cao py-1 shadow-noi">
+        <ul className="mem-cuon absolute z-30 mt-1 max-h-72 w-72 overflow-y-auto rounded-md border border-ke bg-giay-cao py-1 shadow-noi">
           {ketQua.map((p, i) => (
             <li key={p.id}>
               <button
                 type="button"
+                tabIndex={-1}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => chon(i)}
                 onMouseEnter={() => setViTri(i)}
@@ -315,7 +333,7 @@ export function ChonMonLoc({
       )}
 
       {mo && q.length > 0 && ketQua.length === 0 && (
-        <div className="absolute z-30 mt-1 w-72 rounded-sm border border-ke bg-giay-cao px-3 py-3 text-[12.5px] text-muc-nhat shadow-noi">
+        <div className="absolute z-30 mt-1 w-72 rounded-md border border-ke bg-giay-cao px-3 py-3 text-[12.5px] text-muc-nhat shadow-noi">
           Không có món nào khớp “{q}”.
         </div>
       )}
@@ -403,27 +421,40 @@ export function OTenCanPham({
         onChange={(e) => {
           onDoi(e.target.value);
           setViTri(0);
-          setMo(true);
+          setMo(e.target.value.trim().length > 0);
         }}
-        onFocus={() => setMo(true)}
-        // Bấm lại vào ô đang focus không phát sinh sự kiện focus — xem chú thích
-        // ở ô lọc theo món.
-        onClick={() => setMo(true)}
+        // Ô trống thì không mở danh sách: gợi ý chỉ có ích khi đã gõ dở một cái
+        // tên, còn mở sẵn thì che mất phần còn lại của biểu mẫu.
+        onFocus={() => {
+          if (giaTri.trim().length > 0) setMo(true);
+        }}
+        onClick={() => {
+          if (giaTri.trim().length > 0) setMo(true);
+        }}
         onBlur={() => setTimeout(() => setMo(false), 150)}
         onKeyDown={onKey}
+        autoComplete="off"
         placeholder="Gõ họ tên can phạm…"
+        aria-label="Họ và tên can phạm"
         className={lopOTim}
       />
+      {/* Gợi ý mờ ngay trên dòng nhãn: báo rằng hệ thống đã nhớ người mua trước */}
+      {!giaTri && ref === inputRef && goiY.length > 0 && (
+        <span className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 font-mono text-[10px] tracking-[0.04em] text-muc-mo sm:block">
+          {goiY.length} người đã mua
+        </span>
+      )}
 
       {hienBang && (
-        <ul className="mem-cuon absolute z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-sm border border-ke bg-giay-cao py-1 shadow-noi">
-          <li className="nhan-muc border-b border-ke/60 px-3 py-1.5">
+        <ul className={`${lopGoiY} max-h-72`} role="listbox" aria-label="Can phạm đã mua trước đây">
+          <li className="nhan-muc border-b border-ke/60 px-3 py-1.5" role="presentation">
             Đã mua trước đây — chọn để điền luôn năm sinh, buồng giam
           </li>
           {ketQua.map((c, i) => (
-            <li key={`${c.hoTen}-${c.buongGiam}-${c.namSinh}-${i}`}>
+            <li key={`${c.hoTen}-${c.buongGiam}-${c.namSinh}-${i}`} role="option" aria-selected={i === viTri}>
               <button
                 type="button"
+                tabIndex={-1}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => chon(i)}
                 onMouseEnter={() => setViTri(i)}

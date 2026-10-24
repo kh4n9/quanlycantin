@@ -4,9 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "@/lib/client";
 import { homNay, khop, ngayVN, so } from "@/lib/format";
 import { useStore } from "@/lib/store";
+import { conThieu, phieuConThieu } from "@/lib/thieu-hang";
 import type { LineItem, Order } from "@/lib/types";
 import { useNap } from "@/lib/use-nap";
-import { bao, baoLoi, BieuTuong, Nut, OText, Trong } from "./ui";
+import { HopChiTietPhieu } from "./hop-chi-tiet-phieu";
+import { HopThieuHang } from "./hop-thieu-hang";
+import { bao, baoLoi, BieuTuong, Nut, OChonKhoang, OKhoangNgay, OText, OTim, Trong } from "./ui";
 
 type LocKiem = "chua_kiem" | "da_kiem" | "tat_ca";
 
@@ -40,6 +43,8 @@ export function ManKiemPhieu() {
   const [sua, setSua] = useState<{ id: string; dong: LineItem[] } | null>(null);
   const [ghiChuSua, setGhiChuSua] = useState<{ id: string; value: string } | null>(null);
   const [dangLuu, setDangLuu] = useState(false);
+  const [moThieu, setMoThieu] = useState(false);
+  const [phieuChiTiet, setPhieuChiTiet] = useState<Order | null>(null);
 
   const nap = useCallback(async () => {
     setDangTai(true);
@@ -102,6 +107,7 @@ export function ManKiemPhieu() {
   }, [dsDong, dangChon]);
 
   const tongSauSua = dsDong.reduce((s, d) => s + d.thanhTien, 0);
+  const tongThieu = dangChon ? phieuConThieu(dangChon) : 0;
 
   /** Xác nhận phiếu hiện tại rồi nhảy sang phiếu kế tiếp còn chờ kiểm. */
   const xacNhan = useCallback(
@@ -184,48 +190,46 @@ export function ManKiemPhieu() {
     }
   };
 
+  // Phím gạt khoảng ngày sáng đúng ô đang áp dụng
+  const preset: "" | "homnay" | "7ngay" | "thangnay" =
+    tu === homNay() && den === homNay()
+      ? "homnay"
+      : tu === luiNgay(6) && den === homNay()
+        ? "7ngay"
+        : tu === dauThang() && den === homNay()
+          ? "thangnay"
+          : "";
+
   const phanTram = tienDo.tong ? Math.round((tienDo.daKiem / tienDo.tong) * 100) : 0;
 
   return (
     <div className="flex flex-col gap-3">
       {/* --- Bộ lọc và tiến độ --- */}
       <div className="rounded-lg border border-ke bg-giay-cao px-3.5 py-3 shadow-the">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           <span className="mr-1 font-serif text-[15px] font-semibold tracking-[-0.01em] text-muc">Kiểm phiếu</span>
-          <Nut co="sm" onClick={() => datNhanh("homnay")}>
-            Hôm nay
-          </Nut>
-          <Nut co="sm" onClick={() => datNhanh("7ngay")}>
-            7 ngày
-          </Nut>
-          <Nut co="sm" onClick={() => datNhanh("thangnay")}>
-            Tháng này
-          </Nut>
-          <div className="flex items-center gap-1.5">
-            <input
-              type="date"
-              value={tu}
-              onChange={(e) => setTu(e.target.value)}
-              className="h-8 rounded-sm border border-ke-dam bg-white px-2 font-mono text-[11.5px] text-muc outline-none transition focus:border-muc"
-            />
-            <span className="text-muc-mo">→</span>
-            <input
-              type="date"
-              value={den}
-              onChange={(e) => setDen(e.target.value)}
-              className="h-8 rounded-sm border border-ke-dam bg-white px-2 font-mono text-[11.5px] text-muc outline-none transition focus:border-muc"
-            />
-          </div>
-          <OText
+          <OChonKhoang
+            giaTri={preset}
+            onDoi={datNhanh}
+            chon={[
+              { khoa: "homnay", nhan: "Hôm nay" },
+              { khoa: "7ngay", nhan: "7 ngày" },
+              { khoa: "thangnay", nhan: "Tháng này" },
+            ]}
+          />
+          <OKhoangNgay tu={tu} den={den} onTu={setTu} onDen={setDen} />
+          <OTim
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Tìm số phiếu, họ tên…"
-            className="w-52"
+            aria-label="Tìm phiếu để kiểm"
+            className="min-w-48"
           />
           <select
             value={loc}
             onChange={(e) => setLoc(e.target.value as LocKiem)}
-            className="h-9 w-40 rounded-sm border border-ke-dam bg-white px-2 text-[13px] text-muc outline-none transition focus:border-muc"
+            aria-label="Lọc theo trạng thái kiểm"
+            className="h-9 w-44 rounded-md border border-ke-dam bg-white px-2 text-[13px] text-muc shadow-xs outline-none transition focus:border-muc focus:ring-2 focus:ring-muc/20"
           >
             <option value="chua_kiem">Chưa kiểm ({tienDo.con})</option>
             <option value="da_kiem">Đã kiểm ({tienDo.daKiem})</option>
@@ -236,10 +240,7 @@ export function ManKiemPhieu() {
         {tienDo.tong > 0 && (
           <div className="mt-3 flex items-center gap-3">
             <div className="h-1.5 flex-1 overflow-hidden rounded-sm bg-ke/70">
-              <div
-                className="h-full rounded-sm bg-ngoc transition-all"
-                style={{ width: `${phanTram}%` }}
-              />
+              <div className="h-full rounded-sm bg-ngoc transition-all" style={{ width: `${phanTram}%` }} />
             </div>
             <span className="shrink-0 font-mono text-[10.5px] tracking-[0.03em] text-muc-nhat uppercase">
               Đã kiểm <b className="text-muc">{so(tienDo.daKiem)}</b> / {so(tienDo.tong)} phiếu
@@ -348,16 +349,23 @@ export function ManKiemPhieu() {
                       Chưa kiểm
                     </span>
                   )}
+                  {tongThieu > 0 && (
+                    <span className="inline-flex items-center gap-1.5 rounded-sm border border-moc/30 bg-moc-nhat px-2 py-1 font-mono text-[10px] font-medium tracking-[0.04em] text-moc uppercase">
+                      <BieuTuong ten="canh" className="h-3.5 w-3.5" />
+                      Còn thiếu {so(tongThieu)} đơn vị
+                    </span>
+                  )}
                 </div>
 
                 <div className="mem-cuon max-h-[calc(100vh-340px)] min-h-[220px] overflow-auto">
-                  <table className="w-full min-w-[760px] border-collapse text-sm">
+                  <table className="w-full min-w-[860px] border-collapse text-sm">
                     <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
                       <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
                         <th className="w-10">#</th>
                         <th className="text-left">Tên mặt hàng</th>
                         <th className="w-16">ĐVT</th>
                         <th className="w-28 text-center">Số lượng</th>
+                        <th className="w-24 text-right">Còn thiếu</th>
                         <th className="w-28 text-right">Đơn giá</th>
                         <th className="w-32 text-right">Thành tiền</th>
                       </tr>
@@ -427,6 +435,15 @@ export function ManKiemPhieu() {
                                 <span className="so block text-center text-[13px] text-muc">{so(d.soLuong)}</span>
                               )}
                             </td>
+                            <td className="text-right">
+                              {goc && conThieu(goc) > 0 ? (
+                                <span className="so inline-block rounded-sm border border-moc/30 bg-moc-nhat px-1.5 py-0.5 text-[11px] font-semibold text-moc">
+                                  {so(conThieu(goc))}
+                                </span>
+                              ) : (
+                                <span className="so text-[12.5px] text-muc-mo">—</span>
+                              )}
+                            </td>
                             <td className="so text-right text-[12.5px] text-muc-nhat">{so(d.donGia)}</td>
                             <td className="so text-right text-[13px] font-semibold text-muc">{so(d.thanhTien)}</td>
                           </tr>
@@ -435,7 +452,7 @@ export function ManKiemPhieu() {
                     </tbody>
                     <tfoot className="bg-giay">
                       <tr className="[&>td]:border-t [&>td]:border-ke [&>td]:px-3 [&>td]:py-2.5">
-                        <td colSpan={5} className="nhan-muc text-right">
+                        <td colSpan={6} className="nhan-muc text-right">
                           Tổng cộng
                         </td>
                         <td className="so text-right text-[15px] font-semibold text-muc">
@@ -459,6 +476,32 @@ export function ManKiemPhieu() {
                     />
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    {tongThieu > 0 && duocSua && (
+                      <Nut
+                        co="lg"
+                        onClick={() => setMoThieu(true)}
+                        disabled={dangLuu || coThayDoi}
+                        title={
+                          coThayDoi
+                            ? "Lưu số lượng đã sửa trước khi bù hàng"
+                            : "Ghi nhận hàng đã bù cho phiếu này"
+                        }
+                      >
+                        <BieuTuong ten="canh" className="h-4 w-4" /> Bù hàng thiếu
+                      </Nut>
+                    )}
+                    <Nut
+                      co="lg"
+                      onClick={() => setPhieuChiTiet(dangChon)}
+                      disabled={coThayDoi}
+                      title={
+                        coThayDoi
+                          ? "Lưu số lượng đã sửa trước khi mở chi tiết"
+                          : "Xem chi tiết đầy đủ, bù hàng hoặc chỉnh sửa phiếu"
+                      }
+                    >
+                      <BieuTuong ten="phieu" className="h-4 w-4" /> Chi tiết &amp; sửa
+                    </Nut>
                     {dangChon.kiemLuc && (
                       <Nut co="lg" onClick={() => void boKiem()} disabled={dangLuu}>
                         Bỏ đánh dấu
@@ -509,6 +552,26 @@ export function ManKiemPhieu() {
           )}
         </div>
       )}
+
+      {moThieu && dangChon && (
+        <HopThieuHang
+          key={dangChon.id}
+          phieu={dangChon}
+          dong={() => setMoThieu(false)}
+          onLuu={(o) => setDs((cu) => cu.map((x) => (x.id === o.id ? o : x)))}
+        />
+      )}
+
+      <HopChiTietPhieu
+        key={phieuChiTiet?.id ?? "dong"}
+        orderId={phieuChiTiet?.id ?? null}
+        banDau={phieuChiTiet}
+        onDong={() => setPhieuChiTiet(null)}
+        onThayDoi={(o) => {
+          setDs((cu) => cu.map((x) => (x.id === o.id ? o : x)));
+          setPhieuChiTiet(o);
+        }}
+      />
     </div>
   );
 }

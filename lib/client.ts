@@ -88,6 +88,7 @@ export type BaoCao = {
   } | null;
   /** Hàng còn thiếu đã sắp theo buồng rồi tới phiếu — dùng để in đi phát */
   thieuTheoPhieu: {
+    id: string;
     buongGiam: string;
     soPhieu: string;
     ngay: string;
@@ -200,6 +201,8 @@ export const apiClient = {
   canPham: () => api<{ canPham: CanPhamGoiY[] }>("/api/can-pham"),
 
   orders: (q = "") => api<{ orders: Order[] }>(`/api/orders${q ? `?${q}` : ""}`),
+  /** Lấy đầy đủ một phiếu, dùng cho hộp chi tiết phiếu dùng chung. */
+  layPhieuBan: (id: string) => api<{ order: Order }>(`/api/orders/${id}`),
   themPhieuBan: (body: DuLieuPhieu) =>
     api<{ order: Order }>("/api/orders", { method: "POST", body: JSON.stringify(body) }),
   /** Sửa phiếu bán: gửi trường nào thì cập nhật trường đó (màn Kiểm phiếu chỉ gửi items). */

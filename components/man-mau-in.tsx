@@ -78,6 +78,7 @@ export function ManMauIn() {
 
   return (
     <The
+      so="02"
       tieuDe="Mẫu phiếu in"
       phuDe="Bật/tắt và sửa chữ hiện trên phiếu bán in ra"
       hanhDong={
@@ -220,10 +221,15 @@ export function ManMauIn() {
 
         {/* ------------------------------ Xem trước ------------------------------ */}
         <div className="lg:sticky lg:top-4 lg:self-start">
-          <div className="nhan-muc mb-1.5">Xem trước</div>
-          <div className="mem-cuon max-h-[38rem] overflow-auto rounded-sm border border-ke-dam bg-white p-3 shadow-[inset_0_1px_3px_rgb(22_32_28/0.05)]">
-            <div style={{ transform: "scale(0.62)", transformOrigin: "top left", width: "161%" }}>
-              <MauPhieuBan order={DON_MAU} settings={settings} mau={mau} />
+          <div className="mb-1.5 flex items-baseline justify-between gap-2">
+            <span className="nhan-muc">Xem trước</span>
+            <span className="font-mono text-[9.5px] tracking-[0.03em] text-muc-mo uppercase">A4 · bản nháp</span>
+          </div>
+          <div className="mem-cuon max-h-[38rem] overflow-auto rounded-sm border border-ke-dam bg-giay p-3 shadow-[inset_0_1px_3px_rgb(19_30_25/0.05)]">
+            <div className="bg-white px-4 py-5 shadow-the ring-1 ring-ke/60" lang="vi">
+              <div style={{ transform: "scale(0.68)", transformOrigin: "top left", width: "147%" }}>
+                <MauPhieuBan order={DON_MAU} settings={settings} mau={mau} />
+              </div>
             </div>
           </div>
           <p className="mt-1.5 text-[11px] text-muc-nhat">

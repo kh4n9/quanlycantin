@@ -5,28 +5,31 @@
  *
  * Căn tin phát hàng cho can phạm theo phiếu có số. Giao diện lấy chất liệu từ
  * chính công việc đó: giấy, mực, con dấu, sổ kẻ dòng — chứ không phải bảng điều
- * khiển SaaS.
+ * khiển SaaS. Mọi màn hình là một "tờ" trong cùng một cuốn sổ: thanh mục lục ở
+ * trên đóng vai gáy sổ, tờ đang mở là một phép gấp có màu.
  *
- *   giấy   nền trang, hơi ngả xanh, không phải kem
- *   mực    màu chính: chữ, nút, viền đậm
- *   dấu    đỏ con dấu: chỉ dùng cho tiền còn thiếu, xoá, lỗi
- *   mộc    vàng đất: chờ xử lý
- *   ngọc   xanh ngọc: đã kiểm, đã thu
+ *   giấy      nền trang, hơi ngả xanh, không phải kem
+ *   mực       màu chính: chữ, nút, viền đậm
+ *   dấu       đỏ con dấu: chỉ dùng cho tiền còn thiếu, xoá, lỗi, và một vạch
+ *             đánh dấu tờ đang mở
+ *   mộc       vàng đất: chờ xử lý
+ *   ngọc      xanh ngọc: đã kiểm, đã thu — màu duy nhất nói "xong việc"
+ *   lam       xanh da trời: dùng cho số liệu (cột biểu đồ), tách khỏi mực
  *
- * Ba vai trò chữ: Literata (tiêu đề), Be Vietnam Pro (nội dung), IBM Plex Mono
- * (mã phiếu, số lượng, số tiền) — cả ba đều có bộ dấu tiếng Việt đầy đủ.
+ * Ba vai trò chữ: Literata (tiêu đề, chữ trên giấy in), Be Vietnam Pro (nội
+ * dung), IBM Plex Mono (mã phiếu, số lượng, số tiền — như máy đánh chữ).
  */
 
 @theme {
   /* ---------- Chất liệu ---------- */
-  --color-giay: #f1f2ec;
-  --color-giay-cao: #fcfcf9;
-  --color-muc: #16201c;
-  --color-muc-dam: #0b1411;
-  --color-muc-nhat: #59665f;
-  --color-muc-mo: #7d8a82;
-  --color-ke: #d9ded5;
-  --color-ke-dam: #bfc7ba;
+  --color-giay: #eef0e9;
+  --color-giay-cao: #fcfcfa;
+  --color-muc: #131e19;
+  --color-muc-dam: #0a120f;
+  --color-muc-nhat: #58665e;
+  --color-muc-mo: #7c8981;
+  --color-ke: #dbe0d6;
+  --color-ke-dam: #c1c8bc;
 
   /* ---------- Màu chức năng ---------- */
   --color-dau: #a3261c;
@@ -36,6 +39,8 @@
   --color-moc-nhat: #fbf4e4;
   --color-ngoc: #1f6b4a;
   --color-ngoc-nhat: #eaf4ee;
+  --color-lam: #2f5d86;
+  --color-lam-nhat: #eef4fa;
 
   /* ---------- Chữ ---------- */
   --font-sans: var(--font-be-viet-nam), "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
@@ -51,8 +56,8 @@
   --radius-3xl: 0.75rem;
 
   /* ---------- Bóng: một đường kẻ mảnh, không phải khối nổi ---------- */
-  --shadow-the: 0 1px 0 rgb(22 32 28 / 0.04), 0 1px 2px rgb(22 32 28 / 0.05);
-  --shadow-noi: 0 18px 48px -20px rgb(11 20 17 / 0.45), 0 2px 6px rgb(11 20 17 / 0.08);
+  --shadow-the: 0 1px 0 rgb(19 30 25 / 0.035), 0 1px 2px rgb(19 30 25 / 0.05);
+  --shadow-noi: 0 18px 48px -20px rgb(10 18 15 / 0.45), 0 2px 6px rgb(10 18 15 / 0.08);
 
   /*
    * Các màn cũ còn viết thẳng lớp màu của Tailwind (slate/blue/rose/…).
@@ -82,8 +87,8 @@
   --color-blue-500: #6a746b;
   --color-blue-600: #45524a;
   --color-blue-700: #26332c;
-  --color-blue-800: #16201c;
-  --color-blue-900: #0c1411;
+  --color-blue-800: #131e19;
+  --color-blue-900: #0a120f;
   --color-blue-950: #060a08;
 
   /* rose → đỏ con dấu */
@@ -143,7 +148,7 @@ th:where(:not(.text-center):not(.text-right):not(.text-start)) {
 body {
   background:
     radial-gradient(1100px 560px at 88% -10%, #fafbf5 0%, transparent 62%),
-    linear-gradient(180deg, #f4f5ef 0%, #eceee6 100%);
+    linear-gradient(180deg, #f3f4ee 0%, #ebeee5 100%);
   background-attachment: fixed;
   color: var(--color-muc);
   font-family: var(--font-sans);
@@ -153,15 +158,20 @@ body {
 }
 
 ::selection {
-  background: #d9e0d4;
-  color: #0b1411;
+  background: #d5ddd0;
+  color: #0a120f;
 }
 
 /* Vòng focus hai lớp: nhìn rõ trên cả nền giấy lẫn thanh mực đậm */
 :focus-visible {
-  outline: 2px solid #16201c;
+  outline: 2px solid #131e19;
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgb(252 252 249 / 0.9);
+  box-shadow: 0 0 0 4px rgb(252 252 250 / 0.9);
+}
+/* Trên nền mực đậm thì vòng ngoài phải là ánh sáng, không phải giấy */
+.bang-muc :focus-visible {
+  outline-color: #fcfcfa;
+  box-shadow: 0 0 0 4px rgb(19 30 25 / 0.9);
 }
 
 /*
@@ -201,8 +211,12 @@ button:not(:disabled) {
   color: var(--color-muc-mo);
 }
 
-/* Đường xé của phiếu: nét đứt, hai đầu có chấm tròn nhỏ */
+/* ---------- Đường xé của phiếu ----------
+ * Nét đứt ở chân các khối "tờ phiếu", kèm hai răng giấy nhỏ ở hai đầu như
+ * đường răng cưa xé phiếu. Nền răng giấy dùng --rang-giay để khối đặt trên
+ * nền nào cũng khớp (mặc định là nền trang). */
 .khia {
+  --rang-giay: var(--color-giay);
   position: relative;
   border-bottom: 1px dashed var(--color-ke-dam);
 }
@@ -210,17 +224,17 @@ button:not(:disabled) {
 .khia::after {
   content: "";
   position: absolute;
-  bottom: -3px;
-  width: 5px;
-  height: 5px;
-  border-radius: 9999px;
-  background: var(--color-ke-dam);
+  bottom: -4px;
+  width: 8px;
+  height: 7px;
+  background: var(--rang-giay);
+  mask-image: radial-gradient(circle at 50% 0, transparent 3.5px, #000 3.6px);
 }
 .khia::before {
-  left: -2px;
+  left: -1px;
 }
 .khia::after {
-  right: -2px;
+  right: -1px;
 }
 
 /* Bỏ mũi tên tăng/giảm của ô nhập số cho gọn, dễ gõ tay */
@@ -234,6 +248,10 @@ input[type="number"] {
 }
 
 /* Thanh cuộn mảnh cho bảng dữ liệu */
+.mem-cuon {
+  scrollbar-width: thin;
+  scrollbar-color: #c4cbbd transparent;
+}
 .mem-cuon::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -242,7 +260,7 @@ input[type="number"] {
   background: transparent;
 }
 .mem-cuon::-webkit-scrollbar-thumb {
-  background: #c2c9bc;
+  background: #c4cbbd;
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: content-box;
@@ -252,7 +270,8 @@ input[type="number"] {
   background-clip: content-box;
 }
 
-/* Chuyển động ngắn, chỉ để người dùng biết thứ gì vừa xuất hiện */
+/* ---------- Chuyển động ----------
+ * Chỉ để người dùng biết thứ gì vừa xuất hiện. Một nhịp duy nhất, ngắn. */
 @keyframes hop-noi {
   from {
     opacity: 0;
@@ -275,11 +294,26 @@ input[type="number"] {
   }
 }
 
+/* Tờ sổ mở ra: nội dung màn hình trượt lên nhẹ mỗi lần đổi mục */
+@keyframes mo-to {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .hop-noi {
   animation: hop-noi 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .truot-vao {
   animation: truot-vao 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mo-to {
+  animation: mo-to 240ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {

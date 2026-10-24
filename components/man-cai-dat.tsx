@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { apiClient } from "@/lib/client";
+import { so } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { ManMauIn } from "./man-mau-in";
 import { ManMauInThieu } from "./man-mau-in-thieu";
@@ -129,129 +130,162 @@ export function ManCaiDat() {
   };
 
   return (
-    <div className="flex max-w-3xl flex-col gap-3">
-      <The tieuDe="Thông tin đơn vị" phuDe="In ở phần đầu của phiếu bán">
-        <div className="grid gap-3 p-4">
-          <div>
-            <ONhan>Tên đơn vị</ONhan>
-            <OText
-              value={tenDonVi}
-              onChange={(e) => setTenDonVi(e.target.value)}
-              placeholder="Ví dụ: TRẠI GIAM X — CĂN TIN PHẠM NHÂN"
-            />
-          </div>
-          <div>
-            <ONhan>Địa chỉ / dòng phụ</ONhan>
-            <OText value={diaChi} onChange={(e) => setDiaChi(e.target.value)} placeholder="Không bắt buộc" />
-          </div>
-          <div>
-            <ONhan>Người lập phiếu (mặc định)</ONhan>
-            <OText
-              value={nguoiLapPhieu}
-              onChange={(e) => setNguoiLapPhieu(e.target.value)}
-              placeholder="Không bắt buộc"
-            />
-          </div>
-          <div className="flex items-center gap-3">
-            <Nut kieu="chinh" onClick={() => void luu()} disabled={dangLuu || !duocSua}>
-              {dangLuu ? "Đang lưu…" : "Lưu thông tin"}
-            </Nut>
-            {!duocSua && (
-              <span className="text-[12px] text-muc-mo">
-                Tài khoản của bạn không có quyền sửa cài đặt.
-              </span>
-            )}
-          </div>
-        </div>
-      </The>
+    <div className="flex max-w-5xl flex-col gap-3">
+      {/* Mục lục nhỏ: nhảy nhanh tới ô cần sửa thay vì cuộn qua cả trang */}
+      <nav
+        aria-label="Mục trong phần cài đặt"
+        className="flex flex-wrap items-center gap-1.5 rounded-lg border border-ke bg-giay-cao px-3 py-2 shadow-the"
+      >
+        <span className="nhan-muc mr-1">Trong trang này</span>
+        {[
+          ["#cd-don-vi", "Đơn vị"],
+          ["#cd-mau-in", "Mẫu phiếu in"],
+          ["#cd-mau-thieu", "Mẫu danh sách thiếu"],
+          ["#cd-thung-rac", "Thùng rác"],
+          ["#cd-du-lieu", "Dữ liệu"],
+          ["#cd-phim-tat", "Phím tắt"],
+        ].map(([href, nhan]) => (
+          <a
+            key={href}
+            href={href}
+            className="rounded-sm border border-ke-dam bg-white px-2 py-0.5 font-mono text-[10.5px] tracking-[0.02em] text-muc-nhat transition hover:border-muc/40 hover:text-muc"
+          >
+            {nhan}
+          </a>
+        ))}
+      </nav>
 
-      <ManMauIn />
-
-      <ManMauInThieu />
-
-      <The tieuDe="Thùng rác" phuDe="Phiếu bị xoá vẫn phục hồi được cho tới khi quá hạn này">
-        <div className="grid gap-3 p-4">
-          <div className="max-w-xs">
-            <ONhan>Số ngày giữ phiếu trong thùng rác</ONhan>
-            <OText
-              type="number"
-              min={0}
-              value={soNgayGiuThungRac}
-              onChange={(e) => setSoNgayGiuThungRac(e.target.value)}
-              disabled={!duocSua}
-              placeholder="0"
-            />
-          </div>
-          <p className="text-[12px] text-muc-nhat">
-            Để <b className="font-semibold text-muc">0</b> nghĩa là giữ mãi, không tự xoá. Đặt số ngày cụ thể thì
-            phiếu nằm trong thùng rác quá số ngày đó sẽ bị{" "}
-            <b className="font-semibold text-muc">xoá vĩnh viễn, không lấy lại được</b>.
-          </p>
-          <p className="text-[12px] text-muc-mo">
-            Việc dọn dẹp chạy khi mở thùng rác hoặc khi khởi động lại máy chủ — không cần hẹn giờ riêng.
-          </p>
-          <div>
-            <Nut kieu="chinh" onClick={() => void luuThungRac()} disabled={dangLuu || !duocSua}>
-              {dangLuu ? "Đang lưu…" : "Lưu thiết lập thùng rác"}
-            </Nut>
-          </div>
-        </div>
-      </The>
-
-      <The tieuDe="Dữ liệu" phuDe="Toàn bộ dữ liệu được lưu trên MongoDB, nhiều máy cùng dùng chung">
-        <div className="flex flex-col gap-3 p-4">
-          <div className="flex flex-wrap items-center gap-4 text-[12.5px] text-muc-nhat">
-            <span>
-              <b className="so font-semibold text-muc">{soHang}</b> mặt hàng
-            </span>
-            <span>
-              <b className="so font-semibold text-muc">{soPhieu}</b> phiếu bán
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Nut onClick={() => void saoLuu()}>
-              <BieuTuong ten="tai" /> Tải file sao lưu (JSON)
-            </Nut>
-            {duocSuaHang && (
-              <Nut onClick={() => void napMau()} disabled={dangNap}>
-                <BieuTuong ten="them" />
-                {dangNap ? "Đang xử lý…" : "Nạp danh mục mặt hàng mẫu"}
-              </Nut>
-            )}
-            {duocSua && (
-              <Nut kieu="nguy" onClick={() => void xoaHet()} disabled={dangNap}>
-                <BieuTuong ten="xoa" /> Xoá sạch dữ liệu
-              </Nut>
-            )}
-          </div>
-          <p className="text-[12px] text-muc-mo">
-            Nên sao lưu định kỳ: file tải về chứa toàn bộ mặt hàng và phiếu bán, dùng để đối chiếu hoặc khôi phục
-            khi cần. Việc xoá sạch chỉ ảnh hưởng mặt hàng và phiếu bán — tài khoản và thông tin đơn vị vẫn giữ
-            nguyên.
-          </p>
-        </div>
-      </The>
-
-      <The tieuDe="Phím tắt" phuDe="Giúp nhập liệu nhanh hơn">
-        <div className="grid gap-2 p-4 text-sm sm:grid-cols-2">
-          {[
-            ["Ctrl + Enter", "Lưu phiếu đang lập ở màn hình Bán hàng"],
-            ["↑ / ↓", "Chọn mục trong danh sách gợi ý"],
-            ["Enter", "Thêm mặt hàng đang chọn vào phiếu"],
-            ["5 + dấu cách + tên", "Nhập nhanh số lượng, ví dụ “5 mì”"],
-            ["Esc", "Đóng danh sách gợi ý / hộp thoại"],
-            ["Alt + 1…7", "Chuyển nhanh giữa các mục đang thấy"],
-            ["Ctrl + ↵ (Kiểm phiếu)", "Xác nhận phiếu đúng và sang phiếu kế tiếp"],
-          ].map(([k, v]) => (
-            <div key={k} className="flex items-start gap-2">
-              <kbd className="rounded-sm border border-ke-dam bg-giay px-1.5 py-0.5 font-mono text-[10px] whitespace-nowrap text-muc">
-                {k}
-              </kbd>
-              <span className="text-muc-nhat">{v}</span>
+      <div id="cd-don-vi" className="scroll-mt-24">
+        <The so="01" tieuDe="Thông tin đơn vị" phuDe="In ở phần đầu của phiếu bán">
+          <div className="grid gap-3 p-4">
+            <div>
+              <ONhan>Tên đơn vị</ONhan>
+              <OText
+                value={tenDonVi}
+                onChange={(e) => setTenDonVi(e.target.value)}
+                placeholder="Ví dụ: TRẠI GIAM X — CĂN TIN PHẠM NHÂN"
+              />
             </div>
-          ))}
-        </div>
-      </The>
+            <div>
+              <ONhan>Địa chỉ / dòng phụ</ONhan>
+              <OText value={diaChi} onChange={(e) => setDiaChi(e.target.value)} placeholder="Không bắt buộc" />
+            </div>
+            <div>
+              <ONhan>Người lập phiếu (mặc định)</ONhan>
+              <OText
+                value={nguoiLapPhieu}
+                onChange={(e) => setNguoiLapPhieu(e.target.value)}
+                placeholder="Không bắt buộc"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <Nut kieu="chinh" onClick={() => void luu()} disabled={dangLuu || !duocSua}>
+                {dangLuu ? "Đang lưu…" : "Lưu thông tin"}
+              </Nut>
+              {!duocSua && <span className="text-[12px] text-muc-mo">Tài khoản của bạn không có quyền sửa cài đặt.</span>}
+            </div>
+          </div>
+        </The>
+      </div>
+
+      <div id="cd-mau-in" className="scroll-mt-24">
+        <ManMauIn />
+      </div>
+
+      <div id="cd-mau-thieu" className="scroll-mt-24">
+        <ManMauInThieu />
+      </div>
+
+      <div id="cd-thung-rac" className="scroll-mt-24">
+        <The so="04" tieuDe="Thùng rác" phuDe="Phiếu bị xoá vẫn phục hồi được cho tới khi quá hạn này">
+          <div className="grid gap-3 p-4">
+            <div className="max-w-xs">
+              <ONhan>Số ngày giữ phiếu trong thùng rác</ONhan>
+              <OText
+                type="number"
+                min={0}
+                value={soNgayGiuThungRac}
+                onChange={(e) => setSoNgayGiuThungRac(e.target.value)}
+                disabled={!duocSua}
+                placeholder="0"
+              />
+            </div>
+            <p className="text-[12px] text-muc-nhat">
+              Để <b className="font-semibold text-muc">0</b> nghĩa là giữ mãi, không tự xoá. Đặt số ngày cụ thể thì
+              phiếu nằm trong thùng rác quá số ngày đó sẽ bị{" "}
+              <b className="font-semibold text-muc">xoá vĩnh viễn, không lấy lại được</b>.
+            </p>
+            <p className="text-[12px] text-muc-mo">
+              Việc dọn dẹp chạy khi mở thùng rác hoặc khi khởi động lại máy chủ — không cần hẹn giờ riêng.
+            </p>
+            <div>
+              <Nut kieu="chinh" onClick={() => void luuThungRac()} disabled={dangLuu || !duocSua}>
+                {dangLuu ? "Đang lưu…" : "Lưu thiết lập thùng rác"}
+              </Nut>
+            </div>
+          </div>
+        </The>
+      </div>
+
+      <div id="cd-du-lieu" className="scroll-mt-24">
+        <The so="05" tieuDe="Dữ liệu" phuDe="Toàn bộ dữ liệu được lưu trên MongoDB, nhiều máy cùng dùng chung">
+          <div className="flex flex-col gap-3 p-4">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="inline-flex items-baseline gap-1.5 rounded-md border border-ke bg-giay px-2.5 py-1.5">
+                <b className="so text-[15px] font-semibold text-muc">{so(soHang)}</b>
+                <span className="text-[11.5px] text-muc-nhat">mặt hàng</span>
+              </span>
+              <span className="inline-flex items-baseline gap-1.5 rounded-md border border-ke bg-giay px-2.5 py-1.5">
+                <b className="so text-[15px] font-semibold text-muc">{so(soPhieu)}</b>
+                <span className="text-[11.5px] text-muc-nhat">phiếu bán</span>
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Nut onClick={() => void saoLuu()}>
+                <BieuTuong ten="tai" /> Tải file sao lưu (JSON)
+              </Nut>
+              {duocSuaHang && (
+                <Nut onClick={() => void napMau()} disabled={dangNap}>
+                  <BieuTuong ten="them" />
+                  {dangNap ? "Đang xử lý…" : "Nạp danh mục mặt hàng mẫu"}
+                </Nut>
+              )}
+              {duocSua && (
+                <Nut kieu="nguy" onClick={() => void xoaHet()} disabled={dangNap}>
+                  <BieuTuong ten="xoa" /> Xoá sạch dữ liệu
+                </Nut>
+              )}
+            </div>
+            <p className="text-[12px] text-muc-mo">
+              Nên sao lưu định kỳ: file tải về chứa toàn bộ mặt hàng và phiếu bán, dùng để đối chiếu hoặc khôi phục khi
+              cần. Việc xoá sạch chỉ ảnh hưởng mặt hàng và phiếu bán — tài khoản và thông tin đơn vị vẫn giữ nguyên.
+            </p>
+          </div>
+        </The>
+      </div>
+
+      <div id="cd-phim-tat" className="scroll-mt-24">
+        <The so="06" tieuDe="Phím tắt" phuDe="Giúp nhập liệu nhanh hơn">
+          <div className="grid gap-2 p-4 text-sm sm:grid-cols-2">
+            {[
+              ["Ctrl + Enter", "Lưu phiếu đang lập ở màn hình Bán hàng"],
+              ["↑ / ↓", "Chọn mục trong danh sách gợi ý"],
+              ["Enter", "Thêm mặt hàng đang chọn vào phiếu"],
+              ["5 + dấu cách + tên", "Nhập nhanh số lượng, ví dụ “5 mì”"],
+              ["Esc", "Đóng danh sách gợi ý / hộp thoại"],
+              ["Alt + 1…9", "Chuyển nhanh giữa các mục đang thấy"],
+              ["Ctrl + ↵ (Kiểm phiếu)", "Xác nhận phiếu đúng và sang phiếu kế tiếp"],
+            ].map(([k, v]) => (
+              <div key={k} className="flex items-start gap-2">
+                <kbd className="rounded-sm border border-ke-dam bg-giay px-1.5 py-0.5 font-mono text-[10px] whitespace-nowrap text-muc">
+                  {k}
+                </kbd>
+                <span className="text-muc-nhat">{v}</span>
+              </div>
+            ))}
+          </div>
+        </The>
+      </div>
     </div>
   );
 }

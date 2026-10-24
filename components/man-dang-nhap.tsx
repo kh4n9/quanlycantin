@@ -40,12 +40,14 @@ export function ManDangNhap() {
       {/* Nền giấy kẻ dòng, rất nhạt — chỉ để mặt phẳng không trơn như màn hình */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-40 [background-image:repeating-linear-gradient(180deg,transparent_0_33px,#dfe3d8_33px_34px)]"
+        className="pointer-events-none absolute inset-0 opacity-45 [background-image:repeating-linear-gradient(180deg,transparent_0_33px,#dde1d6_33px_34px)]"
       />
+      {/* Lề đỏ của vở kẻ dòng: một vạch dọc duy nhất, giữ chỗ cho gáy vở */}
+      <div aria-hidden className="pointer-events-none absolute inset-y-0 left-10 w-px bg-dau/15 sm:left-16" />
 
       <div className="hop-noi relative grid w-full max-w-5xl overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-noi md:grid-cols-[1.05fr_1fr]">
         {/* Cột giới thiệu — chỉ hiện trên màn hình rộng */}
-        <aside className="relative hidden flex-col justify-between overflow-hidden bg-muc p-9 text-giay/70 md:flex md:border-r md:border-dashed md:border-giay/20">
+        <aside className="relative hidden flex-col justify-between overflow-hidden bg-muc p-9 text-giay/70 md:flex md:border-r md:border-giay/15">
           {/* Vân chấm mờ, như giấy in bảo an */}
           <div
             aria-hidden
@@ -64,7 +66,7 @@ export function ManDangNhap() {
 
           <div className="relative mt-10">
             <div className="font-mono text-[9.5px] tracking-[0.18em] text-giay/40 uppercase">Ghi nhận tại quầy</div>
-            <h2 className="mt-3 font-serif text-[30px] leading-[1.18] font-semibold tracking-[-0.02em] text-giay-cao">
+            <h2 className="mt-3 font-serif text-[32px] leading-[1.16] font-semibold tracking-[-0.025em] text-giay-cao">
               Mỗi phiếu một dòng sổ,
               <br />
               mỗi đồng đều rõ.
@@ -89,7 +91,7 @@ export function ManDangNhap() {
         </aside>
 
         {/* Cột đăng nhập */}
-        <div className="p-6 sm:p-8 md:p-10">
+        <div className="flex flex-col justify-center p-6 sm:p-8 md:p-10">
           <div className="mb-7 flex items-center gap-3 md:hidden">
             <Logo className="h-11 w-11" />
             <div>
@@ -102,7 +104,7 @@ export function ManDangNhap() {
 
           <div className="hidden md:block">
             <div className="font-mono text-[9.5px] tracking-[0.18em] text-muc-mo uppercase">Đăng nhập</div>
-            <h1 className="mt-2 font-serif text-[26px] leading-tight font-semibold tracking-[-0.02em] text-muc">
+            <h1 className="mt-2 font-serif text-[27px] leading-tight font-semibold tracking-[-0.02em] text-muc">
               Vào hệ thống
             </h1>
             <p className="mt-1.5 text-[13px] text-muc-nhat">Dùng tài khoản được cấp để tiếp tục.</p>
@@ -117,6 +119,7 @@ export function ManDangNhap() {
                 onChange={(e) => setTenDangNhap(e.target.value)}
                 placeholder="admin"
                 autoComplete="username"
+                aria-label="Tên đăng nhập"
               />
             </div>
 
@@ -129,6 +132,7 @@ export function ManDangNhap() {
                   onChange={(e) => setMatKhau(e.target.value)}
                   placeholder="••••••"
                   autoComplete="current-password"
+                  aria-label="Mật khẩu"
                   className="pr-11"
                 />
                 <button
@@ -153,7 +157,7 @@ export function ManDangNhap() {
             </div>
 
             {loi && (
-              <div className="flex items-start gap-2 rounded-sm border border-dau/25 border-l-[3px] border-l-dau bg-dau-nhat px-3 py-2.5 text-[13px] text-dau">
+              <div role="alert" className="flex items-start gap-2 rounded-md border border-dau/25 border-l-[3px] border-l-dau bg-dau-nhat px-3 py-2.5 text-[13px] text-dau">
                 <BieuTuong ten="canh" className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{loi}</span>
               </div>

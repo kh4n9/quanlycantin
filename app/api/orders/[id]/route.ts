@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { yeuCau } from "@/lib/auth";
+import { loiKhongCoQuyen, yeuCau } from "@/lib/auth";
 import { dungDongHang, khoiTao, suaPhieuBan, timPhieuBan, xoaPhieuBan } from "@/lib/db";
 import { ngayVN, so, tien } from "@/lib/format";
 import { soSanhTruong } from "@/lib/nhat-ky";
@@ -9,8 +9,13 @@ export const dynamic = "force-dynamic";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   await khoiTao();
-  const kq = await yeuCau("xem_phieu");
+  // Tài khoản chỉ xem báo cáo vẫn mở được chi tiết phiếu từ các danh sách
+  // trong báo cáo, vì báo cáo đã cho họ xem thông tin tóm tắt của phiếu.
+  const kq = await yeuCau();
   if ("res" in kq) return kq.res;
+  if (!kq.nd.quyen.includes("xem_phieu") && !kq.nd.quyen.includes("xem_bao_cao")) {
+    return loiKhongCoQuyen("xem_phieu");
+  }
 
   const { id } = await params;
   const phieu = await timPhieuBan(id);

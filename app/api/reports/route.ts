@@ -186,6 +186,7 @@ export async function GET(req: Request) {
      * từng phiếu một.
      */
     const thieuTheoPhieu: {
+      id: string;
       buongGiam: string;
       soPhieu: string;
       ngay: string;
@@ -234,6 +235,7 @@ export async function GET(req: Request) {
         theoThieu.set(item.productId, t);
 
         thieuTheoPhieu.push({
+          id: o.id,
           buongGiam: o.buongGiam || "",
           soPhieu: o.soPhieu,
           ngay: o.ngay,

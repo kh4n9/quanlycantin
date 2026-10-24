@@ -2,6 +2,13 @@
 
 import { useEffect, useState, type ComponentPropsWithRef, type ReactNode } from "react";
 
+/* ==========================================================================
+ * Bộ khối dựng giao diện của "Sổ cấp phát"
+ *
+ * Mọi màn hình dùng chung đúng bộ này để chữ, khoảng cách, đường kẻ và nhịp
+ * chuyển động giống nhau như các trang của cùng một cuốn sổ.
+ * ========================================================================== */
+
 /* ----------------------------- Nút -----------------------------
    Nút chính là mực đặc trên giấy; viền mảnh, cạnh hơi vuông như con dấu đóng.
    Đỏ chỉ dành cho việc không hoàn tác được. */
@@ -14,17 +21,17 @@ type NutProps = ComponentPropsWithRef<"button"> & {
 export function Nut({ kieu = "vien", co = "md", className = "", ...rest }: NutProps) {
   const nen = {
     chinh:
-      "border-muc bg-muc text-giay-cao shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_1px_2px_rgb(11_20_17/0.22)] hover:border-muc-dam hover:bg-muc-dam",
+      "border-muc bg-muc text-giay-cao shadow-[inset_0_1px_0_rgb(255_255_255/0.10),0_1px_2px_rgb(10_18_15/0.22)] hover:border-muc-dam hover:bg-muc-dam",
     phu: "border-ke-dam bg-giay text-muc shadow-xs hover:border-muc-mo hover:bg-white",
-    nguy: "border-dau bg-dau text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.14)] hover:border-dau-dam hover:bg-dau-dam",
+    nguy: "border-dau bg-dau text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.12)] hover:border-dau-dam hover:bg-dau-dam",
     vien: "border-ke-dam bg-white text-muc shadow-xs hover:border-muc-mo hover:bg-giay-cao",
-    mo: "border-transparent bg-transparent text-muc-nhat hover:bg-muc/5 hover:text-muc",
+    mo: "border-transparent bg-transparent text-muc-nhat hover:bg-muc/6 hover:text-muc",
   }[kieu];
   const coChu = { sm: "h-8 px-3 text-[13px]", md: "h-9 px-3.5 text-sm", lg: "h-11 px-5 text-[15px]" }[co];
   return (
     <button
       {...rest}
-      className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md border font-semibold tracking-[-0.005em] transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-muc/45 focus-visible:ring-offset-1 active:translate-y-px disabled:pointer-events-none disabled:opacity-45 ${nen} ${coChu} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md border font-semibold tracking-[-0.005em] whitespace-nowrap transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-muc/45 focus-visible:ring-offset-1 active:translate-y-px disabled:pointer-events-none disabled:opacity-45 ${nen} ${coChu} ${className}`}
     />
   );
 }
@@ -32,7 +39,7 @@ export function Nut({ kieu = "vien", co = "md", className = "", ...rest }: NutPr
 /* ---------------------------- Nhập liệu ---------------------------- */
 
 const oNhapChung =
-  "rounded-md border border-ke-dam bg-white px-3 py-2 text-sm text-muc shadow-[inset_0_1px_2px_rgb(22_32_28/0.04)] placeholder:text-muc-mo outline-none transition focus:border-muc focus:ring-2 focus:ring-muc/20 focus-visible:outline-hidden disabled:bg-giay disabled:text-muc-mo";
+  "rounded-md border border-ke-dam bg-white px-3 py-2 text-sm text-muc shadow-[inset_0_1px_2px_rgb(19_30_25/0.04)] placeholder:text-muc-mo outline-none transition focus:border-muc focus:ring-2 focus:ring-muc/20 focus-visible:outline-hidden disabled:bg-giay disabled:text-muc-mo";
 
 /**
  * Mặc định ô nhập rộng hết cỡ, nhưng nếu nơi gọi tự đặt bề rộng (w-36, w-44…)
@@ -71,6 +78,168 @@ export function ONhan({ children, className = "" }: { children: ReactNode; class
   );
 }
 
+/**
+ * Ô tìm kiếm: biểu tượng kính lúp nằm sẵn trong khung, nút xoá hiện khi có chữ.
+ * Dùng chung để ô tìm ở mọi màn hình cùng một dáng.
+ */
+export function OTim({
+  className = "",
+  ...rest
+}: ComponentPropsWithRef<"input"> & { className?: string }) {
+  const co = Boolean(rest.value);
+  return (
+    <div className={`relative ${/(^|\s)w-/.test(className) ? "" : "flex-1"} ${className}`}>
+      <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muc-mo">
+        <BieuTuong ten="tim" className="h-4 w-4" />
+      </span>
+      <input
+        type="search"
+        {...rest}
+        className="h-9 w-full rounded-md border border-ke-dam bg-white pr-8 pl-9 text-sm text-muc shadow-[inset_0_1px_2px_rgb(19_30_25/0.04)] placeholder:text-muc-mo outline-none transition focus:border-muc focus:ring-2 focus:ring-muc/20 [&::-webkit-search-cancel-button]:appearance-none"
+      />
+      {co && (
+        <button
+          type="button"
+          onClick={(e) => {
+            // Xoá chữ rồi trả focus về ô nhập, gọi đúng onChange của nơi dùng
+            const o = e.currentTarget.parentElement?.querySelector("input");
+            if (!o) return;
+            const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+            setter?.call(o, "");
+            o.dispatchEvent(new Event("input", { bubbles: true }));
+            o.focus();
+          }}
+          className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-sm p-1 text-muc-mo transition hover:bg-muc/6 hover:text-muc"
+          aria-label="Xoá từ khoá"
+          title="Xoá từ khoá"
+        >
+          <BieuTuong ten="xoa" className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Nhóm chọn nhanh khoảng ngày (Hôm nay / 7 ngày / Tháng này / Tất cả) đóng
+ * khung như một phím gạt: mục đang áp dụng là mực đặc. Thay cho dãy nút rời
+ * khiến người dùng phải đoán nút nào đang bật.
+ *
+ * Trên điện thoại, khung gạt cho phím sang mép trái và các ô vẫn nằm trên một
+ * hàng — vẫn nhập được ngày bằng ô ngày kế bên.
+ */
+export function OChonKhoang<T extends string>({
+  giaTri,
+  onDoi,
+  chon,
+  className = "",
+}: {
+  giaTri: T | "";
+  onDoi: (k: T) => void;
+  chon: { khoa: T; nhan: string }[];
+  className?: string;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label="Chọn nhanh khoảng ngày"
+      className={`flex shrink-0 items-center gap-0.5 overflow-x-auto rounded-md border border-ke-dam bg-white p-0.5 shadow-xs ${className}`}
+    >
+      {chon.map((c) => {
+        const bat = c.khoa === giaTri;
+        return (
+          <button
+            key={c.khoa}
+            type="button"
+            aria-pressed={bat}
+            onClick={() => onDoi(c.khoa)}
+            className={`h-7 shrink-0 rounded-sm px-2 font-mono text-[10.5px] font-medium tracking-[0.04em] whitespace-nowrap uppercase transition-colors sm:px-2.5 ${
+              bat ? "bg-muc text-giay-cao" : "text-muc-nhat hover:bg-giay hover:text-muc"
+            }`}
+          >
+            {c.nhan}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Hai ô ngày nối bằng dấu mũi tên — một dáng chung cho mọi bộ lọc khoảng ngày. */
+export function OKhoangNgay({
+  tu,
+  den,
+  onTu,
+  onDen,
+  nhan = "Khoảng ngày",
+}: {
+  tu: string;
+  den: string;
+  onTu: (v: string) => void;
+  onDen: (v: string) => void;
+  nhan?: string;
+}) {
+  return (
+    <div className="flex shrink-0 items-center gap-1.5">
+      <input
+        type="date"
+        value={tu}
+        onChange={(e) => onTu(e.target.value)}
+        aria-label={`${nhan} — từ ngày`}
+        title="Từ ngày"
+        className="h-9 w-36 rounded-md border border-ke-dam bg-white px-2.5 font-mono text-[11.5px] text-muc shadow-xs outline-none transition focus:border-muc focus:ring-2 focus:ring-muc/20"
+      />
+      <span aria-hidden className="text-muc-mo">
+        →
+      </span>
+      <input
+        type="date"
+        value={den}
+        onChange={(e) => onDen(e.target.value)}
+        aria-label={`${nhan} — đến ngày`}
+        title="Đến ngày"
+        className="h-9 w-36 rounded-md border border-ke-dam bg-white px-2.5 font-mono text-[11.5px] text-muc shadow-xs outline-none transition focus:border-muc focus:ring-2 focus:ring-muc/20"
+      />
+    </div>
+  );
+}
+
+/** Công tắc dạng ô chọn: dùng cho các bộ lọc bật/tắt (vd. "Chỉ phiếu còn thiếu"). */
+export function OCongTac({
+  bat,
+  onDoi,
+  children,
+  sac = "muc",
+  title,
+}: {
+  bat: boolean;
+  onDoi: (v: boolean) => void;
+  children: ReactNode;
+  sac?: "muc" | "moc";
+  title?: string;
+}) {
+  const mau =
+    sac === "moc"
+      ? "border-moc/45 bg-moc-nhat text-moc"
+      : "border-muc/35 bg-muc/6 text-muc";
+  return (
+    <label
+      title={title}
+      className={`flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md border px-2.5 text-[13px] transition select-none ${
+        bat ? `${mau} font-medium` : "border-ke-dam bg-white text-muc-nhat shadow-xs hover:border-muc/40 hover:text-muc"
+      }`}
+    >
+      <input
+        type="checkbox"
+        checked={bat}
+        onChange={(e) => onDoi(e.target.checked)}
+        className={`h-4 w-4 ${sac === "moc" ? "accent-moc" : "accent-muc"}`}
+      />
+      {children}
+    </label>
+  );
+}
+
 /* ----------------------------- Nhãn ----------------------------- */
 
 export function Nhan({
@@ -78,7 +247,7 @@ export function Nhan({
   sac = "xam",
 }: {
   children: ReactNode;
-  sac?: "xam" | "xanh" | "vang" | "do" | "luc";
+  sac?: "xam" | "xanh" | "vang" | "do" | "luc" | "lam";
 }) {
   const mau = {
     xam: "bg-giay text-muc-nhat border-ke-dam",
@@ -86,6 +255,7 @@ export function Nhan({
     vang: "bg-moc-nhat text-moc border-moc/25",
     do: "bg-dau-nhat text-dau border-dau/25",
     luc: "bg-ngoc-nhat text-ngoc border-ngoc/25",
+    lam: "bg-lam-nhat text-lam border-lam/25",
   }[sac];
   return (
     <span
@@ -96,13 +266,41 @@ export function Nhan({
   );
 }
 
+/** Nhãn trạng thái có chấm tròn — dùng cho "Đang bán / Tạm dừng", "Hoạt động". */
+export function NhanCham({
+  children,
+  sac,
+  mo = false,
+}: {
+  children: ReactNode;
+  sac: "ngoc" | "moc" | "dau" | "xam";
+  mo?: boolean;
+}) {
+  const mau = {
+    ngoc: "border-ngoc/25 bg-ngoc-nhat text-ngoc",
+    moc: "border-moc/25 bg-moc-nhat text-moc",
+    dau: "border-dau/25 bg-dau-nhat text-dau",
+    xam: "border-ke-dam bg-giay text-muc-nhat",
+  }[sac];
+  const cham = { ngoc: "bg-ngoc", moc: "bg-moc", dau: "bg-dau", xam: "bg-ke-dam" }[sac];
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 font-mono text-[9.5px] font-medium tracking-[0.05em] whitespace-nowrap uppercase ${mau}`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${cham} ${mo ? "opacity-40" : ""}`} aria-hidden />
+      {children}
+    </span>
+  );
+}
+
 /* ----------------------------- Thẻ -----------------------------
    Thẻ là một tờ phiếu: viền mảnh, không đổ bóng, dòng tiêu đề ngăn bằng đường
-   xé nét đứt. */
+   xé nét đứt với hai răng giấy ở hai đầu. */
 
 export function The({
   tieuDe,
   phuDe,
+  so,
   hanhDong,
   children,
   className = "",
@@ -110,6 +308,8 @@ export function The({
 }: {
   tieuDe?: ReactNode;
   phuDe?: ReactNode;
+  /** Số thứ tự tờ trong màn hình (01, 02, 03) — khoanh như số thứ tự dòng sổ */
+  so?: string;
   hanhDong?: ReactNode;
   children: ReactNode;
   className?: string;
@@ -118,20 +318,84 @@ export function The({
   return (
     <section className={`overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the ${className}`}>
       {(tieuDe || hanhDong) && (
-        <header className="khia flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-          <div className="min-w-0">
-            {tieuDe && (
-              <h2 className="truncate font-serif text-[15px] leading-tight font-semibold tracking-[-0.01em] text-muc">
-                {tieuDe}
-              </h2>
-            )}
-            {phuDe && <p className="mt-1 truncate text-[12px] text-muc-nhat">{phuDe}</p>}
+        <header className="khia flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            {so && <SoTo so={so} />}
+            <div className="min-w-0">
+              {tieuDe && (
+                <h2 className="truncate font-serif text-[15px] leading-tight font-semibold tracking-[-0.01em] text-muc">
+                  {tieuDe}
+                </h2>
+              )}
+              {phuDe && <p className="mt-0.5 truncate text-[12px] text-muc-nhat">{phuDe}</p>}
+            </div>
           </div>
           {hanhDong && <div className="flex max-w-full flex-wrap items-center justify-end gap-2">{hanhDong}</div>}
         </header>
       )}
       <div className={thanClassName}>{children}</div>
     </section>
+  );
+}
+
+/** Số thứ tự tờ: khoanh tròn mảnh như số dòng trên sổ, chữ mono. */
+export function SoTo({ so }: { so: string }) {
+  return (
+    <span
+      aria-hidden
+      className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full border border-ke-dam px-1 font-mono text-[10.5px] font-medium text-muc-nhat"
+    >
+      {so}
+    </span>
+  );
+}
+
+/**
+ * Ô số liệu — "một dòng sổ được đóng khung": nhãn in hoa nhỏ, con số lớn bằng
+ * chữ số đẳng khoảng, kèm một dòng chú thích và biểu tượng rất nhạt.
+ * Cả màn hình chỉ nên có một hàng ô số; số liệu trùng nhau thì gộp, đừng lặp.
+ */
+export function TheSo({
+  nhan,
+  giaTri,
+  phu,
+  icon,
+  sac = "muc",
+  nhanNho = false,
+}: {
+  nhan: string;
+  giaTri: ReactNode;
+  phu?: ReactNode;
+  icon?: string;
+  sac?: "muc" | "ngoc" | "moc" | "dau" | "lam";
+  /** Con số là chữ (ngày tháng, tên) chứ không phải số đo — in nhỏ hơn chữ số */
+  nhanNho?: boolean;
+}) {
+  const mauSo = {
+    muc: "text-muc",
+    ngoc: "text-ngoc",
+    moc: "text-moc",
+    dau: "text-dau",
+    lam: "text-lam",
+  }[sac];
+  return (
+    <div className="relative overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
+      {icon && (
+        <BieuTuong
+          ten={icon}
+          className="pointer-events-none absolute -right-3 -bottom-3 h-16 w-16 text-muc/[0.045]"
+        />
+      )}
+      <div className="relative px-4 py-3">
+        <div className="nhan-muc truncate">{nhan}</div>
+        <div
+          className={`so mt-1.5 font-semibold tracking-tight ${nhanNho ? "text-[17px]" : "text-[26px] leading-none"} ${mauSo}`}
+        >
+          {giaTri}
+        </div>
+        {phu && <div className="mt-1.5 truncate text-[11.5px] text-muc-nhat">{phu}</div>}
+      </div>
+    </div>
   );
 }
 
@@ -144,6 +408,7 @@ export function HopThoai({
   children,
   chanTrang,
   rong = "max-w-lg",
+  khoaEsc = false,
 }: {
   mo: boolean;
   dong: () => void;
@@ -151,20 +416,26 @@ export function HopThoai({
   children: ReactNode;
   chanTrang?: ReactNode;
   rong?: string;
+  /** Giữ Escape cho hộp thoại con đang mở trên hộp thoại này. */
+  khoaEsc?: boolean;
 }) {
   useEffect(() => {
     if (!mo) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") dong();
+      if (e.key === "Escape" && !khoaEsc) dong();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [mo, dong]);
+  }, [mo, dong, khoaEsc]);
 
   if (!mo) return null;
   return (
     <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-muc/45 p-4 pt-12 backdrop-blur-[3px]">
-      <div className={`hop-noi w-full ${rong} rounded-lg border border-ke-dam bg-giay-cao shadow-noi`}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        className={`hop-noi w-full ${rong} overflow-hidden rounded-lg border border-ke-dam bg-giay-cao shadow-noi`}
+      >
         <header className="khia flex items-center justify-between px-5 py-3.5">
           <h3 className="font-serif text-[16px] leading-tight font-semibold tracking-[-0.01em] text-muc">{tieuDe}</h3>
           <button
@@ -172,16 +443,12 @@ export function HopThoai({
             className="rounded-md p-1.5 text-muc-mo transition hover:bg-muc/6 hover:text-muc"
             aria-label="Đóng"
           >
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
-            </svg>
+            <BieuTuong ten="dong" className="h-4 w-4" />
           </button>
         </header>
         <div className="px-5 py-4">{children}</div>
         {chanTrang && (
-          <footer className="flex items-center justify-end gap-2 border-t border-ke bg-giay px-5 py-3">
-            {chanTrang}
-          </footer>
+          <footer className="flex items-center justify-end gap-2 border-t border-ke bg-giay px-5 py-3">{chanTrang}</footer>
         )}
       </div>
     </div>
@@ -209,7 +476,7 @@ export function HopThongBao() {
     phatTin = (t) => {
       const id = Date.now() + Math.random();
       setDs((cu) => [...cu, { ...t, id }]);
-      setTimeout(() => setDs((cu) => cu.filter((x) => x.id !== id)), 3200);
+      setTimeout(() => setDs((cu) => cu.filter((x) => x.id !== id)), 3600);
     };
     return () => {
       phatTin = null;
@@ -217,23 +484,34 @@ export function HopThongBao() {
   }, []);
 
   const mau = {
-    luc: "border-ke border-l-ngoc text-muc",
-    do: "border-ke border-l-dau text-muc",
-    xanh: "border-ke border-l-muc text-muc",
+    luc: "border-l-ngoc",
+    do: "border-l-dau",
+    xanh: "border-l-muc",
   };
   const icon = { luc: "check", do: "canh", xanh: "check" } as const;
   const iconMau = { luc: "text-ngoc", do: "text-dau", xanh: "text-muc" };
+  const nhan = { luc: "Đã lưu", do: "Chưa làm được", xanh: "Thông báo" };
 
   return (
-    <div className="khong-in pointer-events-none fixed right-4 bottom-4 z-[60] flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2">
+    <div className="khong-in pointer-events-none fixed right-4 bottom-4 z-[60] flex w-[min(23rem,calc(100vw-2rem))] flex-col gap-2">
       {ds.map((t) => (
         <div
           key={t.id}
           role="status"
-          className={`truot-vao pointer-events-auto flex items-start gap-2.5 rounded-md border border-l-[3px] bg-giay-cao px-3.5 py-3 text-[13px] font-medium shadow-noi ${mau[t.sac]}`}
+          className={`truot-vao pointer-events-auto flex items-start gap-2.5 rounded-md border border-ke border-l-[3px] bg-giay-cao px-3.5 py-2.5 shadow-noi ${mau[t.sac]}`}
         >
           <BieuTuong ten={icon[t.sac]} className={`mt-0.5 h-4 w-4 shrink-0 ${iconMau[t.sac]}`} />
-          <span className="leading-snug">{t.noiDung}</span>
+          <div className="min-w-0 flex-1">
+            <div className="font-mono text-[9px] tracking-[0.14em] text-muc-mo uppercase">{nhan[t.sac]}</div>
+            <div className="mt-0.5 text-[13px] leading-snug font-medium text-muc">{t.noiDung}</div>
+          </div>
+          <button
+            onClick={() => setDs((cu) => cu.filter((x) => x.id !== t.id))}
+            className="pointer-events-auto -mr-1 rounded-sm p-1 text-muc-mo transition hover:bg-muc/6 hover:text-muc"
+            aria-label="Đóng thông báo"
+          >
+            <BieuTuong ten="dong" className="h-3.5 w-3.5" />
+          </button>
         </div>
       ))}
     </div>
@@ -246,21 +524,60 @@ export function Trong({
   tieuDe,
   moTa,
   hanhDong,
+  icon = "phieu",
 }: {
   tieuDe: string;
   moTa?: string;
   hanhDong?: ReactNode;
+  icon?: string;
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2.5 px-6 py-14 text-center">
       <div className="rounded-lg border border-dashed border-ke-dam bg-giay p-3.5 text-muc-mo">
-        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.6">
-          <path d="M3 7h18v13H3zM3 7l2-3h14l2 3M9 12h6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <BieuTuong ten={icon} className="h-6 w-6" />
       </div>
       <p className="font-serif text-[15px] font-semibold text-muc">{tieuDe}</p>
       {moTa && <p className="max-w-md text-[13px] leading-relaxed text-muc-nhat">{moTa}</p>}
       {hanhDong && <div className="mt-1.5">{hanhDong}</div>}
+    </div>
+  );
+}
+
+/* ---------------------------- Bảng và phân trang ---------------------------- */
+
+export const LOP_TIEU_DE_BANG =
+  "sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur";
+
+/** Thanh phân trang: "Trang 1 / 3 · 42 sổ mục" + hai nút. Ẩn khi chỉ có một trang. */
+export function OPhanTrang({
+  trang,
+  soTrang,
+  tong,
+  onTrang,
+  nhan = "mục",
+  disabled = false,
+}: {
+  trang: number;
+  soTrang: number;
+  tong: number;
+  onTrang: (t: number) => void;
+  nhan?: string;
+  disabled?: boolean;
+}) {
+  const so = (n: number) => new Intl.NumberFormat("vi-VN").format(n);
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ke bg-giay px-3.5 py-2">
+      <span className="font-mono text-[9.5px] tracking-[0.03em] text-muc-mo uppercase">
+        Trang {so(trang)} / {so(Math.max(1, soTrang))} · {so(tong)} {nhan}
+      </span>
+      <div className="flex items-center gap-1.5">
+        <Nut co="sm" disabled={trang <= 1 || disabled} onClick={() => onTrang(trang - 1)}>
+          Trang trước
+        </Nut>
+        <Nut co="sm" disabled={trang >= soTrang || disabled} onClick={() => onTrang(trang + 1)}>
+          Trang sau
+        </Nut>
+      </div>
     </div>
   );
 }
@@ -288,6 +605,11 @@ const DUONG_DAN: Record<string, string> = {
   lich: "M12 8v4l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z",
   lammoi: "M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7",
   xem: "M9 18l6-6-6-6",
+  dong: "M18 6 6 18M6 6l12 12",
+  xuong: "m6 9 6 6 6-6",
+  chep: "M9 9h10v12H9zM5 15H3V3h12v2",
+  trang: "M19 12H5M12 19l-7-7 7-7",
+  tiep: "M5 12h14M12 5l7 7-7 7",
 };
 
 export function BieuTuong({ ten, className = "h-4 w-4" }: { ten: string; className?: string }) {
@@ -306,3 +628,13 @@ export function BieuTuong({ ten, className = "h-4 w-4" }: { ten: string; classNa
     </svg>
   );
 }
+
+/* ---------------------------- Ô tìm gợi ý ---------------------------- */
+
+/**
+ * Khung chung cho danh sách gợi ý thả xuống (mặt hàng, can phạm, món lọc).
+ * Danh sách chỉ hiện khi người dùng thật sự gõ — không bung ra khi ô vừa được
+ * focus, nếu không màn hình Bán hàng bị che ngay khi mở.
+ */
+export const LOP_GOI_Y =
+  "mem-cuon absolute z-30 mt-1 w-full overflow-y-auto rounded-md border border-ke bg-giay-cao py-1 shadow-noi";

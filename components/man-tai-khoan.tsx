@@ -75,15 +75,49 @@ function NhanVaiTro({ quyen, lon = false }: { quyen: Quyen[]; lon?: boolean }) {
     <span
       className={`inline-flex items-center gap-1 rounded-sm border font-mono font-medium tracking-[0.03em] uppercase whitespace-nowrap ${
         lon ? "px-2 py-1 text-[10.5px]" : "px-1.5 py-0.5 text-[9.5px]"
-      } ${
-        vaiTro
-          ? "border-muc/20 bg-muc/6 text-muc"
-          : "border-ke-dam bg-giay text-muc-nhat"
-      }`}
+      } ${vaiTro ? "border-muc/20 bg-muc/6 text-muc" : "border-ke-dam bg-giay text-muc-nhat"}`}
     >
       <BieuTuong ten={vaiTro ? "nguoi" : "cai"} className={lon ? "h-3.5 w-3.5" : "h-3 w-3"} />
       {vaiTro?.ten ?? "Tuỳ chỉnh"}
     </span>
+  );
+}
+
+/**
+ * Quyền được cấp đọc gọn theo bốn nhóm, kèm số quyền từng nhóm — thay cho
+ * mười một chip rải kín cột khiến bảng dài và khó so sánh giữa các tài khoản.
+ */
+function QuyenTheoNhom({ quyen }: { quyen: Quyen[] }) {
+  const co = new Set(quyen);
+  return (
+    <div className="flex flex-wrap gap-1">
+      {NHOM_QUYEN.map((n) => {
+        const soCo = n.quyen.filter((q) => co.has(q)).length;
+        if (soCo === 0) return null;
+        return (
+          <span
+            key={n.nhom}
+            title={n.quyen
+              .filter((q) => co.has(q))
+              .map((q) => TEN_QUYEN[q])
+              .join(", ")}
+            className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono text-[9.5px] tracking-[0.02em] whitespace-nowrap ${
+              soCo === n.quyen.length
+                ? "border-muc/20 bg-muc/6 text-muc"
+                : "border-ke-dam bg-giay text-muc-nhat"
+            }`}
+          >
+            {n.nhom}
+            <b className={soCo === n.quyen.length ? "text-muc" : "text-muc-nhat"}>
+              {soCo}/{n.quyen.length}
+            </b>
+          </span>
+        );
+      })}
+      {quyen.length === 0 && (
+        <span className="font-mono text-[10.5px] text-muc-mo">Chưa được cấp quyền nào</span>
+      )}
+    </div>
   );
 }
 
@@ -302,12 +336,11 @@ export function ManTaiKhoan() {
 
   return (
     <div className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
-      <div className="flex flex-wrap items-center gap-2 border-b border-dashed border-ke bg-giay px-3.5 py-3">
+      <div className="khia flex flex-wrap items-center gap-2 bg-giay px-3.5 py-3">
         <div className="mr-auto">
           <div className="font-serif text-[15px] leading-tight font-semibold tracking-[-0.01em] text-muc">Tài khoản</div>
           <div className="mt-0.5 text-[11.5px] text-muc-nhat">
-            Gán vai trò mẫu hoặc bật/tắt từng quyền cho mỗi tài khoản. Mật khẩu lưu dạng đã băm,
-            không xem lại được.
+            Gán vai trò mẫu hoặc bật/tắt từng quyền cho mỗi tài khoản. Mật khẩu lưu dạng đã băm, không xem lại được.
           </div>
         </div>
         <Nut kieu="chinh" onClick={() => setForm({ ...formTrong })}>
@@ -391,19 +424,8 @@ export function ManTaiKhoan() {
                     {nd.quyen.length}/{DS_QUYEN.length} quyền
                   </span>
                 </div>
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {nd.quyen.length === 0 ? (
-                    <span className="font-mono text-[10.5px] text-muc-mo">Chưa được cấp quyền nào</span>
-                  ) : (
-                    nd.quyen.map((q) => (
-                      <span
-                        key={q}
-                        className="rounded-sm border border-ke-dam/70 bg-giay px-1.5 py-0.5 font-mono text-[9.5px] tracking-[0.01em] text-muc-nhat"
-                      >
-                        {TEN_QUYEN[q]}
-                      </span>
-                    ))
-                  )}
+                <div className="mt-1.5">
+                  <QuyenTheoNhom quyen={nd.quyen} />
                 </div>
 
                 <div className="mt-2 flex justify-end border-t border-ke/60 pt-2">{thaoTacNd(nd)}</div>
@@ -463,20 +485,7 @@ export function ManTaiKhoan() {
                       {nd.quyen.length}/{DS_QUYEN.length}
                     </span>
                   </div>
-                  {nd.quyen.length === 0 ? (
-                    <span className="font-mono text-[10.5px] text-muc-mo">Chưa được cấp quyền nào</span>
-                  ) : (
-                    <div className="flex flex-wrap gap-1">
-                      {nd.quyen.map((q) => (
-                        <span
-                          key={q}
-                          className="rounded-sm border border-ke-dam/70 bg-giay px-1.5 py-0.5 font-mono text-[9.5px] tracking-[0.01em] text-muc-nhat"
-                        >
-                          {TEN_QUYEN[q]}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  <QuyenTheoNhom quyen={nd.quyen} />
                 </td>
                 <td>
                   <span

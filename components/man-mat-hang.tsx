@@ -5,9 +5,11 @@ import { apiClient } from "@/lib/client";
 import { taiExcel } from "@/lib/excel";
 import { homNay, khop, ngayVN, so, tien } from "@/lib/format";
 import { useQuyen } from "@/lib/store";
+import { conThieu } from "@/lib/thieu-hang";
 import type { Order, Product } from "@/lib/types";
 import { useNap } from "@/lib/use-nap";
-import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, OChon, ONhan, OText, Trong } from "./ui";
+import { HopChiTietPhieu } from "./hop-chi-tiet-phieu";
+import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, OChon, OChonKhoang, OKhoangNgay, ONhan, OTim, OText, TheSo, Trong } from "./ui";
 
 const NHOM_GOI_Y = [
   "Thực phẩm",
@@ -49,6 +51,18 @@ type BanCuaHang = {
   phieu: Set<string>;
 };
 
+/** Số lượng còn thiếu của một mặt hàng trong khoảng ngày đang chọn. */
+type ThieuCuaHang = {
+  soLuong: number;
+  phieu: Set<string>;
+};
+
+type DongPhieuCuaHang = {
+  order: Order;
+  soLuong: number;
+  conThieu: number;
+};
+
 export function ManMatHang() {
   const [products, setProducts] = useState<Product[]>([]);
   const [dangTai, setDangTai] = useState(true);
@@ -68,6 +82,7 @@ export function ManMatHang() {
   const [donHang, setDonHang] = useState<Order[]>([]);
   const [dangTaiDon, setDangTaiDon] = useState(xemDuocPhieu);
   const [loiDon, setLoiDon] = useState("");
+  const [phieuDangXem, setPhieuDangXem] = useState<Order | null>(null);
 
   const napLai = useCallback(async () => {
     try {
@@ -140,6 +155,28 @@ export function ManMatHang() {
     return m;
   }, [donHang]);
 
+  /** Cộng dồn số lượng còn thiếu theo từng mặt hàng. */
+  const thieuTheoHang = useMemo(() => {
+    const m = new Map<string, ThieuCuaHang>();
+    for (const o of donHang) {
+      for (const it of o.items) {
+        const con = conThieu(it);
+        if (con <= 0) continue;
+        const cu = m.get(it.productId) ?? { soLuong: 0, phieu: new Set<string>() };
+        cu.soLuong += con;
+        cu.phieu.add(o.id);
+        m.set(it.productId, cu);
+      }
+    }
+    return m;
+  }, [donHang]);
+
+  /** Tổng số lượng còn thiếu của đúng những mặt hàng đang hiện trong danh sách. */
+  const tongThieuDangXem = useMemo(
+    () => danhSach.reduce((s, p) => s + (thieuTheoHang.get(p.id)?.soLuong ?? 0), 0),
+    [danhSach, thieuTheoHang],
+  );
+
   /** Kho ứng dụng có dùng đến tiền hay chỉ quản lý số lượng. */
   const coDungTien = useMemo(
     () => products.some((p) => p.giaBan > 0) || donHang.some((o) => o.tongTien > 0),
@@ -164,6 +201,22 @@ export function ManMatHang() {
   }, [danhSach, banTheoHang]);
 
   const banCuaChiTiet = chiTiet ? banTheoHang.get(chiTiet.id) : undefined;
+  const thieuCuaChiTiet = chiTiet ? thieuTheoHang.get(chiTiet.id) : undefined;
+  const phieuCuaChiTiet = useMemo<DongPhieuCuaHang[]>(() => {
+    if (!chiTiet) return [];
+    return donHang
+      .map((o) => {
+        const dong = o.items.filter((i) => i.productId === chiTiet.id);
+        if (dong.length === 0) return null;
+        return {
+          order: o,
+          soLuong: dong.reduce((s, i) => s + i.soLuong, 0),
+          conThieu: dong.reduce((s, i) => s + conThieu(i), 0),
+        };
+      })
+      .filter((d): d is DongPhieuCuaHang => d !== null)
+      .sort((a, b) => b.order.ngay.localeCompare(a.order.ngay));
+  }, [donHang, chiTiet]);
 
   const homNayStr = homNay();
   const dauThangStr = dauThang();
@@ -243,9 +296,9 @@ export function ManMatHang() {
       }}
       disabled={dangDoi === p.id}
       title={p.dangDung ? "Bấm để tạm dừng bán" : "Bấm để mở bán lại"}
-      className={`inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-[10px] font-medium tracking-[0.03em] uppercase transition disabled:opacity-50 ${
+      className={`inline-flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 font-mono text-[9.5px] font-medium tracking-[0.05em] whitespace-nowrap uppercase transition disabled:opacity-50 ${
         p.dangDung
-          ? "border-ngoc/30 bg-ngoc-nhat text-ngoc hover:bg-ngoc-nhat/70"
+          ? "border-ngoc/25 bg-ngoc-nhat text-ngoc hover:bg-ngoc-nhat/70"
           : "border-ke-dam bg-giay text-muc-mo hover:bg-ke/40"
       }`}
     >
@@ -256,6 +309,7 @@ export function ManMatHang() {
 
   const moSua = (p: Product) => {
     setChiTiet(null);
+    setPhieuDangXem(null);
     setForm({
       id: p.id,
       ma: p.ma,
@@ -281,16 +335,17 @@ export function ManMatHang() {
   const xuatExcel = () => {
     const tieuDeCot = ["Mã", "Tên mặt hàng", "Nhóm hàng", "ĐVT", "Giá bán"];
     if (xemDuocPhieu) {
-      tieuDeCot.push("Đã bán");
+      tieuDeCot.push("Đã bán", "Còn thiếu");
       if (coDungTien) tieuDeCot.push("Doanh thu");
     }
     tieuDeCot.push("Trạng thái", "Ghi chú");
 
     const dong = danhSach.map((p) => {
       const ban = banTheoHang.get(p.id);
+      const thieu = thieuTheoHang.get(p.id);
       const r: (string | number)[] = [p.ma, p.ten, p.nhom, p.donViTinh, p.giaBan];
       if (xemDuocPhieu) {
-        r.push(ban?.soLuong ?? 0);
+        r.push(ban?.soLuong ?? 0, thieu?.soLuong ?? 0);
         if (coDungTien) r.push(ban?.doanhThu ?? 0);
       }
       r.push(p.dangDung ? "Đang bán" : "Tạm dừng bán", p.ghiChu);
@@ -298,11 +353,11 @@ export function ManMatHang() {
     });
 
     const cotTien = [4];
-    if (xemDuocPhieu && coDungTien) cotTien.push(6);
+    if (xemDuocPhieu && coDungTien) cotTien.push(7);
 
     const doRong = [14, 32, 16, 10, 14];
     if (xemDuocPhieu) {
-      doRong.push(12);
+      doRong.push(12, 12);
       if (coDungTien) doRong.push(16);
     }
     doRong.push(16, 26);
@@ -316,12 +371,12 @@ export function ManMatHang() {
     }).catch((e) => baoLoi((e as Error).message));
   };
 
-  const soCot = 7 + (xemDuocPhieu ? 1 : 0) + (xemDuocPhieu && coDungTien ? 1 : 0);
+  const soCot = 7 + (xemDuocPhieu ? 2 : 0) + (xemDuocPhieu && coDungTien ? 1 : 0);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <section className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
-        <div className="border-b border-dashed border-ke bg-giay px-3.5 py-3">
+        <div className="khia bg-giay px-3.5 py-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <div className="font-serif text-[15px] leading-tight font-semibold tracking-[-0.01em] text-muc">
@@ -343,70 +398,41 @@ export function ManMatHang() {
 
           {xemDuocPhieu && (
             <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-              <span className="nhan-muc w-full sm:mr-1 sm:w-auto">Bán trong kỳ</span>
-              <OText
-                type="date"
-                value={tu}
-                onChange={(e) => setTu(e.target.value)}
-                aria-label="Từ ngày"
-                title="Từ ngày"
-                className="w-36"
+              <OChonKhoang
+                giaTri={preset}
+                onDoi={(k) => {
+                  if (k === "hom_nay") {
+                    setTu(homNayStr);
+                    setDen(homNayStr);
+                  } else if (k === "thang_nay") {
+                    setTu(dauThangStr);
+                    setDen(homNayStr);
+                  } else {
+                    setTu("");
+                    setDen("");
+                  }
+                }}
+                chon={[
+                  { khoa: "hom_nay", nhan: "Hôm nay" },
+                  { khoa: "thang_nay", nhan: "Tháng này" },
+                  { khoa: "tat_ca", nhan: "Tất cả" },
+                ]}
               />
-              <span className="text-muc-mo">→</span>
-              <OText
-                type="date"
-                value={den}
-                onChange={(e) => setDen(e.target.value)}
-                aria-label="Đến ngày"
-                title="Đến ngày"
-                className="w-36"
-              />
-              <Nut
-                co="sm"
-                kieu={preset === "hom_nay" ? "phu" : "mo"}
-                onClick={() => {
-                  setTu(homNayStr);
-                  setDen(homNayStr);
-                }}
-              >
-                Hôm nay
-              </Nut>
-              <Nut
-                co="sm"
-                kieu={preset === "thang_nay" ? "phu" : "mo"}
-                onClick={() => {
-                  setTu(dauThangStr);
-                  setDen(homNayStr);
-                }}
-              >
-                Tháng này
-              </Nut>
-              <Nut
-                co="sm"
-                kieu={preset === "tat_ca" ? "phu" : "mo"}
-                onClick={() => {
-                  setTu("");
-                  setDen("");
-                }}
-              >
-                Tất cả
-              </Nut>
+              <OKhoangNgay tu={tu} den={den} onTu={setTu} onDen={setDen} nhan="Bán trong kỳ" />
+              <span className="font-mono text-[10px] tracking-[0.03em] text-muc-mo">
+                {tu && den && tu > den && <span className="text-dau">Khoảng ngày đang ngược</span>}
+              </span>
             </div>
           )}
 
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <div className="relative min-w-64 flex-1">
-              <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muc-mo">
-                <BieuTuong ten="tim" className="h-4 w-4" />
-              </span>
-              <OText
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Tìm theo mã hoặc tên mặt hàng…"
-                aria-label="Tìm mặt hàng"
-                className="pl-8"
-              />
-            </div>
+            <OTim
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Tìm theo mã hoặc tên mặt hàng…"
+              aria-label="Tìm mặt hàng"
+              className="min-w-56"
+            />
             <OChon
               value={nhom}
               onChange={(e) => setNhom(e.target.value)}
@@ -424,48 +450,44 @@ export function ManMatHang() {
               value={trangThai}
               onChange={(e) => setTrangThai(e.target.value as typeof trangThai)}
               aria-label="Lọc theo trạng thái"
-              className="w-40"
+              className="w-44"
             >
               <option value="tat_ca">Tất cả trạng thái</option>
               <option value="dang_ban">Đang bán</option>
               <option value="tam_dung">Tạm dừng bán{soTamDung ? ` (${soTamDung})` : ""}</option>
             </OChon>
-          </div>
-
-          <div className="-mx-3.5 mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-ke/60 px-3.5 pt-2 font-mono text-[9.5px] tracking-[0.03em] text-muc-mo uppercase">
-            <span>
-              Đang xem {so(danhSach.length)} / {so(products.length)} mặt hàng
+            <span className="ml-auto font-mono text-[9.5px] tracking-[0.03em] text-muc-mo uppercase">
+              {dangTai ? (
+                <span className="font-semibold text-muc normal-case">Đang tải danh mục…</span>
+              ) : (
+                <>
+                  {so(danhSach.length)} / {so(products.length)} mặt hàng
+                </>
+              )}
+              {xemDuocPhieu && dangTaiDon && <span className="ml-2 font-semibold text-muc normal-case">Đang tính số bán…</span>}
+              {loiDon && <span className="ml-2 text-dau normal-case">{loiDon}</span>}
             </span>
-            {xemDuocPhieu && <span className="normal-case">Bán trong kỳ: {khoangNhan}</span>}
-            {dangTai && <span className="font-semibold text-muc">Đang tải danh mục…</span>}
-            {xemDuocPhieu && dangTaiDon && <span className="font-semibold text-muc">Đang tải số liệu bán…</span>}
-            {xemDuocPhieu && tu && den && tu > den && (
-              <span className="normal-case text-dau">Khoảng ngày đang ngược (từ sau đến)</span>
-            )}
-            {!xemDuocPhieu && (
-              <span className="normal-case">Cần quyền xem phiếu bán để hiện số đã bán</span>
-            )}
-            {loiDon && <span className="normal-case text-dau">Lỗi số liệu bán: {loiDon}</span>}
           </div>
         </div>
       </section>
 
       {xemDuocPhieu && (
         <section className={`grid grid-cols-2 gap-2.5 ${coDungTien ? "xl:grid-cols-4" : "xl:grid-cols-3"}`}>
-          <TheSo
-            nhan="Lượng hàng đã bán"
-            giaTri={choSoLieu ? "…" : so(tongDangXem.soLuong)}
-            icon="kho"
-          />
+          <TheSo nhan="Lượng hàng đã bán" giaTri={choSoLieu ? "…" : so(tongDangXem.soLuong)} icon="kho" phu={khoangNhan} />
           {coDungTien && (
-            <TheSo nhan="Doanh thu" giaTri={choSoLieu ? "…" : tien(tongDangXem.doanhThu)} icon="bieu" />
+            <TheSo nhan="Doanh thu" giaTri={choSoLieu ? "…" : tien(tongDangXem.doanhThu)} icon="bieu" phu={khoangNhan} />
           )}
           <TheSo
             nhan="Mặt hàng có bán"
             giaTri={choSoLieu ? "…" : `${so(tongDangXem.soHang)} / ${so(danhSach.length)}`}
             icon="check"
+            phu={
+              tongThieuDangXem > 0
+                ? `${so(tongThieuDangXem)} đơn vị còn thiếu`
+                : "trong danh sách đang lọc"
+            }
           />
-          <TheSo nhan="Số phiếu" giaTri={choSoLieu ? "…" : so(tongDangXem.soPhieu)} icon="phieu" />
+          <TheSo nhan="Số phiếu" giaTri={choSoLieu ? "…" : so(tongDangXem.soPhieu)} icon="phieu" phu={khoangNhan} />
         </section>
       )}
 
@@ -488,6 +510,7 @@ export function ManMatHang() {
             <div className="divide-y divide-ke/60">
               {danhSach.map((p) => {
                 const ban = banTheoHang.get(p.id);
+                const thieu = thieuTheoHang.get(p.id);
                 return (
                   <div
                     key={p.id}
@@ -529,6 +552,15 @@ export function ManMatHang() {
                         )}
                       </div>
                     )}
+                    {xemDuocPhieu && thieu && thieu.soLuong > 0 && (
+                      <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                        <span className="nhan-muc text-moc">Còn thiếu</span>
+                        <span className="so text-[12.5px] font-semibold text-moc">
+                          {so(thieu.soLuong)} {p.donViTinh}
+                        </span>
+                        <span className="font-mono text-[10px] text-muc-mo">· {so(thieu.phieu.size)} phiếu</span>
+                      </div>
+                    )}
                     <div className="mt-2 flex items-center justify-between gap-2 border-t border-ke/60 pt-2">
                       {nutTrangThai(p)}
                       {thaoTacHang(p)}
@@ -542,7 +574,7 @@ export function ManMatHang() {
 
         <div className="mem-cuon hidden max-h-[66vh] overflow-auto sm:block">
           <table
-            className={`w-full ${coDungTien && xemDuocPhieu ? "min-w-[1000px]" : "min-w-[880px]"} table-fixed border-collapse text-sm`}
+            className={`w-full ${coDungTien && xemDuocPhieu ? "min-w-[1120px]" : xemDuocPhieu ? "min-w-[1000px]" : "min-w-[880px]"} table-fixed border-collapse text-sm`}
           >
             <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
               <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
@@ -557,6 +589,14 @@ export function ManMatHang() {
                     title="Tổng số lượng bán trên các phiếu trong khoảng ngày đang chọn"
                   >
                     Đã bán
+                  </th>
+                )}
+                {xemDuocPhieu && (
+                  <th
+                    className="w-28 text-right"
+                    title="Số lượng còn nợ can phạm, chưa bù, trong khoảng ngày đang chọn"
+                  >
+                    Còn thiếu
                   </th>
                 )}
                 {xemDuocPhieu && coDungTien && (
@@ -588,6 +628,7 @@ export function ManMatHang() {
               )}
               {danhSach.map((p) => {
                 const ban = banTheoHang.get(p.id);
+                const thieu = thieuTheoHang.get(p.id);
                 return (
                   <tr
                     key={p.id}
@@ -618,6 +659,21 @@ export function ManMatHang() {
                         )}
                       </td>
                     )}
+                    {xemDuocPhieu && (
+                      <td className="text-right">
+                        {thieu && thieu.soLuong > 0 ? (
+                          <span
+                            className="so inline-flex items-center rounded-sm border border-moc/25 bg-moc-nhat px-1.5 py-0.5 text-[11.5px] font-semibold text-moc"
+                            title={`${so(thieu.phieu.size)} phiếu còn thiếu`}
+                          >
+                            {so(thieu.soLuong)}
+                            <span className="ml-1 text-[10px] font-normal">{p.donViTinh}</span>
+                          </span>
+                        ) : (
+                          <span className="so text-[13px] text-muc-mo">—</span>
+                        )}
+                      </td>
+                    )}
                     {xemDuocPhieu && coDungTien && (
                       <td className="so text-right text-[13px] text-muc-nhat">
                         {ban && ban.doanhThu > 0 ? so(ban.doanhThu) : "—"}
@@ -636,12 +692,23 @@ export function ManMatHang() {
       {/* --- Chi tiết mặt hàng --- */}
       <HopThoai
         mo={chiTiet !== null}
-        dong={() => setChiTiet(null)}
+        dong={() => {
+          setChiTiet(null);
+          setPhieuDangXem(null);
+        }}
         tieuDe="Chi tiết mặt hàng"
-        rong="max-w-lg"
+        rong="max-w-2xl"
+        khoaEsc={phieuDangXem !== null}
         chanTrang={
           <>
-            <Nut onClick={() => setChiTiet(null)}>Đóng</Nut>
+            <Nut
+              onClick={() => {
+                setChiTiet(null);
+                setPhieuDangXem(null);
+              }}
+            >
+              Đóng
+            </Nut>
             {chiTiet && (
               <Nut kieu="chinh" onClick={() => moSua(chiTiet)}>
                 <BieuTuong ten="sua" className="h-4 w-4" /> Sửa mặt hàng
@@ -651,7 +718,7 @@ export function ManMatHang() {
         }
       >
         {chiTiet && (
-          <div className="space-y-3">
+          <div className="max-h-[70vh] space-y-3 overflow-y-auto pr-1">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2.5">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border border-ke-dam bg-giay text-muc-nhat">
@@ -701,6 +768,79 @@ export function ManMatHang() {
                     Chưa bán mặt hàng này trong khoảng ngày đang chọn.
                   </div>
                 )}
+                {thieuCuaChiTiet && thieuCuaChiTiet.soLuong > 0 && (
+                  <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-sm border border-moc/25 bg-moc-nhat px-2 py-1.5 text-[11.5px] text-moc">
+                    <BieuTuong ten="canh" className="h-3.5 w-3.5" />
+                    Còn thiếu <b className="so font-semibold">{so(thieuCuaChiTiet.soLuong)}</b> {chiTiet.donViTinh} trên{" "}
+                    <b className="so font-semibold">{so(thieuCuaChiTiet.phieu.size)}</b> phiếu
+                  </div>
+                )}
+              </div>
+            )}
+
+            {xemDuocPhieu && (
+              <div>
+                <div className="mb-1.5 flex items-center justify-between gap-2">
+                  <div className="nhan-muc">Phiếu có mặt hàng này</div>
+                  <span className="so text-[10px] text-muc-mo">{so(phieuCuaChiTiet.length)} phiếu</span>
+                </div>
+                {phieuCuaChiTiet.length === 0 ? (
+                  <div className="rounded-sm border border-dashed border-ke-dam px-3 py-3 text-center font-mono text-[10.5px] tracking-[0.02em] text-muc-mo">
+                    Chưa có phiếu nào chứa mặt hàng này trong khoảng đang chọn.
+                  </div>
+                ) : (
+                  <div className="mem-cuon max-h-60 overflow-auto rounded-sm border border-ke">
+                    <table className="w-full min-w-[560px] border-collapse text-[13px]">
+                      <thead className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+                        <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
+                          <th className="w-24">Số phiếu</th>
+                          <th className="w-24">Ngày</th>
+                          <th>Can phạm</th>
+                          <th className="w-16 text-right">SL</th>
+                          <th className="w-24 text-right">Còn thiếu</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {phieuCuaChiTiet.map((d) => (
+                          <tr
+                            key={d.order.id}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setPhieuDangXem(d.order)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                setPhieuDangXem(d.order);
+                              }
+                            }}
+                            title="Bấm để xem chi tiết phiếu, bù hàng hoặc chỉnh sửa"
+                            className="cursor-pointer transition-colors hover:bg-giay/70 [&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5"
+                          >
+                            <td className="so text-[11px] font-medium text-muc">{d.order.soPhieu}</td>
+                            <td className="so whitespace-nowrap text-[11px] text-muc-nhat">{ngayVN(d.order.ngay)}</td>
+                            <td>
+                              <div className="font-medium text-muc">{d.order.hoTen}</div>
+                              <div className="font-mono text-[10px] text-muc-mo">
+                                {d.order.buongGiam || "—"}
+                                {d.order.namSinh ? ` · SN ${d.order.namSinh}` : ""}
+                              </div>
+                            </td>
+                            <td className="so text-right text-[12px] text-muc-nhat">{so(d.soLuong)}</td>
+                            <td className="text-right">
+                              {d.conThieu > 0 ? (
+                                <span className="so inline-block rounded-sm border border-moc/30 bg-moc-nhat px-1.5 py-0.5 text-[11px] font-semibold text-moc">
+                                  {so(d.conThieu)}
+                                </span>
+                              ) : (
+                                <span className="so text-[12px] text-muc-mo">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 
@@ -733,6 +873,17 @@ export function ManMatHang() {
           </div>
         )}
       </HopThoai>
+
+      <HopChiTietPhieu
+        key={phieuDangXem?.id ?? "dong"}
+        orderId={phieuDangXem?.id ?? null}
+        banDau={phieuDangXem}
+        onDong={() => setPhieuDangXem(null)}
+        onThayDoi={(o) => {
+          setDonHang((cu) => cu.map((x) => (x.id === o.id ? o : x)));
+          setPhieuDangXem(o);
+        }}
+      />
 
       <HopThoai
         mo={form !== null}
@@ -811,20 +962,6 @@ export function ManMatHang() {
           </div>
         )}
       </HopThoai>
-    </div>
-  );
-}
-
-function TheSo({ nhan, giaTri, icon }: { nhan: string; giaTri: string; icon: string }) {
-  return (
-    <div className="rounded-lg border border-ke bg-giay-cao px-4 py-3 shadow-the">
-      <div className="flex items-center justify-between gap-2">
-        <div className="nhan-muc">{nhan}</div>
-        <span className="flex h-7 w-7 items-center justify-center rounded-sm border border-ke bg-giay text-muc-mo">
-          <BieuTuong ten={icon} className="h-3.5 w-3.5" />
-        </span>
-      </div>
-      <div className="so mt-1.5 text-[19px] font-semibold tracking-tight text-muc">{giaTri}</div>
     </div>
   );
 }

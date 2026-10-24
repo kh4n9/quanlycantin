@@ -8,12 +8,26 @@ import { useStore } from "@/lib/store";
 import type { CanPhamGoiY, Order, Product } from "@/lib/types";
 import { useNap } from "@/lib/use-nap";
 import { HopThieuHang } from "./hop-thieu-hang";
+import { HopChiTietPhieu } from "./hop-chi-tiet-phieu";
 import { ChonMonLoc } from "./pickers";
 import { HopThungRac } from "./hop-thung-rac";
 import { PhieuBanForm } from "./phieu-ban-form";
 import { conThieu, daBu, phieuConThieu } from "@/lib/thieu-hang";
 import { MauPhieuBan, useInPhieu } from "./print";
-import { bao, baoLoi, BieuTuong, HopThoai, Nut, ONhan, OText, OVung, Trong } from "./ui";
+import {
+  bao,
+  baoLoi,
+  BieuTuong,
+  HopThoai,
+  Nut,
+  OCongTac,
+  OKhoangNgay,
+  ONhan,
+  OPhanTrang,
+  OTim,
+  OVung,
+  Trong,
+} from "./ui";
 
 function dauThang(): string {
   const d = new Date();
@@ -38,6 +52,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
   const [lyDoXoa, setLyDoXoa] = useState("");
   const [dangXoaLuu, setDangXoaLuu] = useState(false);
   const [phieuThieu, setPhieuThieu] = useState<Order | null>(null);
+  const [phieuDangXem, setPhieuDangXem] = useState<Order | null>(null);
   const [chiThieuHang, setChiThieuHang] = useState(false);
   const [monLoc, setMonLoc] = useState<Product | null>(null);
 
@@ -107,6 +122,20 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
     if (q) d = d.filter((o) => khop(o.soPhieu, q) || khop(o.hoTen, q) || khop(o.buongGiam, q));
     return d;
   }, [ds, q, chiThieuHang, monLoc]);
+
+  // Danh sách một tháng có thể vài trăm phiếu: chia trang để chân bảng và dòng
+  // tổng kết luôn nằm trong tầm mắt, không phải cuộn qua cả sổ. Đổi khoảng ngày
+  // hay bộ lọc (khoá `locKhoa`) thì tự quay về trang 1 — tính trong lúc render,
+  // không cần effect đồng bộ state.
+  const MOI_TRANG = 25;
+  const locKhoa = [tu, den, q, chiThieuHang ? "1" : "", monLoc?.id ?? ""].join("|");
+  const [trangChon, setTrangChon] = useState({ khoa: locKhoa, trang: 1 });
+  const trang = trangChon.khoa === locKhoa ? trangChon.trang : 1;
+  const datTrang = (t: number) => setTrangChon({ khoa: locKhoa, trang: t });
+  const soTrang = Math.max(1, Math.ceil(hienThi.length / MOI_TRANG));
+  const trangHien = Math.min(trang, soTrang);
+
+  const dangXemDay = hienThi.slice((trangHien - 1) * MOI_TRANG, trangHien * MOI_TRANG);
 
   /**
    * Ô lọc món chỉ liệt kê những món thật sự có bán trong khoảng ngày đang xem.
@@ -266,11 +295,11 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
   return (
     <>
     <div className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
-      <div className="border-b border-dashed border-ke bg-giay px-3.5 py-3">
+      <div className="khia bg-giay px-3.5 py-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <div className="font-serif text-[15px] leading-tight font-semibold tracking-[-0.01em] text-muc">Phiếu bán</div>
-            <div className="mt-0.5 text-[11.5px] text-muc-nhat">Bấm vào dòng để xem và in lại phiếu</div>
+          <div className="flex items-baseline gap-2.5">
+            <h2 className="font-serif text-[15px] leading-tight font-semibold tracking-[-0.01em] text-muc">Sổ phiếu bán</h2>
+            <span className="text-[11.5px] text-muc-nhat">Bấm vào dòng để xem chi tiết, bù hàng hoặc sửa phiếu</span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {duocXoa && (
@@ -285,44 +314,32 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
             )}
           </div>
         </div>
+
+        {/* Cả khoảng ngày, ô tìm, bộ lọc món và các bộ lọc phụ trên một dải */}
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-          <OText type="date" value={tu} onChange={(e) => setTu(e.target.value)} className="w-36" />
-          <span className="text-muc-mo">→</span>
-          <OText type="date" value={den} onChange={(e) => setDen(e.target.value)} className="w-36" />
-          <div className="relative min-w-52 flex-1">
-            <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muc-mo">
-              <BieuTuong ten="tim" className="h-4 w-4" />
-            </span>
-            <OText
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Tìm số phiếu, họ tên, buồng giam…"
-              className="pl-8"
-            />
-          </div>
+          <OKhoangNgay tu={tu} den={den} onTu={setTu} onDen={setDen} />
+          <OTim
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Tìm số phiếu, họ tên, buồng giam…"
+            aria-label="Tìm phiếu bán"
+            className="min-w-52"
+          />
           <ChonMonLoc
             products={sanPhamTrongKy}
             daChon={monLoc}
             onChon={setMonLoc}
             onBo={() => setMonLoc(null)}
           />
-          <label
-            className={`flex h-9 cursor-pointer items-center gap-2 rounded-sm border px-3 text-[13px] transition ${
-              chiThieuHang
-                ? "border-moc/40 bg-moc-nhat font-medium text-moc"
-                : "border-ke-dam bg-white text-muc-nhat shadow-xs hover:border-muc/40 hover:text-muc"
-            }`}
+          <OCongTac
+            bat={chiThieuHang}
+            onDoi={setChiThieuHang}
+            sac="moc"
             title="Chỉ hiện những phiếu còn nợ hàng can phạm"
           >
-            <input
-              type="checkbox"
-              checked={chiThieuHang}
-              onChange={(e) => setChiThieuHang(e.target.checked)}
-              className="h-4 w-4 accent-moc"
-            />
             Còn thiếu hàng{soPhieuThieu > 0 ? ` (${so(soPhieuThieu)})` : ""}
-          </label>
-          <Nut onClick={xuatExcel} disabled={hienThi.length === 0}>
+          </OCongTac>
+          <Nut onClick={xuatExcel} disabled={hienThi.length === 0} className="ml-auto">
             <BieuTuong ten="tai" /> Excel
           </Nut>
         </div>
@@ -345,9 +362,9 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
         ) : (
           <>
             <div className="divide-y divide-ke/70">
-              {hienThi.map((o) => (
+              {dangXemDay.map((o) => (
                 <div key={o.id} className="p-3">
-                  <button type="button" onClick={() => xemTruoc(o)} className="block w-full text-left">
+                  <button type="button" onClick={() => setPhieuDangXem(o)} className="block w-full text-left">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="so text-[11.5px] font-medium text-muc">{o.soPhieu}</div>
@@ -388,11 +405,18 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
               </span>
               <span className="so font-semibold text-muc">{coTien ? tien(tongTien) : "—"}</span>
             </div>
+            <OPhanTrang
+              trang={trangHien}
+              soTrang={soTrang}
+              tong={hienThi.length}
+              onTrang={datTrang}
+              nhan="phiếu"
+            />
           </>
         )}
       </div>
 
-      <div className="mem-cuon hidden max-h-[calc(100vh-210px)] min-h-[320px] overflow-auto sm:block">
+      <div className="mem-cuon hidden max-h-[calc(100vh-260px)] min-h-[320px] overflow-auto sm:block">
         <table className="w-full min-w-[1040px] border-collapse text-sm">
           <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
             <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
@@ -413,11 +437,11 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
                 </td>
               </tr>
             )}
-            {hienThi.map((o) => (
+            {dangXemDay.map((o) => (
               <tr
                 key={o.id}
-                onClick={() => xemTruoc(o)}
-                className="cursor-pointer [&>td]:border-b [&>td]:border-ke/70 [&>td]:px-3 [&>td]:py-2.5 hover:bg-giay/70"
+                onClick={() => setPhieuDangXem(o)}
+                className="group cursor-pointer [&>td]:border-b [&>td]:border-ke/70 [&>td]:px-3 [&>td]:py-2.5 hover:bg-giay/70"
               >
                 <td className="so text-[11.5px] font-medium text-muc">{o.soPhieu}</td>
                 <td className="text-[13px] text-muc-nhat">{ngayVN(o.ngay)}</td>
@@ -457,7 +481,13 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
             <tfoot className="sticky bottom-0 bg-giay/95 backdrop-blur">
               <tr className="[&>td]:border-t [&>td]:border-ke [&>td]:px-3 [&>td]:py-2.5">
                 <td colSpan={4} className="text-[12px] font-medium text-muc-nhat">
-                  Tổng {so(hienThi.length)} phiếu
+                  {soTrang > 1 ? (
+                    <>
+                      Trang {so(trangHien)}/{so(soTrang)} · tổng cả kỳ {so(hienThi.length)} phiếu
+                    </>
+                  ) : (
+                    <>Tổng {so(hienThi.length)} phiếu</>
+                  )}
                 </td>
                 <td className="so text-center text-[12px] text-muc-nhat">{so(tongDonVi)} đơn vị</td>
                 <td className="so text-right text-[15px] font-semibold whitespace-nowrap text-muc">
@@ -469,6 +499,17 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
           )}
         </table>
       </div>
+
+      {hienThi.length > 0 && (
+        <OPhanTrang
+          trang={trangHien}
+          soTrang={soTrang}
+          tong={hienThi.length}
+          onTrang={datTrang}
+          nhan="phiếu"
+          disabled={dangTai}
+        />
+      )}
     </div>
 
       {/* --- Hộp thoại sửa phiếu --- */}
@@ -546,6 +587,18 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
           }}
         />
       )}
+
+      {/* --- Chi tiết phiếu dùng chung: xem, bù hàng, sửa --- */}
+      <HopChiTietPhieu
+        key={phieuDangXem?.id ?? "dong"}
+        orderId={phieuDangXem?.id ?? null}
+        banDau={phieuDangXem}
+        onDong={() => setPhieuDangXem(null)}
+        onThayDoi={(o) => {
+          setDs((cu) => cu.map((x) => (x.id === o.id ? o : x)));
+          setPhieuDangXem(o);
+        }}
+      />
 
       {/* --- Thùng rác --- */}
       {moThungRac && (

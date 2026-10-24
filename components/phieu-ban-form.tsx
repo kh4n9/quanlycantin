@@ -7,7 +7,7 @@ import { useStore } from "@/lib/store";
 import type { CanPhamGoiY, LineItem, Order, Product } from "@/lib/types";
 import { ChonHang, OTenCanPham } from "./pickers";
 import { useInPhieu } from "./print";
-import { baoLoi, BieuTuong, Nut, ONhan, OText, Trong } from "./ui";
+import { baoLoi, BieuTuong, Nut, ONhan, OText, SoTo, Trong } from "./ui";
 
 /**
  * Form lập / sửa phiếu bán.
@@ -126,7 +126,7 @@ export function PhieuBanForm({
   /** Ô số lượng dùng chung cho bảng trên máy tính và thẻ trên điện thoại */
   const oSoLuong = (d: LineItem, i: number, rong = false) => (
     <div
-      className={`flex items-center overflow-hidden rounded-md border border-ke-dam bg-white shadow-xs ${
+      className={`flex items-center overflow-hidden rounded-md border border-ke-dam bg-white shadow-xs transition focus-within:border-muc ${
         rong ? "w-full" : "inline-flex"
       }`}
     >
@@ -138,6 +138,7 @@ export function PhieuBanForm({
           rong ? "h-9 w-9" : "h-8 w-7"
         }`}
         title="Giảm 1"
+        aria-label={`Giảm số lượng ${d.ten}`}
       >
         <span className="text-base leading-none font-semibold">−</span>
       </button>
@@ -159,6 +160,7 @@ export function PhieuBanForm({
             suaDong(i, { soLuong: Math.max(0, d.soLuong - 1) });
           }
         }}
+        aria-label={`Số lượng ${d.ten}`}
         className={`border-x border-ke px-1 text-center font-mono text-[12.5px] font-semibold tabular-nums outline-none focus:bg-giay ${
           rong ? "h-9 min-w-0 flex-1" : "h-8 w-12"
         }`}
@@ -170,6 +172,7 @@ export function PhieuBanForm({
           rong ? "h-9 w-9" : "h-8 w-7"
         }`}
         title="Tăng 1"
+        aria-label={`Tăng số lượng ${d.ten}`}
       >
         <span className="text-base leading-none font-semibold">+</span>
       </button>
@@ -185,7 +188,8 @@ export function PhieuBanForm({
       onChange={(e) => suaDong(i, { donGia: Number(e.target.value) })}
       onFocus={(e) => e.target.select()}
       placeholder="0"
-      className={`rounded-sm border border-ke-dam px-2 text-right font-mono text-[13px] tabular-nums shadow-[inset_0_1px_2px_rgb(22_32_28/0.04)] outline-none transition focus:border-muc ${
+      aria-label={`Đơn giá ${d.ten}`}
+      className={`rounded-md border border-ke-dam px-2 text-right font-mono text-[13px] tabular-nums shadow-[inset_0_1px_2px_rgb(19_30_25/0.04)] outline-none transition focus:border-muc focus:ring-2 focus:ring-muc/20 ${
         rong ? "h-9 w-full" : "h-8 w-24"
       }`}
     />
@@ -271,10 +275,10 @@ export function PhieuBanForm({
   return (
     <div className="flex flex-col gap-3">
       {/* --- Thông tin can phạm, ghi thẳng trên phiếu --- */}
-      <section className="rounded-lg border border-ke bg-giay-cao shadow-the">
+      <section className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
         <header className="khia flex flex-wrap items-baseline justify-between gap-2 px-4 py-3">
-          <div className="flex items-baseline gap-3">
-            <span className="so text-[10.5px] text-muc-mo">01</span>
+          <div className="flex items-baseline gap-2.5">
+            <SoTo so="01" />
             <h2 className="font-serif text-[15px] font-semibold tracking-[-0.01em] text-muc">Thông tin can phạm</h2>
           </div>
           <span className="hidden text-[11.5px] text-muc-nhat sm:block">
@@ -333,10 +337,10 @@ export function PhieuBanForm({
       </section>
 
       {/* --- Thêm mặt hàng --- */}
-      <section className="rounded-lg border border-ke bg-giay-cao shadow-the">
+      <section className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
         <header className="khia flex flex-wrap items-baseline justify-between gap-2 px-4 py-3">
-          <div className="flex items-baseline gap-3">
-            <span className="so text-[10.5px] text-muc-mo">02</span>
+          <div className="flex items-baseline gap-2.5">
+            <SoTo so="02" />
             <h2 className="font-serif text-[15px] font-semibold tracking-[-0.01em] text-muc">Thêm mặt hàng</h2>
           </div>
           <span className="hidden text-[11.5px] text-muc-nhat sm:block">
@@ -352,14 +356,15 @@ export function PhieuBanForm({
       {/* --- Danh sách mặt hàng đã chọn --- */}
       <div className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
         <header className="khia flex flex-wrap items-baseline justify-between gap-2 px-4 py-3">
-          <div className="flex items-baseline gap-3">
-            <span className="so text-[10.5px] text-muc-mo">03</span>
+          <div className="flex items-baseline gap-2.5">
+            <SoTo so="03" />
             <h2 className="font-serif text-[15px] font-semibold tracking-[-0.01em] text-muc">Mặt hàng trên phiếu</h2>
           </div>
           <span className="so text-[10.5px] text-muc-mo">{dsDong.length} dòng</span>
         </header>
         {dsDong.length === 0 ? (
           <Trong
+            icon="kho"
             tieuDe="Chưa có mặt hàng nào trên phiếu"
             moTa="Dùng ô “Thêm mặt hàng” ở trên để chọn hàng can phạm mua."
           />
@@ -434,7 +439,7 @@ export function PhieuBanForm({
         )}
       </div>
 
-      {/* --- Thanh tổng kết --- */}
+      {/* --- Thanh tổng kết: chân của tờ phiếu --- */}
       <div
         className={`overflow-hidden rounded-lg border border-ke bg-giay-cao/95 shadow-the backdrop-blur ${
           trongHopThoai ? "" : "z-10 lg:sticky lg:bottom-0"
@@ -451,15 +456,18 @@ export function PhieuBanForm({
           </div>
 
           <div className="flex w-full flex-col gap-3 sm:ml-auto sm:w-auto sm:flex-row sm:items-center">
+            {/* Tổng thu: con số đặt trên một đường kẻ đôi như ô tổng của sổ kế toán */}
             <div className="text-right">
               <div className="nhan-muc">Tổng thu</div>
-              {tongTien > 0 ? (
-                <div className="so mt-1.5 text-[30px] leading-none font-semibold text-muc">{tien(tongTien)}</div>
-              ) : dsDong.length > 0 ? (
-                <div className="mt-2 font-serif text-xl font-semibold text-muc-nhat">Chưa ghi giá</div>
-              ) : (
-                <div className="so mt-1.5 text-[30px] leading-none font-semibold text-muc-mo">0 đ</div>
-              )}
+              <div className="mt-1.5 border-t-2 border-muc/80 pt-1.5">
+                {tongTien > 0 ? (
+                  <div className="so text-[30px] leading-none font-semibold text-muc">{tien(tongTien)}</div>
+                ) : dsDong.length > 0 ? (
+                  <div className="font-serif text-xl leading-none font-semibold text-moc">Chưa ghi giá</div>
+                ) : (
+                  <div className="so text-[30px] leading-none font-semibold text-muc-mo">0 đ</div>
+                )}
+              </div>
               <div className="mt-2 font-mono text-[10.5px] tracking-[0.04em] text-muc-mo">
                 {dsDong.length} mặt hàng · {so(tongDonVi)} đơn vị
               </div>

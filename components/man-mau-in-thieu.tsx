@@ -33,10 +33,10 @@ const BAOCAO_MAU: BaoCao = {
   theoCanPham: [],
   hangThieu: [],
   thieuTheoPhieu: [
-    { buongGiam: "B01", soPhieu: "PB-2026-0001", ngay: homNay(), hoTen: "Nguyễn Văn A", ma: "MI-001", ten: "Mì tôm Hảo Hảo", donViTinh: "gói", conThieu: 3, ghiChu: "Nhận buổi chiều" },
-    { buongGiam: "B01", soPhieu: "PB-2026-0001", ngay: homNay(), hoTen: "Nguyễn Văn A", ma: "NU-001", ten: "Nước ngọt Coca 330ml", donViTinh: "lon", conThieu: 2, ghiChu: "" },
-    { buongGiam: "B01", soPhieu: "PB-2026-0005", ngay: homNay(), hoTen: "Trần Văn B", ma: "MI-001", ten: "Mì tôm Hảo Hảo", donViTinh: "gói", conThieu: 4, ghiChu: "" },
-    { buongGiam: "B03", soPhieu: "PB-2026-0009", ngay: homNay(), hoTen: "Lê Văn C", ma: "MI-001", ten: "Mì tôm Hảo Hảo", donViTinh: "gói", conThieu: 3, ghiChu: "" },
+    { id: "mau-1", buongGiam: "B01", soPhieu: "PB-2026-0001", ngay: homNay(), hoTen: "Nguyễn Văn A", ma: "MI-001", ten: "Mì tôm Hảo Hảo", donViTinh: "gói", conThieu: 3, ghiChu: "Nhận buổi chiều" },
+    { id: "mau-2", buongGiam: "B01", soPhieu: "PB-2026-0001", ngay: homNay(), hoTen: "Nguyễn Văn A", ma: "NU-001", ten: "Nước ngọt Coca 330ml", donViTinh: "lon", conThieu: 2, ghiChu: "" },
+    { id: "mau-3", buongGiam: "B01", soPhieu: "PB-2026-0005", ngay: homNay(), hoTen: "Trần Văn B", ma: "MI-001", ten: "Mì tôm Hảo Hảo", donViTinh: "gói", conThieu: 4, ghiChu: "" },
+    { id: "mau-4", buongGiam: "B03", soPhieu: "PB-2026-0009", ngay: homNay(), hoTen: "Lê Văn C", ma: "MI-001", ten: "Mì tôm Hảo Hảo", donViTinh: "gói", conThieu: 3, ghiChu: "" },
   ],
 };
 
@@ -78,6 +78,7 @@ export function ManMauInThieu() {
 
   return (
     <The
+      so="03"
       tieuDe="Mẫu phiếu trả đồ thiếu"
       phuDe="Bản in danh sách hàng còn thiếu để đi phát cho can phạm"
       hanhDong={

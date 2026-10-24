@@ -10,7 +10,8 @@ import type { KieuInThieu } from "@/lib/types";
 import { useDaMount, useNap } from "@/lib/use-nap";
 import { PhieuThieu } from "./in-thieu";
 import { homNay, ngayVN, so, tien } from "@/lib/format";
-import { baoLoi, BieuTuong, HopThoai, Nhan, Nut, Trong } from "./ui";
+import { baoLoi, BieuTuong, HopThoai, Nhan, Nut, OChonKhoang, OKhoangNgay, Trong } from "./ui";
+import { HopChiTietPhieu } from "./hop-chi-tiet-phieu";
 
 /** Màu duy nhất cho chuỗi dữ liệu — đã kiểm bằng scripts/validate_palette.js */
 const MAU_DUONG = "linear-gradient(180deg, #2a342e 0%, #16201c 100%)";
@@ -40,6 +41,8 @@ export function ManBaoCao() {
   const [chiTietHang, setChiTietHang] = useState<HangBaoCao | null>(null);
   const [chiTietCanPham, setChiTietCanPham] = useState<CanPhamBaoCao | null>(null);
   const [chiTietNgay, setChiTietNgay] = useState<NgayBaoCao | null>(null);
+  // Mã phiếu đang mở trong hộp chi tiết dùng chung (có bù hàng / sửa phiếu).
+  const [phieuDangXem, setPhieuDangXem] = useState<string | null>(null);
   // Chỉ phản hồi của lần tải mới nhất được phép cập nhật màn hình.
   const lanNap = useRef(0);
   // Portal cần document nên chỉ dựng sau khi đã sang phía trình duyệt
@@ -116,6 +119,28 @@ export function ManBaoCao() {
       setDen(`${cuoi.getFullYear()}-${p(cuoi.getMonth() + 1)}-${p(cuoi.getDate())}`);
     }
   };
+
+  // Phím gạt khoảng ngày sáng đúng ô đang áp dụng; chọn tay thì không ô nào sáng
+  const thangTruoc = useMemo(() => {
+    const d = new Date();
+    const dau = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+    const cuoi = new Date(d.getFullYear(), d.getMonth(), 0);
+    const p = (n: number) => String(n).padStart(2, "0");
+    return {
+      tu: `${dau.getFullYear()}-${p(dau.getMonth() + 1)}-01`,
+      den: `${cuoi.getFullYear()}-${p(cuoi.getMonth() + 1)}-${p(cuoi.getDate())}`,
+    };
+  }, []);
+  const preset: "" | "homnay" | "7ngay" | "thangnay" | "thangtruoc" =
+    tu === homNay() && den === homNay()
+      ? "homnay"
+      : tu === luiNgay(6) && den === homNay()
+        ? "7ngay"
+        : tu === dauThang() && den === homNay()
+          ? "thangnay"
+          : tu === thangTruoc.tu && den === thangTruoc.den
+            ? "thangtruoc"
+            : "";
 
   const xuatExcel = () => {
     if (!du) return;
@@ -238,33 +263,17 @@ export function ManBaoCao() {
       {/* Bộ lọc — một hàng phía trên các biểu đồ */}
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-ke bg-giay-cao px-3.5 py-3 shadow-the">
         <span className="mr-1 font-serif text-[14px] font-semibold text-muc">Khoảng thời gian</span>
-        {(
-          [
-            ["homnay", "Hôm nay"],
-            ["7ngay", "7 ngày"],
-            ["thangnay", "Tháng này"],
-            ["thangtruoc", "Tháng trước"],
-          ] as const
-        ).map(([k, nhan]) => (
-          <Nut key={k} co="sm" onClick={() => datNhanh(k)}>
-            {nhan}
-          </Nut>
-        ))}
-        <div className="flex items-center gap-1.5">
-          <input
-            type="date"
-            value={tu}
-            onChange={(e) => setTu(e.target.value)}
-            className="h-9 rounded-sm border border-ke-dam bg-giay-cao px-2.5 font-mono text-[11.5px] shadow-xs outline-none transition focus:border-muc"
-          />
-          <span className="text-muc-mo">→</span>
-          <input
-            type="date"
-            value={den}
-            onChange={(e) => setDen(e.target.value)}
-            className="h-9 rounded-sm border border-ke-dam bg-giay-cao px-2.5 font-mono text-[11.5px] shadow-xs outline-none transition focus:border-muc"
-          />
-        </div>
+        <OChonKhoang
+          giaTri={preset}
+          onDoi={datNhanh}
+          chon={[
+            { khoa: "homnay", nhan: "Hôm nay" },
+            { khoa: "7ngay", nhan: "7 ngày" },
+            { khoa: "thangnay", nhan: "Tháng này" },
+            { khoa: "thangtruoc", nhan: "Tháng trước" },
+          ]}
+        />
+        <OKhoangNgay tu={tu} den={den} onTu={setTu} onDen={setDen} nhan="Khoảng báo cáo" />
         <Nut onClick={xuatExcel} disabled={!du} className="ml-auto">
           <BieuTuong ten="tai" /> Xuất Excel
         </Nut>
@@ -372,6 +381,7 @@ export function ManBaoCao() {
               const h = du.theoHang.find((x) => x.productId === productId);
               if (h) setChiTietHang(h);
             }}
+            onChonPhieu={setPhieuDangXem}
           />
 
           <BangXepHang
@@ -426,6 +436,8 @@ export function ManBaoCao() {
           hang={chiTietHang}
           dungTien={du?.tongQuan.coDungTien ?? false}
           dong={() => setChiTietHang(null)}
+          onChonPhieu={setPhieuDangXem}
+          khoaEsc={phieuDangXem !== null}
         />
       )}
       {chiTietCanPham && (
@@ -433,6 +445,8 @@ export function ManBaoCao() {
           canPham={chiTietCanPham}
           dungTien={du?.tongQuan.coDungTien ?? false}
           dong={() => setChiTietCanPham(null)}
+          onChonPhieu={setPhieuDangXem}
+          khoaEsc={phieuDangXem !== null}
         />
       )}
       {chiTietNgay && (
@@ -440,8 +454,17 @@ export function ManBaoCao() {
           ngay={chiTietNgay}
           dungTien={du?.tongQuan.coDungTien ?? false}
           dong={() => setChiTietNgay(null)}
+          onChonPhieu={setPhieuDangXem}
+          khoaEsc={phieuDangXem !== null}
         />
       )}
+
+      <HopChiTietPhieu
+        key={phieuDangXem ?? "dong"}
+        orderId={phieuDangXem}
+        onDong={() => setPhieuDangXem(null)}
+        onThayDoi={() => void nap()}
+      />
 
       {daMount &&
         createPortal(
@@ -539,23 +562,22 @@ function Tile({
       }`}
     >
       {chinh && <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-muc" />}
+      {icon && (
+        <BieuTuong
+          ten={icon}
+          className="pointer-events-none absolute -right-3 -bottom-3 h-16 w-16 text-muc/[0.045]"
+        />
+      )}
       <div className="relative">
-        <div className="flex items-start justify-between gap-2">
-          <div className="nhan-muc min-w-0 truncate">{nhan}</div>
-          {icon && (
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-ke bg-giay text-muc-mo">
-              <BieuTuong ten={icon} className="h-3.5 w-3.5" />
-            </span>
-          )}
-        </div>
+        <div className="nhan-muc min-w-0 truncate">{nhan}</div>
         <div
           className={`so mt-1.5 font-semibold tracking-tight whitespace-nowrap text-muc ${
-            chinh ? "text-[25px] sm:text-[30px]" : "text-[19px] sm:text-[22px]"
+            chinh ? "text-[25px] sm:text-[30px]" : "text-[22px] sm:text-[26px]"
           }`}
         >
           {giaTri}
         </div>
-        {phu && <div className="mt-1 text-[11px] text-muc-nhat">{phu}</div>}
+        {phu && <div className="mt-1 truncate text-[11px] text-muc-nhat">{phu}</div>}
         {ss && (
           <div className="mt-1.5">
             <Nhan sac={ss.sac}>{ss.nhan}</Nhan>
@@ -722,6 +744,7 @@ function HangConThieu({
   onIn,
   onXemTruoc,
   onChonHang,
+  onChonPhieu,
 }: {
   hang: DongThieu[];
   tu: string;
@@ -731,6 +754,7 @@ function HangConThieu({
   onIn?: () => void;
   onXemTruoc?: () => void;
   onChonHang?: (productId: string) => void;
+  onChonPhieu?: (id: string) => void;
 }) {
   if (hang.length === 0) {
     return (
@@ -826,7 +850,23 @@ function HangConThieu({
               <table className="w-full border-collapse text-[13px] sm:min-w-[560px]">
                 <tbody>
                   {h.phieu.map((p) => (
-                    <tr key={`${h.productId}-${p.id}`} className="[&>td]:py-1">
+                    <tr
+                      key={`${h.productId}-${p.id}`}
+                      role={onChonPhieu ? "button" : undefined}
+                      tabIndex={onChonPhieu ? 0 : undefined}
+                      onClick={() => onChonPhieu?.(p.id)}
+                      onKeyDown={(e) => {
+                        if (!onChonPhieu) return;
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          onChonPhieu(p.id);
+                        }
+                      }}
+                      title={onChonPhieu ? "Bấm để xem chi tiết phiếu, bù hàng hoặc chỉnh sửa" : undefined}
+                      className={`[&>td]:py-1 ${
+                        onChonPhieu ? "cursor-pointer transition-colors hover:bg-giay/70" : ""
+                      }`}
+                    >
                       <td className="so w-28 text-[11.5px] text-muc sm:w-32">{p.soPhieu}</td>
                       <td className="hidden w-24 font-mono text-[10.5px] text-muc-mo sm:table-cell">{ngayVN(p.ngay)}</td>
                       <td className="text-muc-nhat">{p.hoTen}</td>
@@ -1083,16 +1123,13 @@ function TheNhanh({
   const noiDung = (
     <>
       <div className="flex items-center gap-2">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm border border-ke bg-giay text-muc-mo">
-          <BieuTuong ten={icon} className="h-3.5 w-3.5" />
-        </span>
-        <span className="nhan-muc">{nhan}</span>
+        <BieuTuong ten={icon} className="h-3.5 w-3.5 shrink-0 text-muc-mo" />
+        <span className="nhan-muc truncate">{nhan}</span>
       </div>
       <div className="mt-1.5">{children}</div>
     </>
   );
-  const lop =
-    "rounded-lg border border-ke bg-giay-cao px-3 py-2.5 text-left shadow-xs transition-colors";
+  const lop = "rounded-lg border border-ke bg-giay-cao px-3 py-2.5 text-left shadow-xs transition-colors";
   if (!onClick) return <div className={lop}>{noiDung}</div>;
   return (
     <button
@@ -1121,10 +1158,14 @@ function HopChiTietHang({
   hang,
   dungTien,
   dong,
+  onChonPhieu,
+  khoaEsc = false,
 }: {
   hang: HangBaoCao;
   dungTien: boolean;
   dong: () => void;
+  onChonPhieu?: (id: string) => void;
+  khoaEsc?: boolean;
 }) {
   return (
     <HopThoai
@@ -1132,6 +1173,7 @@ function HopChiTietHang({
       dong={dong}
       tieuDe="Chi tiết mặt hàng"
       rong="max-w-3xl"
+      khoaEsc={khoaEsc}
       chanTrang={<Nut onClick={dong}>Đóng</Nut>}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1176,7 +1218,20 @@ function HopChiTietHang({
             {hang.phieu.map((p) => (
               <tr
                 key={`${p.id}-${p.soPhieu}`}
-                className="[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5"
+                role={onChonPhieu ? "button" : undefined}
+                tabIndex={onChonPhieu ? 0 : undefined}
+                onClick={() => onChonPhieu?.(p.id)}
+                onKeyDown={(e) => {
+                  if (!onChonPhieu) return;
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onChonPhieu(p.id);
+                  }
+                }}
+                title={onChonPhieu ? "Bấm để xem chi tiết phiếu, bù hàng hoặc chỉnh sửa" : undefined}
+                className={`[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5 ${
+                  onChonPhieu ? "cursor-pointer transition-colors hover:bg-giay/70" : ""
+                }`}
               >
                 <td className="so whitespace-nowrap text-[11px] text-muc-nhat">{ngayVN(p.ngay)}</td>
                 <td className="so text-[10.5px] text-muc-nhat">{p.soPhieu}</td>
@@ -1204,10 +1259,14 @@ function HopChiTietCanPham({
   canPham,
   dungTien,
   dong,
+  onChonPhieu,
+  khoaEsc = false,
 }: {
   canPham: CanPhamBaoCao;
   dungTien: boolean;
   dong: () => void;
+  onChonPhieu?: (id: string) => void;
+  khoaEsc?: boolean;
 }) {
   const chuDau = canPham.hoTen
     .trim()
@@ -1222,6 +1281,7 @@ function HopChiTietCanPham({
       dong={dong}
       tieuDe="Chi tiết can phạm"
       rong="max-w-4xl"
+      khoaEsc={khoaEsc}
       chanTrang={<Nut onClick={dong}>Đóng</Nut>}
     >
       <div className="max-h-[72vh] space-y-4 overflow-y-auto pr-1">
@@ -1295,7 +1355,7 @@ function HopChiTietCanPham({
             <h4 className="font-serif text-[15px] font-semibold text-muc">Phiếu đã mua</h4>
             <span className="so text-[10px] text-muc-mo">{so(canPham.phieu.length)} phiếu</span>
           </div>
-          <BangPhieuTomTat phieu={canPham.phieu} dungTien={dungTien} />
+          <BangPhieuTomTat phieu={canPham.phieu} dungTien={dungTien} onChonPhieu={onChonPhieu} />
         </div>
       </div>
     </HopThoai>
@@ -1306,10 +1366,14 @@ function HopChiTietNgay({
   ngay,
   dungTien,
   dong,
+  onChonPhieu,
+  khoaEsc = false,
 }: {
   ngay: NgayBaoCao;
   dungTien: boolean;
   dong: () => void;
+  onChonPhieu?: (id: string) => void;
+  khoaEsc?: boolean;
 }) {
   const soNguoi = new Set(ngay.phieu.map((p) => p.hoTen.trim().toLowerCase())).size;
   return (
@@ -1318,6 +1382,7 @@ function HopChiTietNgay({
       dong={dong}
       tieuDe={`Chi tiết ngày ${ngayVN(ngay.ngay)}`}
       rong="max-w-4xl"
+      khoaEsc={khoaEsc}
       chanTrang={<Nut onClick={dong}>Đóng</Nut>}
     >
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -1333,13 +1398,21 @@ function HopChiTietNgay({
             Bấm Đóng để quay lại báo cáo
           </span>
         </div>
-        <BangPhieuTomTat phieu={ngay.phieu} dungTien={dungTien} />
+        <BangPhieuTomTat phieu={ngay.phieu} dungTien={dungTien} onChonPhieu={onChonPhieu} />
       </div>
     </HopThoai>
   );
 }
 
-function BangPhieuTomTat({ phieu, dungTien }: { phieu: PhieuTomTat[]; dungTien: boolean }) {
+function BangPhieuTomTat({
+  phieu,
+  dungTien,
+  onChonPhieu,
+}: {
+  phieu: PhieuTomTat[];
+  dungTien: boolean;
+  onChonPhieu?: (id: string) => void;
+}) {
   if (phieu.length === 0) {
     return (
       <div className="rounded-sm border border-dashed border-ke-dam px-3 py-6 text-center font-mono text-[10.5px] tracking-[0.02em] text-muc-mo">
@@ -1363,7 +1436,23 @@ function BangPhieuTomTat({ phieu, dungTien }: { phieu: PhieuTomTat[]; dungTien: 
         </thead>
         <tbody>
           {phieu.map((p) => (
-            <tr key={p.id} className="[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5">
+            <tr
+              key={p.id}
+              role={onChonPhieu ? "button" : undefined}
+              tabIndex={onChonPhieu ? 0 : undefined}
+              onClick={() => onChonPhieu?.(p.id)}
+              onKeyDown={(e) => {
+                if (!onChonPhieu) return;
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onChonPhieu(p.id);
+                }
+              }}
+              title={onChonPhieu ? "Bấm để xem chi tiết phiếu, bù hàng hoặc chỉnh sửa" : undefined}
+              className={`[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5 ${
+                onChonPhieu ? "cursor-pointer transition-colors hover:bg-giay/70" : ""
+              }`}
+            >
               <td className="so whitespace-nowrap text-[11px] text-muc-nhat">{ngayVN(p.ngay)}</td>
               <td className="so text-[10.5px] text-muc-nhat">{p.soPhieu}</td>
               <td>
