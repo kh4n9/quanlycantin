@@ -6,6 +6,7 @@ import { homNay, ngayVN, so } from "@/lib/format";
 import { conThieu, daBu } from "@/lib/thieu-hang";
 import type { Order } from "@/lib/types";
 import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, ONhan, OText } from "./ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
 type CheDo = "thieu" | "bu";
 
@@ -205,29 +206,29 @@ export function HopThieuHang({
         )}
 
         <div className="mem-cuon max-h-[42vh] overflow-auto rounded-sm border border-ke">
-          <table className="w-full min-w-[620px] border-collapse text-sm">
-            <thead className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-              <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
-                <th className="text-left">Mặt hàng</th>
-                <th className="w-16">ĐVT</th>
-                <th className="w-20 text-center">Trên phiếu</th>
-                <th className="w-20 text-center">Đã bù</th>
-                <th className="w-20 text-center">Còn thiếu</th>
-                <th className="w-32 text-center">{cheDo === "thieu" ? "Ghi thiếu" : "Bù lần này"}</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="w-full min-w-[620px] border-collapse text-sm">
+            <TableHeader className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+              <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
+                <TableHead className="text-left">Mặt hàng</TableHead>
+                <TableHead className="w-16">ĐVT</TableHead>
+                <TableHead className="w-20 text-center">Trên phiếu</TableHead>
+                <TableHead className="w-20 text-center">Đã bù</TableHead>
+                <TableHead className="w-20 text-center">Còn thiếu</TableHead>
+                <TableHead className="w-32 text-center">{cheDo === "thieu" ? "Ghi thiếu" : "Bù lần này"}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {phieu.items.map((i) => {
                 const con = conThieu(i);
                 // Khi bù hàng chỉ hiện những mặt hàng còn thiếu
                 if (cheDo === "bu" && con <= 0) return null;
                 return (
-                  <tr key={i.productId} className="[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5">
-                    <td className="font-medium text-muc">{i.ten}</td>
-                    <td className="text-center text-[12px] text-muc-nhat">{i.donViTinh}</td>
-                    <td className="so text-center text-[12.5px] text-muc-nhat">{so(i.soLuong)}</td>
-                    <td className="so text-center text-[12.5px] text-muc-nhat">{daBu(i) || "—"}</td>
-                    <td className="text-center">
+                  <TableRow key={i.productId} className="[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5">
+                    <TableCell className="font-medium text-muc">{i.ten}</TableCell>
+                    <TableCell className="text-center text-[12px] text-muc-nhat">{i.donViTinh}</TableCell>
+                    <TableCell className="so text-center text-[12.5px] text-muc-nhat">{so(i.soLuong)}</TableCell>
+                    <TableCell className="so text-center text-[12.5px] text-muc-nhat">{daBu(i) || "—"}</TableCell>
+                    <TableCell className="text-center">
                       <span
                         className={
                           con > 0
@@ -237,8 +238,8 @@ export function HopThieuHang({
                       >
                         {con || "—"}
                       </span>
-                    </td>
-                    <td className="text-center">
+                    </TableCell>
+                    <TableCell className="text-center">
                       {cheDo === "thieu" ? (
                         <input
                           type="number"
@@ -261,12 +262,12 @@ export function HopThieuHang({
                           className="h-8 w-20 rounded-sm border border-ke-dam bg-white px-2 text-center font-mono text-[12.5px] text-muc outline-none placeholder:text-muc-mo focus:border-muc"
                         />
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
 
         {cheDo === "bu" && coGiDeBu && (

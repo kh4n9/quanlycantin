@@ -18,6 +18,14 @@ import { Logo } from "./logo";
 import { PhieuInProvider, useInPhieu } from "./print";
 import { useHienDien } from "@/lib/use-hien-dien";
 import { bao, BieuTuong, HopThongBao, Nut, Trong } from "./ui";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Khoa = "ban" | "phieu" | "kiem" | "mathang" | "canpham" | "baocao" | "nhatky" | "taikhoan" | "cai";
 
@@ -295,22 +303,36 @@ function Khung() {
 
             {/* Thao tác nhanh cho màn hình nhỏ / split view (< lg) */}
             <div className="flex items-center gap-1 lg:hidden">
-              <button
-                onClick={() => setDoiMatKhau(true)}
-                className="rounded-md p-1.5 text-giay/50 transition hover:bg-white/8 hover:text-giay"
-                title="Đổi mật khẩu"
-                aria-label="Đổi mật khẩu"
-              >
-                <BieuTuong ten="khoa" className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => void dangXuat()}
-                className="rounded-md p-1.5 text-giay/50 transition hover:bg-white/8 hover:text-giay"
-                title="Đăng xuất"
-                aria-label="Đăng xuất"
-              >
-                <BieuTuong ten="xuat" className="h-4 w-4" />
-              </button>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <button
+                      type="button"
+                      onClick={() => setDoiMatKhau(true)}
+                      className="rounded-md p-1.5 text-giay/50 transition hover:bg-white/8 hover:text-giay"
+                      aria-label="Đổi mật khẩu"
+                    />
+                  }
+                >
+                  <BieuTuong ten="khoa" className="h-4 w-4" />
+                </TooltipTrigger>
+                <TooltipContent>Đổi mật khẩu</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <button
+                      type="button"
+                      onClick={() => void dangXuat()}
+                      className="rounded-md p-1.5 text-giay/50 transition hover:bg-white/8 hover:text-giay"
+                      aria-label="Đăng xuất"
+                    />
+                  }
+                >
+                  <BieuTuong ten="xuat" className="h-4 w-4" />
+                </TooltipTrigger>
+                <TooltipContent>Đăng xuất</TooltipContent>
+              </Tooltip>
             </div>
           </div>
 
@@ -372,37 +394,61 @@ function Khung() {
           </nav>
 
           <div className="hidden flex-col gap-1 border-t border-white/10 px-2.5 py-3 lg:flex">
-            {!thuGonSidebar && (
-              <div className="mb-1 flex items-center gap-2.5 rounded-sm bg-white/5 px-2.5 py-2">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-giay/25 font-mono text-[10.5px] font-semibold tracking-[0.02em] text-giay-cao">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <button
+                    type="button"
+                    aria-label="Tài khoản và thao tác"
+                    className={`flex items-center gap-2.5 rounded-sm text-left transition-colors hover:bg-white/8 ${
+                      thuGonSidebar ? "justify-center px-1 py-2" : "bg-white/5 px-2.5 py-2"
+                    }`}
+                  />
+                }
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-giay/25 font-mono text-[10.5px] font-semibold tracking-[0.02em] text-giay-cao">
                   {chuDau || "?"}
+                </span>
+                {!thuGonSidebar && (
+                  <>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[12px] font-semibold text-giay-cao">{nguoiDung.hoTen}</span>
+                      <span className="block truncate font-mono text-[9.5px] tracking-[0.12em] text-giay/55 uppercase">
+                        {vaiTro}
+                      </span>
+                    </span>
+                    <BieuTuong ten="xuong" className="h-3.5 w-3.5 shrink-0 text-giay/40" />
+                  </>
+                )}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                side="top"
+                align="start"
+                sideOffset={6}
+                className="w-60 border-ke bg-giay-cao p-1 text-muc shadow-noi"
+              >
+                <div className="px-1.5 py-1.5">
+                  <div className="truncate text-[12.5px] font-semibold text-muc">{nguoiDung.hoTen}</div>
+                  <div className="truncate font-mono text-[9.5px] tracking-[0.14em] text-muc-mo uppercase">{vaiTro}</div>
                 </div>
-                <div className="min-w-0">
-                  <div className="truncate text-[12px] font-semibold text-giay-cao">{nguoiDung.hoTen}</div>
-                  <div className="truncate font-mono text-[9.5px] tracking-[0.12em] text-giay/55 uppercase">{vaiTro}</div>
-                </div>
-              </div>
-            )}
-            <button
-              onClick={() => setDoiMatKhau(true)}
-              title="Đổi mật khẩu"
-              className={`flex items-center gap-2 rounded-md py-2 text-left text-[12.5px] text-giay/55 transition-colors hover:bg-white/6 hover:text-giay ${
-                thuGonSidebar ? "justify-center px-1" : "px-2.5"
-              }`}
-            >
-              <BieuTuong ten="khoa" className="h-4 w-4 shrink-0" />
-              {!thuGonSidebar && <span>Đổi mật khẩu</span>}
-            </button>
-            <button
-              onClick={() => void dangXuat()}
-              title="Đăng xuất"
-              className={`flex items-center gap-2 rounded-sm py-2 text-left text-[12.5px] text-giay/55 transition-colors hover:bg-dau/20 hover:text-giay ${
-                thuGonSidebar ? "justify-center px-1" : "px-2.5"
-              }`}
-            >
-              <BieuTuong ten="xuat" className="h-4 w-4 shrink-0" />
-              {!thuGonSidebar && <span>Đăng xuất</span>}
-            </button>
+                <Separator className="my-1 bg-ke" />
+                <DropdownMenuItem
+                  onClick={() => setDoiMatKhau(true)}
+                  className="gap-2 px-1.5 py-1.5 text-[13px] focus:bg-muc/8 focus:text-muc"
+                >
+                  <BieuTuong ten="khoa" className="h-4 w-4 shrink-0" />
+                  Đổi mật khẩu
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => void dangXuat()}
+                  className="gap-2 px-1.5 py-1.5 text-[13px] focus:bg-dau/10 focus:text-dau"
+                >
+                  <BieuTuong ten="xuat" className="h-4 w-4 shrink-0" />
+                  Đăng xuất
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </aside>
 
@@ -475,10 +521,12 @@ function Khung() {
 
 export function AppShell() {
   return (
-    <StoreProvider>
-      <PhieuInProvider>
-        <Khung />
-      </PhieuInProvider>
-    </StoreProvider>
+    <TooltipProvider>
+      <StoreProvider>
+        <PhieuInProvider>
+          <Khung />
+        </PhieuInProvider>
+      </StoreProvider>
+    </TooltipProvider>
   );
 }

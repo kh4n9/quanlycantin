@@ -20,6 +20,7 @@ import type { NguoiDungCongKhai } from "@/lib/types";
 import { thoiGianTruoc } from "@/lib/format";
 import { useNap } from "@/lib/use-nap";
 import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, ONhan, OText, Trong } from "./ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
 /** Tín hiệu cũ hơn khoảng này được coi là đã rời trang. */
 const HAN_HIEN_DIEN_MS = 2 * 60 * 1000;
@@ -436,49 +437,49 @@ export function ManTaiKhoan() {
       </div>
 
       <div className="mem-cuon hidden max-h-[66vh] overflow-auto sm:block">
-        <table className="w-full min-w-[1080px] table-fixed border-collapse text-sm">
-          <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-            <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
-              <th className="w-[140px]">Tên đăng nhập</th>
-              <th className="w-[160px]">Họ tên</th>
-              <th>Quyền được cấp</th>
-              <th className="w-[120px]">Trạng thái</th>
-              <th className="w-[180px]">Đang truy cập</th>
-              <th className="w-[140px]">Đăng nhập cuối</th>
-              <th className="w-[116px]" />
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="w-full min-w-[1080px] table-fixed border-collapse text-sm">
+          <TableHeader className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+            <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
+              <TableHead className="w-[140px]">Tên đăng nhập</TableHead>
+              <TableHead className="w-[160px]">Họ tên</TableHead>
+              <TableHead>Quyền được cấp</TableHead>
+              <TableHead className="w-[120px]">Trạng thái</TableHead>
+              <TableHead className="w-[180px]">Đang truy cập</TableHead>
+              <TableHead className="w-[140px]">Đăng nhập cuối</TableHead>
+              <TableHead className="w-[116px]" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {ds.length === 0 && (
-              <tr>
-                <td colSpan={7}>
+              <TableRow>
+                <TableCell colSpan={7}>
                   <Trong tieuDe={dangTai ? "Đang tải…" : "Chưa có tài khoản nào"} />
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
             {ds.map((nd) => (
-              <tr
+              <TableRow
                 key={nd.id}
                 onClick={() => setChiTiet(nd)}
                 className={`cursor-pointer transition-colors hover:bg-giay/60 [&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-2.5 [&>td]:align-middle ${
                   nd.dangHoatDong ? "" : "opacity-55"
                 }`}
               >
-                <td>
+                <TableCell>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="so text-[12px] font-medium text-muc">{nd.tenDangNhap}</span>
                     {nd.id === toi?.id && <Nhan sac="xanh">bạn</Nhan>}
                   </div>
-                </td>
-                <td>
+                </TableCell>
+                <TableCell>
                   <div className="font-semibold text-muc">{nd.hoTen}</div>
                   {nd.phaiDoiMatKhau && (
                     <div className="mt-0.5 font-mono text-[9.5px] tracking-[0.02em] text-moc uppercase">
                       chưa đổi mật khẩu
                     </div>
                   )}
-                </td>
-                <td className="align-top">
+                </TableCell>
+                <TableCell className="align-top">
                   <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                     <NhanVaiTro quyen={nd.quyen} />
                     <span className="so text-[9.5px] text-muc-mo">
@@ -486,8 +487,8 @@ export function ManTaiKhoan() {
                     </span>
                   </div>
                   <QuyenTheoNhom quyen={nd.quyen} />
-                </td>
-                <td>
+                </TableCell>
+                <TableCell>
                   <span
                     className={`inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-[10px] font-medium tracking-[0.03em] uppercase ${
                       nd.dangHoatDong
@@ -504,8 +505,8 @@ export function ManTaiKhoan() {
                       Trực tuyến
                     </div>
                   )}
-                </td>
-                <td>
+                </TableCell>
+                <TableCell>
                   {dangOnline(nd) ? (
                     <div className="text-[12px] font-semibold text-muc">{nd.trangDangXem || "Đang truy cập"}</div>
                   ) : (
@@ -517,8 +518,8 @@ export function ManTaiKhoan() {
                     {nd.lanHoatDong ? thoiGianTruoc(nd.lanHoatDong, bayGio) : "—"}
                     {nd.thietBi && <span className="text-muc-mo/70"> · {nd.thietBi}</span>}
                   </div>
-                </td>
-                <td>
+                </TableCell>
+                <TableCell>
                   {nd.lanDangNhapCuoi ? (
                     (() => {
                       const luc = new Date(nd.lanDangNhapCuoi);
@@ -532,12 +533,12 @@ export function ManTaiKhoan() {
                   ) : (
                     <span className="font-mono text-[10.5px] text-muc-mo">Chưa đăng nhập</span>
                   )}
-                </td>
-                <td>{thaoTacNd(nd)}</td>
-              </tr>
+                </TableCell>
+                <TableCell>{thaoTacNd(nd)}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* --- Thêm / sửa tài khoản --- */}

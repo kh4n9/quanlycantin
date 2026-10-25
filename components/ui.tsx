@@ -1,6 +1,57 @@
 "use client";
 
-import { useEffect, useState, type ComponentPropsWithRef, type ReactNode } from "react";
+import {
+  Children,
+  Fragment,
+  isValidElement,
+  useId,
+  type ChangeEvent,
+  type ComponentPropsWithRef,
+  type ReactNode,
+} from "react";
+import { cn } from "cn";
+import { toast } from "sonner";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Toaster } from "@/components/ui/sonner";
+import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 /* ==========================================================================
  * Bộ khối dựng giao diện của "Sổ cấp phát"
@@ -29,9 +80,16 @@ export function Nut({ kieu = "vien", co = "md", className = "", ...rest }: NutPr
   }[kieu];
   const coChu = { sm: "h-8 px-3 text-[13px]", md: "h-9 px-3.5 text-sm", lg: "h-11 px-5 text-[15px]" }[co];
   return (
-    <button
+    <Button
       {...rest}
-      className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md border font-semibold tracking-[-0.005em] whitespace-nowrap transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-muc/45 focus-visible:ring-offset-1 active:translate-y-px disabled:pointer-events-none disabled:opacity-45 ${nen} ${coChu} ${className}`}
+      variant="outline"
+      size="default"
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md border font-semibold tracking-[-0.005em] whitespace-nowrap transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-muc/45 focus-visible:ring-offset-1 active:translate-y-px disabled:pointer-events-none disabled:opacity-45",
+        nen,
+        coChu,
+        className
+      )}
     />
   );
 }
@@ -52,29 +110,126 @@ function lopONhap(className: string): string {
 }
 
 export function OText({ className = "", ...rest }: ComponentPropsWithRef<"input">) {
-  return <input {...rest} className={lopONhap(className)} />;
+  return <Input {...rest} className={cn("h-9", lopONhap(className))} />;
 }
 
-export function OChon({ className = "", children, ...rest }: ComponentPropsWithRef<"select">) {
+type LuaChon = { value: string; nhan: ReactNode; disabled?: boolean };
+
+/** Đọc các thẻ <option> để chuyển sang Select của shadcn mà không phải sửa nơi gọi. */
+function docLuaChon(children: ReactNode): LuaChon[] {
+  const ds: LuaChon[] = [];
+  Children.forEach(children, (con) => {
+    if (!isValidElement(con)) return;
+    if (con.type === Fragment) {
+      ds.push(...docLuaChon((con.props as { children?: ReactNode }).children));
+      return;
+    }
+    if (con.type === "option") {
+      const p = con.props as {
+        value?: string | number | readonly string[];
+        children?: ReactNode;
+        disabled?: boolean;
+      };
+      const value = p.value == null ? "" : String(p.value);
+      ds.push({ value, nhan: p.children ?? value, disabled: p.disabled });
+    }
+  });
+  return ds;
+}
+
+export function OChon({
+  className = "",
+  children,
+  onChange,
+  value,
+  defaultValue,
+  disabled,
+  name,
+  id,
+  required,
+  multiple,
+  "aria-label": ariaLabel,
+  title,
+}: ComponentPropsWithRef<"select">) {
+  // Trình duyệt vẫn cần select gốc cho trường hợp chọn nhiều; các màn hiện tại
+  // chỉ dùng chọn một nên nhánh này chủ yếu để giữ tương thích API.
+  if (multiple) {
+    return (
+      <select
+        className={lopONhap(className)}
+        onChange={onChange}
+        value={value}
+        defaultValue={defaultValue}
+        disabled={disabled}
+        name={name}
+        id={id}
+        required={required}
+        aria-label={ariaLabel}
+        title={title}
+        multiple
+      >
+        {children}
+      </select>
+    );
+  }
+
+  const ds = docLuaChon(children);
+  const giaTri = value == null ? undefined : String(value);
+  const macDinh = defaultValue == null ? undefined : String(defaultValue);
+
   return (
-    <select {...rest} className={lopONhap(className)}>
-      {children}
-    </select>
+    <Select
+      items={ds.map((o) => ({ value: o.value, label: o.nhan }))}
+      value={giaTri}
+      defaultValue={macDinh}
+      disabled={disabled}
+      name={name}
+      required={required}
+      onValueChange={(v) => {
+        if (!onChange) return;
+        const giaTriMoi = v == null ? "" : String(v);
+        onChange({
+          target: { value: giaTriMoi },
+          currentTarget: { value: giaTriMoi },
+        } as unknown as ChangeEvent<HTMLSelectElement>);
+      }}
+    >
+      <SelectTrigger
+        id={id}
+        aria-label={ariaLabel}
+        title={title}
+        className={cn("h-9", lopONhap(className), "data-placeholder:text-muc-mo")}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent align="start" alignItemWithTrigger={false}>
+        <SelectGroup>
+          {ds.map((o, i) => (
+            <SelectItem key={`${o.value}-${i}`} value={o.value} disabled={o.disabled}>
+              {o.nhan}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }
 
 export function OVung({ className = "", ...rest }: ComponentPropsWithRef<"textarea">) {
-  return <textarea {...rest} className={lopONhap(className)} />;
+  return <Textarea {...rest} className={lopONhap(className)} />;
 }
 
 /** Nhãn ô nhập: chữ nhỏ, in hoa, giãn — như dòng in sẵn trên phiếu giấy */
 export function ONhan({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <label
-      className={`mb-1.5 block font-mono text-[10.5px] font-medium tracking-[0.1em] text-muc-nhat uppercase ${className}`}
+    <Label
+      className={cn(
+        "mb-1.5 block font-mono text-[10.5px] font-medium tracking-[0.1em] text-muc-nhat uppercase",
+        className
+      )}
     >
       {children}
-    </label>
+    </Label>
   );
 }
 
@@ -89,33 +244,37 @@ export function OTim({
   const co = Boolean(rest.value);
   return (
     <div className={`relative ${/(^|\s)w-/.test(className) ? "" : "flex-1"} ${className}`}>
-      <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muc-mo">
-        <BieuTuong ten="tim" className="h-4 w-4" />
-      </span>
-      <input
-        type="search"
-        {...rest}
-        className="h-9 w-full rounded-md border border-ke-dam bg-white pr-8 pl-9 text-sm text-muc shadow-[inset_0_1px_2px_rgb(19_30_25/0.04)] placeholder:text-muc-mo outline-none transition focus:border-muc focus:ring-2 focus:ring-muc/20 [&::-webkit-search-cancel-button]:appearance-none"
-      />
-      {co && (
-        <button
-          type="button"
-          onClick={(e) => {
-            // Xoá chữ rồi trả focus về ô nhập, gọi đúng onChange của nơi dùng
-            const o = e.currentTarget.parentElement?.querySelector("input");
-            if (!o) return;
-            const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
-            setter?.call(o, "");
-            o.dispatchEvent(new Event("input", { bubbles: true }));
-            o.focus();
-          }}
-          className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-sm p-1 text-muc-mo transition hover:bg-muc/6 hover:text-muc"
-          aria-label="Xoá từ khoá"
-          title="Xoá từ khoá"
-        >
-          <BieuTuong ten="xoa" className="h-3.5 w-3.5" />
-        </button>
-      )}
+      <InputGroup className="h-9 rounded-md border-ke-dam bg-white shadow-[inset_0_1px_2px_rgb(19_30_25/0.04)] focus-within:border-muc focus-within:ring-2 focus-within:ring-muc/20">
+        <InputGroupAddon className="pl-3 text-muc-mo">
+          <BieuTuong ten="tim" className="h-4 w-4" />
+        </InputGroupAddon>
+        <InputGroupInput
+          type="search"
+          {...rest}
+          className="h-9 pr-8 text-sm text-muc placeholder:text-muc-mo [&::-webkit-search-cancel-button]:appearance-none"
+        />
+        {co && (
+          <InputGroupAddon align="inline-end" className="pr-1.5">
+            <InputGroupButton
+              size="icon-xs"
+              onClick={(e) => {
+                // Xoá chữ rồi trả focus về ô nhập, gọi đúng onChange của nơi dùng
+                const o = e.currentTarget.parentElement?.parentElement?.querySelector("input");
+                if (!o) return;
+                const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+                setter?.call(o, "");
+                o.dispatchEvent(new Event("input", { bubbles: true }));
+                o.focus();
+              }}
+              className="rounded-sm text-muc-mo hover:bg-muc/6 hover:text-muc"
+              aria-label="Xoá từ khoá"
+              title="Xoá từ khoá"
+            >
+              <BieuTuong ten="xoa" className="h-3.5 w-3.5" />
+            </InputGroupButton>
+          </InputGroupAddon>
+        )}
+      </InputGroup>
     </div>
   );
 }
@@ -140,28 +299,34 @@ export function OChonKhoang<T extends string>({
   className?: string;
 }) {
   return (
-    <div
-      role="group"
+    <ToggleGroup
       aria-label="Chọn nhanh khoảng ngày"
+      value={giaTri ? [giaTri] : []}
+      onValueChange={(v) => {
+        const k = v[0];
+        if (k) onDoi(k as T);
+      }}
+      spacing={2}
       className={`flex shrink-0 items-center gap-0.5 overflow-x-auto rounded-md border border-ke-dam bg-white p-0.5 shadow-xs ${className}`}
     >
       {chon.map((c) => {
         const bat = c.khoa === giaTri;
         return (
-          <button
+          <ToggleGroupItem
             key={c.khoa}
-            type="button"
-            aria-pressed={bat}
-            onClick={() => onDoi(c.khoa)}
-            className={`h-7 shrink-0 rounded-sm px-2 font-mono text-[10.5px] font-medium tracking-[0.04em] whitespace-nowrap uppercase transition-colors sm:px-2.5 ${
-              bat ? "bg-muc text-giay-cao" : "text-muc-nhat hover:bg-giay hover:text-muc"
+            value={c.khoa}
+            aria-label={c.nhan}
+            className={`h-7 min-w-0 shrink-0 rounded-sm px-2 font-mono text-[10.5px] font-medium tracking-[0.04em] whitespace-nowrap uppercase transition-colors sm:px-2.5 ${
+              bat
+                ? "border-transparent bg-muc! text-giay-cao! hover:bg-muc-dam!"
+                : "border-transparent bg-transparent text-muc-nhat hover:bg-giay hover:text-muc"
             }`}
           >
             {c.nhan}
-          </button>
+          </ToggleGroupItem>
         );
       })}
-    </div>
+    </ToggleGroup>
   );
 }
 
@@ -181,24 +346,24 @@ export function OKhoangNgay({
 }) {
   return (
     <div className="flex shrink-0 items-center gap-1.5">
-      <input
+      <Input
         type="date"
         value={tu}
         onChange={(e) => onTu(e.target.value)}
         aria-label={`${nhan} — từ ngày`}
         title="Từ ngày"
-        className="h-9 w-36 rounded-md border border-ke-dam bg-white px-2.5 font-mono text-[11.5px] text-muc shadow-xs outline-none transition focus:border-muc focus:ring-2 focus:ring-muc/20"
+        className="h-9 w-36 rounded-md border-ke-dam bg-white px-2.5 font-mono text-[11.5px] text-muc shadow-xs focus-visible:border-muc focus-visible:ring-2 focus-visible:ring-muc/20"
       />
       <span aria-hidden className="text-muc-mo">
         →
       </span>
-      <input
+      <Input
         type="date"
         value={den}
         onChange={(e) => onDen(e.target.value)}
         aria-label={`${nhan} — đến ngày`}
         title="Đến ngày"
-        className="h-9 w-36 rounded-md border border-ke-dam bg-white px-2.5 font-mono text-[11.5px] text-muc shadow-xs outline-none transition focus:border-muc focus:ring-2 focus:ring-muc/20"
+        className="h-9 w-36 rounded-md border-ke-dam bg-white px-2.5 font-mono text-[11.5px] text-muc shadow-xs focus-visible:border-muc focus-visible:ring-2 focus-visible:ring-muc/20"
       />
     </div>
   );
@@ -218,25 +383,27 @@ export function OCongTac({
   sac?: "muc" | "moc";
   title?: string;
 }) {
+  const id = useId();
   const mau =
     sac === "moc"
       ? "border-moc/45 bg-moc-nhat text-moc"
       : "border-muc/35 bg-muc/6 text-muc";
   return (
-    <label
+    <Label
+      htmlFor={id}
       title={title}
-      className={`flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md border px-2.5 text-[13px] transition select-none ${
+      className={`flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md border px-2.5 text-[13px] font-normal transition select-none ${
         bat ? `${mau} font-medium` : "border-ke-dam bg-white text-muc-nhat shadow-xs hover:border-muc/40 hover:text-muc"
       }`}
     >
-      <input
-        type="checkbox"
+      <Checkbox
+        id={id}
         checked={bat}
-        onChange={(e) => onDoi(e.target.checked)}
-        className={`h-4 w-4 ${sac === "moc" ? "accent-moc" : "accent-muc"}`}
+        onCheckedChange={(v) => onDoi(Boolean(v))}
+        className={sac === "moc" ? "data-checked:border-moc data-checked:bg-moc" : ""}
       />
       {children}
-    </label>
+    </Label>
   );
 }
 
@@ -258,11 +425,15 @@ export function Nhan({
     lam: "bg-lam-nhat text-lam border-lam/25",
   }[sac];
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono text-[10px] font-medium tracking-[0.04em] whitespace-nowrap ${mau}`}
+    <Badge
+      variant="outline"
+      className={cn(
+        "inline-flex h-auto items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono text-[10px] font-medium tracking-[0.04em] whitespace-nowrap",
+        mau
+      )}
     >
       {children}
-    </span>
+    </Badge>
   );
 }
 
@@ -284,12 +455,16 @@ export function NhanCham({
   }[sac];
   const cham = { ngoc: "bg-ngoc", moc: "bg-moc", dau: "bg-dau", xam: "bg-ke-dam" }[sac];
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 font-mono text-[9.5px] font-medium tracking-[0.05em] whitespace-nowrap uppercase ${mau}`}
+    <Badge
+      variant="outline"
+      className={cn(
+        "inline-flex h-auto items-center gap-1.5 rounded-sm border px-1.5 py-0.5 font-mono text-[9.5px] font-medium tracking-[0.05em] whitespace-nowrap uppercase",
+        mau
+      )}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${cham} ${mo ? "opacity-40" : ""}`} aria-hidden />
       {children}
-    </span>
+    </Badge>
   );
 }
 
@@ -316,7 +491,12 @@ export function The({
   thanClassName?: string;
 }) {
   return (
-    <section className={`overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the ${className}`}>
+    <Card
+      className={cn(
+        "gap-0 overflow-hidden rounded-lg border border-ke bg-giay-cao py-0 text-muc shadow-the ring-0",
+        className
+      )}
+    >
       {(tieuDe || hanhDong) && (
         <header className="khia flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3">
           <div className="flex min-w-0 items-center gap-2.5">
@@ -334,7 +514,7 @@ export function The({
         </header>
       )}
       <div className={thanClassName}>{children}</div>
-    </section>
+    </Card>
   );
 }
 
@@ -379,7 +559,7 @@ export function TheSo({
     lam: "text-lam",
   }[sac];
   return (
-    <div className="relative overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
+    <Card className="relative gap-0 overflow-hidden rounded-lg border border-ke bg-giay-cao py-0 text-muc shadow-the ring-0">
       {icon && (
         <BieuTuong
           ten={icon}
@@ -395,7 +575,7 @@ export function TheSo({
         </div>
         {phu && <div className="mt-1.5 truncate text-[11.5px] text-muc-nhat">{phu}</div>}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -419,102 +599,92 @@ export function HopThoai({
   /** Giữ Escape cho hộp thoại con đang mở trên hộp thoại này. */
   khoaEsc?: boolean;
 }) {
-  useEffect(() => {
-    if (!mo) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !khoaEsc) dong();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [mo, dong, khoaEsc]);
-
-  if (!mo) return null;
   return (
-    <div className="khong-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-muc/45 p-4 pt-12 backdrop-blur-[3px]">
-      <div
-        role="dialog"
-        aria-modal="true"
-        className={`hop-noi w-full ${rong} overflow-hidden rounded-lg border border-ke-dam bg-giay-cao shadow-noi`}
+    <Dialog
+      open={mo}
+      onOpenChange={(open, details) => {
+        if (open) return;
+        if (khoaEsc && details.reason === "escape-key") {
+          details.cancel();
+          return;
+        }
+        dong();
+      }}
+    >
+      <DialogContent
+        showCloseButton={false}
+        className={cn(
+          // `grid-cols-[minmax(0,1fr)]`: cột co được theo bề rộng hộp thoại, nhờ vậy bảng
+          // rộng bên trong tự cuộn trong khung `.mem-cuon` thay vì đẩy cả hộp thoại tràn ngang.
+          "top-12 grid-cols-[minmax(0,1fr)] max-h-[calc(100dvh-3rem)] translate-y-0 gap-0 overflow-y-auto rounded-lg border border-ke-dam bg-giay-cao p-0 shadow-noi",
+          rong
+        )}
       >
-        <header className="khia flex items-center justify-between px-5 py-3.5">
-          <h3 className="font-serif text-[16px] leading-tight font-semibold tracking-[-0.01em] text-muc">{tieuDe}</h3>
-          <button
-            onClick={dong}
-            className="rounded-md p-1.5 text-muc-mo transition hover:bg-muc/6 hover:text-muc"
-            aria-label="Đóng"
+        <DialogHeader className="khia flex flex-row items-center justify-between gap-3 px-5 py-3.5">
+          <DialogTitle className="font-serif text-[16px] leading-tight font-semibold tracking-[-0.01em] text-muc">
+            {tieuDe}
+          </DialogTitle>
+          <DialogClose
+            render={
+              <button
+                type="button"
+                className="rounded-md p-1.5 text-muc-mo transition hover:bg-muc/6 hover:text-muc"
+                aria-label="Đóng"
+              />
+            }
           >
             <BieuTuong ten="dong" className="h-4 w-4" />
-          </button>
-        </header>
+          </DialogClose>
+        </DialogHeader>
+        <DialogDescription className="sr-only">
+          {typeof tieuDe === "string" ? tieuDe : "Hộp thoại"}
+        </DialogDescription>
         <div className="px-5 py-4">{children}</div>
         {chanTrang && (
-          <footer className="flex items-center justify-end gap-2 border-t border-ke bg-giay px-5 py-3">{chanTrang}</footer>
+          <DialogFooter className="mx-0 mb-0 flex-row items-center justify-end gap-2 rounded-none border-t border-ke bg-giay px-5 py-3">
+            {chanTrang}
+          </DialogFooter>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 /* ---------------------------- Thông báo ---------------------------- */
 
-type TinNhan = { id: number; noiDung: string; sac: "luc" | "do" | "xanh" };
-
-let phatTin: ((t: Omit<TinNhan, "id">) => void) | null = null;
+type TinNhan = { noiDung: string; sac: "luc" | "do" | "xanh" };
 
 export function bao(msg: string, sac: TinNhan["sac"] = "luc") {
-  phatTin?.({ noiDung: msg, sac });
+  if (sac === "do") toast.error(msg);
+  else if (sac === "xanh") toast.info(msg);
+  else toast.success(msg);
 }
 
 export function baoLoi(msg: string) {
-  phatTin?.({ noiDung: msg, sac: "do" });
+  toast.error(msg);
 }
 
 export function HopThongBao() {
-  const [ds, setDs] = useState<TinNhan[]>([]);
-
-  useEffect(() => {
-    phatTin = (t) => {
-      const id = Date.now() + Math.random();
-      setDs((cu) => [...cu, { ...t, id }]);
-      setTimeout(() => setDs((cu) => cu.filter((x) => x.id !== id)), 3600);
-    };
-    return () => {
-      phatTin = null;
-    };
-  }, []);
-
-  const mau = {
-    luc: "border-l-ngoc",
-    do: "border-l-dau",
-    xanh: "border-l-muc",
-  };
-  const icon = { luc: "check", do: "canh", xanh: "check" } as const;
-  const iconMau = { luc: "text-ngoc", do: "text-dau", xanh: "text-muc" };
-  const nhan = { luc: "Đã lưu", do: "Chưa làm được", xanh: "Thông báo" };
-
   return (
-    <div className="khong-in pointer-events-none fixed right-4 bottom-4 z-[60] flex w-[min(23rem,calc(100vw-2rem))] flex-col gap-2">
-      {ds.map((t) => (
-        <div
-          key={t.id}
-          role="status"
-          className={`truot-vao pointer-events-auto flex items-start gap-2.5 rounded-md border border-ke border-l-[3px] bg-giay-cao px-3.5 py-2.5 shadow-noi ${mau[t.sac]}`}
-        >
-          <BieuTuong ten={icon[t.sac]} className={`mt-0.5 h-4 w-4 shrink-0 ${iconMau[t.sac]}`} />
-          <div className="min-w-0 flex-1">
-            <div className="font-mono text-[9px] tracking-[0.14em] text-muc-mo uppercase">{nhan[t.sac]}</div>
-            <div className="mt-0.5 text-[13px] leading-snug font-medium text-muc">{t.noiDung}</div>
-          </div>
-          <button
-            onClick={() => setDs((cu) => cu.filter((x) => x.id !== t.id))}
-            className="pointer-events-auto -mr-1 rounded-sm p-1 text-muc-mo transition hover:bg-muc/6 hover:text-muc"
-            aria-label="Đóng thông báo"
-          >
-            <BieuTuong ten="dong" className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      ))}
-    </div>
+    <Toaster
+      position="bottom-right"
+      closeButton
+      toastOptions={{
+        classNames: {
+          toast: "khong-in gap-2.5 rounded-md border border-ke border-l-[3px] bg-giay-cao font-sans text-muc shadow-noi",
+          title: "font-medium text-muc",
+          description: "text-muc-nhat",
+          icon: "text-muc",
+          actionButton: "bg-muc text-giay-cao",
+          cancelButton: "border-ke-dam bg-giay text-muc",
+          success: "border-l-ngoc [&_[data-icon]]:text-ngoc",
+          error: "border-l-dau [&_[data-icon]]:text-dau",
+          info: "border-l-muc [&_[data-icon]]:text-muc",
+          warning: "border-l-moc [&_[data-icon]]:text-moc",
+          loading: "border-l-ke-dam [&_[data-icon]]:text-muc-mo",
+        },
+      }}
+    />
   );
 }
 
@@ -532,14 +702,16 @@ export function Trong({
   icon?: string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2.5 px-6 py-14 text-center">
-      <div className="rounded-lg border border-dashed border-ke-dam bg-giay p-3.5 text-muc-mo">
+    <Empty className="gap-2.5 rounded-none border-0 px-6 py-14">
+      <EmptyMedia className="rounded-lg border border-dashed border-ke-dam bg-giay p-3.5 text-muc-mo">
         <BieuTuong ten={icon} className="h-6 w-6" />
-      </div>
-      <p className="font-serif text-[15px] font-semibold text-muc">{tieuDe}</p>
-      {moTa && <p className="max-w-md text-[13px] leading-relaxed text-muc-nhat">{moTa}</p>}
-      {hanhDong && <div className="mt-1.5">{hanhDong}</div>}
-    </div>
+      </EmptyMedia>
+      <EmptyHeader className="max-w-md gap-2">
+        <EmptyTitle className="font-serif text-[15px] font-semibold text-muc">{tieuDe}</EmptyTitle>
+        {moTa && <EmptyDescription className="text-[13px] leading-relaxed text-muc-nhat">{moTa}</EmptyDescription>}
+      </EmptyHeader>
+      {hanhDong && <EmptyContent className="mt-1.5">{hanhDong}</EmptyContent>}
+    </Empty>
   );
 }
 

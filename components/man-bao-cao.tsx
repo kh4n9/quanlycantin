@@ -10,7 +10,8 @@ import type { KieuInThieu } from "@/lib/types";
 import { useDaMount, useNap } from "@/lib/use-nap";
 import { PhieuThieu } from "./in-thieu";
 import { homNay, ngayVN, so, tien } from "@/lib/format";
-import { baoLoi, BieuTuong, HopThoai, Nhan, Nut, OChonKhoang, OKhoangNgay, Trong } from "./ui";
+import { baoLoi, BieuTuong, HopThoai, Nhan, Nut, OChon, OChonKhoang, OKhoangNgay, Trong } from "./ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { HopChiTietPhieu } from "./hop-chi-tiet-phieu";
 
 /** Màu duy nhất cho chuỗi dữ liệu — đã kiểm bằng scripts/validate_palette.js */
@@ -796,18 +797,19 @@ function HangConThieu({
           {onIn && (
             <>
               <label className="text-[12px] text-muc-nhat">Kiểu in</label>
-              <select
+              <OChon
                 value={kieuIn}
                 onChange={(e) => setKieuIn(e.target.value as KieuInThieu)}
+                aria-label="Kiểu in"
                 title={DS_KIEU_IN.find((k) => k.khoa === kieuIn)?.moTa}
-                className="h-8 rounded-md border border-ke-dam bg-giay-cao px-2 text-[13px] shadow-xs outline-none transition focus:border-muc/60"
+                className="h-8 w-fit rounded-md border-ke-dam bg-giay-cao px-2 text-[13px] shadow-xs focus:border-muc/60"
               >
                 {DS_KIEU_IN.map((k) => (
                   <option key={k.khoa} value={k.khoa}>
                     {k.nhan}
                   </option>
                 ))}
-              </select>
+              </OChon>
               <Nut co="sm" onClick={onXemTruoc} title="Xem trước rồi mới in">
                 Xem trước
               </Nut>
@@ -847,10 +849,10 @@ function HangConThieu({
             </div>
 
             <div className="mem-cuon mt-1.5 overflow-x-auto">
-              <table className="w-full border-collapse text-[13px] sm:min-w-[560px]">
-                <tbody>
+              <Table className="w-full border-collapse text-[13px] sm:min-w-[560px]">
+                <TableBody>
                   {h.phieu.map((p) => (
-                    <tr
+                    <TableRow
                       key={`${h.productId}-${p.id}`}
                       role={onChonPhieu ? "button" : undefined}
                       tabIndex={onChonPhieu ? 0 : undefined}
@@ -867,17 +869,17 @@ function HangConThieu({
                         onChonPhieu ? "cursor-pointer transition-colors hover:bg-giay/70" : ""
                       }`}
                     >
-                      <td className="so w-28 text-[11.5px] text-muc sm:w-32">{p.soPhieu}</td>
-                      <td className="hidden w-24 font-mono text-[10.5px] text-muc-mo sm:table-cell">{ngayVN(p.ngay)}</td>
-                      <td className="text-muc-nhat">{p.hoTen}</td>
-                      <td className="hidden w-24 text-muc-nhat sm:table-cell">{p.buongGiam || "—"}</td>
-                      <td className="so w-20 text-right font-semibold text-moc sm:w-24">
+                      <TableCell className="so w-28 text-[11.5px] text-muc sm:w-32">{p.soPhieu}</TableCell>
+                      <TableCell className="hidden w-24 font-mono text-[10.5px] text-muc-mo sm:table-cell">{ngayVN(p.ngay)}</TableCell>
+                      <TableCell className="text-muc-nhat">{p.hoTen}</TableCell>
+                      <TableCell className="hidden w-24 text-muc-nhat sm:table-cell">{p.buongGiam || "—"}</TableCell>
+                      <TableCell className="so w-20 text-right font-semibold text-moc sm:w-24">
                         thiếu {so(p.conThieu)}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </div>
         ))}
@@ -938,19 +940,19 @@ function BangXepHang({
         </span>
       </header>
       <div className="mem-cuon overflow-x-auto">
-        <table className="w-full border-collapse text-sm sm:min-w-[520px]">
-          <thead className="bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase">
-            <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
-              <th className="hidden w-10 sm:table-cell">#</th>
-              <th className="hidden w-32 sm:table-cell">Mã</th>
-              <th>Tên</th>
-              <th className="w-20 text-right sm:w-28">{cot}</th>
-              <th className="w-24 text-right sm:w-56">{nhanGiaTri}</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="w-full border-collapse text-sm sm:min-w-[520px]">
+          <TableHeader className="bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase">
+            <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
+              <TableHead className="hidden w-10 sm:table-cell">#</TableHead>
+              <TableHead className="hidden w-32 sm:table-cell">Mã</TableHead>
+              <TableHead>Tên</TableHead>
+              <TableHead className="w-20 text-right sm:w-28">{cot}</TableHead>
+              <TableHead className="w-24 text-right sm:w-56">{nhanGiaTri}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {hienThi.map((h, i) => (
-              <tr
+              <TableRow
                 key={h.id}
                 onClick={() => mo(h)}
                 title={onChon ? "Bấm để xem chi tiết" : undefined}
@@ -958,18 +960,18 @@ function BangXepHang({
                   onChon ? "cursor-pointer transition-colors hover:bg-giay/60" : ""
                 }`}
               >
-                <td className="hidden text-center font-mono text-[10.5px] text-muc-mo sm:table-cell">
+                <TableCell className="hidden text-center font-mono text-[10.5px] text-muc-mo sm:table-cell">
                   {i < 3 ? <span className="font-semibold text-muc">{i + 1}</span> : i + 1}
-                </td>
-                <td className="so hidden text-[11px] text-muc-mo sm:table-cell">{h.ma}</td>
-                <td>
+                </TableCell>
+                <TableCell className="so hidden text-[11px] text-muc-mo sm:table-cell">{h.ma}</TableCell>
+                <TableCell>
                   <div className="font-semibold text-muc">{h.ten}</div>
                   {h.phu && <div className="text-[10.5px] text-muc-mo">{h.phu}</div>}
-                </td>
-                <td className="so text-right text-[12.5px] text-muc-nhat">
+                </TableCell>
+                <TableCell className="so text-right text-[12.5px] text-muc-nhat">
                   {so(h.soLuong)} {h.donVi}
-                </td>
-                <td>
+                </TableCell>
+                <TableCell>
                   <div className="flex items-center justify-end gap-2">
                     {/* Độ dài cột mã hoá độ lớn; con số vẫn hiện đầy đủ */}
                     <div className="hidden h-1.5 w-28 overflow-hidden rounded-sm bg-ke/70 sm:block">
@@ -980,11 +982,11 @@ function BangXepHang({
                     </div>
                     <span className="so text-right text-[12.5px] font-semibold text-muc sm:w-20">{h.hienThi}</span>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       {hang.length > soHienMacDinh && (
         <button
@@ -1203,20 +1205,20 @@ function HopChiTietHang({
         <span className="so text-[10px] text-muc-mo">{so(hang.phieu.length)} dòng</span>
       </div>
       <div className="mem-cuon mt-2 max-h-[38vh] overflow-auto rounded-sm border border-ke">
-        <table className="w-full min-w-[640px] border-collapse text-[13px]">
-          <thead className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-            <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
-              <th>Ngày</th>
-              <th>Số phiếu</th>
-              <th>Can phạm</th>
-              <th className="text-right">SL</th>
-              {dungTien && <th className="text-right">Thành tiền</th>}
-              <th>Trạng thái</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="w-full min-w-[640px] border-collapse text-[13px]">
+          <TableHeader className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+            <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
+              <TableHead>Ngày</TableHead>
+              <TableHead>Số phiếu</TableHead>
+              <TableHead>Can phạm</TableHead>
+              <TableHead className="text-right">SL</TableHead>
+              {dungTien && <TableHead className="text-right">Thành tiền</TableHead>}
+              <TableHead>Trạng thái</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {hang.phieu.map((p) => (
-              <tr
+              <TableRow
                 key={`${p.id}-${p.soPhieu}`}
                 role={onChonPhieu ? "button" : undefined}
                 tabIndex={onChonPhieu ? 0 : undefined}
@@ -1233,23 +1235,23 @@ function HopChiTietHang({
                   onChonPhieu ? "cursor-pointer transition-colors hover:bg-giay/70" : ""
                 }`}
               >
-                <td className="so whitespace-nowrap text-[11px] text-muc-nhat">{ngayVN(p.ngay)}</td>
-                <td className="so text-[10.5px] text-muc-nhat">{p.soPhieu}</td>
-                <td>
+                <TableCell className="so whitespace-nowrap text-[11px] text-muc-nhat">{ngayVN(p.ngay)}</TableCell>
+                <TableCell className="so text-[10.5px] text-muc-nhat">{p.soPhieu}</TableCell>
+                <TableCell>
                   <div className="font-medium text-muc">{p.hoTen}</div>
                   <div className="font-mono text-[10px] tracking-[0.01em] text-muc-mo">
                     {[p.buongGiam, p.namSinh ? `SN ${p.namSinh}` : ""].filter(Boolean).join(" · ") || "—"}
                   </div>
-                </td>
-                <td className="so text-right text-[12px] text-muc-nhat">{so(p.soLuong)}</td>
-                {dungTien && <td className="so text-right text-[12px] text-muc-nhat">{tien(p.thanhTien)}</td>}
-                <td>
+                </TableCell>
+                <TableCell className="so text-right text-[12px] text-muc-nhat">{so(p.soLuong)}</TableCell>
+                {dungTien && <TableCell className="so text-right text-[12px] text-muc-nhat">{tien(p.thanhTien)}</TableCell>}
+                <TableCell>
                   {p.conThieu > 0 ? <Nhan sac="vang">Thiếu {so(p.conThieu)}</Nhan> : <Nhan sac="luc">Đủ hàng</Nhan>}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </HopThoai>
   );
@@ -1321,32 +1323,32 @@ function HopChiTietCanPham({
             <span className="so text-[10px] text-muc-mo">{so(canPham.hang.length)} mặt hàng</span>
           </div>
           <div className="mem-cuon max-h-[28vh] overflow-auto rounded-sm border border-ke">
-            <table className="w-full min-w-[560px] border-collapse text-[13px]">
-              <thead className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-                <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
-                  <th className="w-28">Mã</th>
-                  <th>Mặt hàng</th>
-                  <th className="text-right">Số lượng</th>
-                  {dungTien && <th className="text-right">Thành tiền</th>}
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="w-full min-w-[560px] border-collapse text-[13px]">
+              <TableHeader className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+                <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
+                  <TableHead className="w-28">Mã</TableHead>
+                  <TableHead>Mặt hàng</TableHead>
+                  <TableHead className="text-right">Số lượng</TableHead>
+                  {dungTien && <TableHead className="text-right">Thành tiền</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {canPham.hang.map((h) => (
-                  <tr
+                  <TableRow
                     key={h.productId}
                     className="[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5"
                   >
-                    <td className="so text-[10.5px] text-muc-mo">{h.ma}</td>
-                    <td>
+                    <TableCell className="so text-[10.5px] text-muc-mo">{h.ma}</TableCell>
+                    <TableCell>
                       <div className="font-medium text-muc">{h.ten}</div>
                       <div className="font-mono text-[10px] tracking-[0.01em] text-muc-mo">{h.donViTinh}</div>
-                    </td>
-                    <td className="so text-right text-[12px] text-muc-nhat">{so(h.soLuong)}</td>
-                    {dungTien && <td className="so text-right text-[12px] text-muc-nhat">{tien(h.thanhTien)}</td>}
-                  </tr>
+                    </TableCell>
+                    <TableCell className="so text-right text-[12px] text-muc-nhat">{so(h.soLuong)}</TableCell>
+                    {dungTien && <TableCell className="so text-right text-[12px] text-muc-nhat">{tien(h.thanhTien)}</TableCell>}
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
 
@@ -1422,21 +1424,21 @@ function BangPhieuTomTat({
   }
   return (
     <div className="mem-cuon max-h-[38vh] overflow-auto rounded-sm border border-ke">
-      <table className="w-full min-w-[720px] border-collapse text-[13px]">
-        <thead className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-          <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
-            <th>Ngày</th>
-            <th>Số phiếu</th>
-            <th>Can phạm</th>
-            <th className="text-center">Mặt hàng</th>
-            <th className="text-right">SL hàng</th>
-            {dungTien && <th className="text-right">Tổng tiền</th>}
-            <th>Trạng thái</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table className="w-full min-w-[720px] border-collapse text-[13px]">
+        <TableHeader className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+          <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
+            <TableHead>Ngày</TableHead>
+            <TableHead>Số phiếu</TableHead>
+            <TableHead>Can phạm</TableHead>
+            <TableHead className="text-center">Mặt hàng</TableHead>
+            <TableHead className="text-right">SL hàng</TableHead>
+            {dungTien && <TableHead className="text-right">Tổng tiền</TableHead>}
+            <TableHead>Trạng thái</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {phieu.map((p) => (
-            <tr
+            <TableRow
               key={p.id}
               role={onChonPhieu ? "button" : undefined}
               tabIndex={onChonPhieu ? 0 : undefined}
@@ -1453,27 +1455,27 @@ function BangPhieuTomTat({
                 onChonPhieu ? "cursor-pointer transition-colors hover:bg-giay/70" : ""
               }`}
             >
-              <td className="so whitespace-nowrap text-[11px] text-muc-nhat">{ngayVN(p.ngay)}</td>
-              <td className="so text-[10.5px] text-muc-nhat">{p.soPhieu}</td>
-              <td>
+              <TableCell className="so whitespace-nowrap text-[11px] text-muc-nhat">{ngayVN(p.ngay)}</TableCell>
+              <TableCell className="so text-[10.5px] text-muc-nhat">{p.soPhieu}</TableCell>
+              <TableCell>
                 <div className="font-medium text-muc">{p.hoTen}</div>
                 <div className="font-mono text-[10px] tracking-[0.01em] text-muc-mo">
                   {[p.buongGiam, p.namSinh ? `SN ${p.namSinh}` : ""].filter(Boolean).join(" · ") || "—"}
                 </div>
-              </td>
-              <td className="so text-center text-[12px] text-muc-nhat">{so(p.soMatHang)}</td>
-              <td className="so text-right text-[12px] text-muc-nhat">{so(p.soLuong)}</td>
-              {dungTien && <td className="so text-right text-[12px] text-muc-nhat">{tien(p.tongTien)}</td>}
-              <td>
+              </TableCell>
+              <TableCell className="so text-center text-[12px] text-muc-nhat">{so(p.soMatHang)}</TableCell>
+              <TableCell className="so text-right text-[12px] text-muc-nhat">{so(p.soLuong)}</TableCell>
+              {dungTien && <TableCell className="so text-right text-[12px] text-muc-nhat">{tien(p.tongTien)}</TableCell>}
+              <TableCell>
                 <div className="flex flex-wrap gap-1">
                   {p.conThieu > 0 && <Nhan sac="vang">Thiếu {so(p.conThieu)}</Nhan>}
                   {p.kiemLuc ? <Nhan sac="luc">Đã kiểm</Nhan> : <Nhan>Chưa kiểm</Nhan>}
                 </div>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

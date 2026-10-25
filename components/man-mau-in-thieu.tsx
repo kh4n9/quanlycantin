@@ -13,7 +13,7 @@ import {
 import { useStore } from "@/lib/store";
 import type { HienThieu, KieuInThieu, MauInThieu, NhanThieu } from "@/lib/types";
 import { PhieuThieu } from "./in-thieu";
-import { bao, baoLoi, BieuTuong, Nut, ONhan, OText, The } from "./ui";
+import { bao, baoLoi, BieuTuong, Nut, OChon, ONhan, OText, The } from "./ui";
 
 /** Dữ liệu giả để xem trước mẫu in hàng thiếu. */
 const BAOCAO_MAU: BaoCao = {
@@ -109,18 +109,19 @@ export function ManMauInThieu() {
 
           <div>
             <ONhan>Kiểu sắp mặc định khi bấm in</ONhan>
-            <select
+            <OChon
               value={mau.kieuIn}
               disabled={!duocSua}
+              aria-label="Kiểu sắp mục đích khi bấm in"
               onChange={(e) => setMau({ ...mau, kieuIn: e.target.value as KieuInThieu })}
-              className="w-full rounded-sm border border-ke-dam bg-white px-2.5 py-1.5 text-[13px] text-muc outline-none transition focus:border-muc disabled:bg-giay disabled:text-muc-mo"
+              className="w-full rounded-sm border-ke-dam bg-white px-2.5 text-[13px] text-muc focus:border-muc disabled:bg-giay disabled:text-muc-mo"
             >
               {DS_KIEU_IN.map((k) => (
                 <option key={k.khoa} value={k.khoa}>
                   {k.nhan}
                 </option>
               ))}
-            </select>
+            </OChon>
             {kieuDangChon && <p className="mt-1 text-[11px] text-muc-nhat">{kieuDangChon.moTa}</p>}
           </div>
 
@@ -165,18 +166,19 @@ export function ManMauInThieu() {
               <span className="nhan-muc">Chữ ký cuối bản in</span>
               <div className="flex items-center gap-2">
                 <label className="text-[12px] text-muc-nhat">Số chữ ký mỗi hàng</label>
-                <select
+                <OChon
                   value={mau.soCotChuKy}
                   disabled={!duocSua}
+                  aria-label="Số chữ ký mỗi hàng"
                   onChange={(e) => setMau({ ...mau, soCotChuKy: Number(e.target.value) })}
-                  className="h-8 rounded-sm border border-ke-dam bg-white px-2 font-mono text-[12px] text-muc outline-none transition focus:border-muc disabled:bg-giay"
+                  className="h-8 rounded-sm border-ke-dam bg-white px-2 font-mono text-[12px] text-muc focus:border-muc disabled:bg-giay"
                 >
                   {[1, 2, 3, 4].map((n) => (
                     <option key={n} value={n}>
                       {n}
                     </option>
                   ))}
-                </select>
+                </OChon>
               </div>
             </div>
             <div className="flex flex-col gap-2">

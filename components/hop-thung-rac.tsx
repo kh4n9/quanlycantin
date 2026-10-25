@@ -8,6 +8,7 @@ import { useNap } from "@/lib/use-nap";
 import type { Order } from "@/lib/types";
 import { useInPhieu } from "./print";
 import { bao, baoLoi, BieuTuong, HopThoai, Nut, OText, Trong } from "./ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
 /** Hộp thoại quản lý phiếu bán đã chuyển vào thùng rác. */
 export function HopThungRac({
@@ -155,22 +156,22 @@ export function HopThungRac({
           />
         ) : (
           <div className="mem-cuon max-h-[54vh] overflow-auto rounded-sm border border-ke">
-            <table className="w-full min-w-[720px] border-collapse text-sm">
-              <thead className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-                <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
-                  <th className="w-28">Số phiếu</th>
-                  <th className="w-24">Ngày bán</th>
-                  <th>Can phạm</th>
-                  <th className="w-14 text-center">Món</th>
-                  <th className="w-24 text-right">Tổng tiền</th>
-                  <th>Lý do xoá</th>
-                  <th className="w-32">Đã xoá</th>
-                  <th className="w-28" />
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="w-full min-w-[720px] border-collapse text-sm">
+              <TableHeader className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+                <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
+                  <TableHead className="w-28">Số phiếu</TableHead>
+                  <TableHead className="w-24">Ngày bán</TableHead>
+                  <TableHead>Can phạm</TableHead>
+                  <TableHead className="w-14 text-center">Món</TableHead>
+                  <TableHead className="w-24 text-right">Tổng tiền</TableHead>
+                  <TableHead>Lý do xoá</TableHead>
+                  <TableHead className="w-32">Đã xoá</TableHead>
+                  <TableHead className="w-28" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {hienThi.map((o) => (
-                  <tr
+                  <TableRow
                     key={o.id}
                     onClick={() => xemTruoc(o)}
                     className={`cursor-pointer transition-colors hover:bg-giay/60 [&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-2 [&>td]:align-middle ${
@@ -178,26 +179,26 @@ export function HopThungRac({
                     }`}
                     title="Bấm để xem lại phiếu"
                   >
-                    <td className="so text-[11px] font-medium text-muc-mo line-through">{o.soPhieu}</td>
-                    <td className="so text-[11px] text-muc-nhat">{ngayVN(o.ngay)}</td>
-                    <td>
+                    <TableCell className="so text-[11px] font-medium text-muc-mo line-through">{o.soPhieu}</TableCell>
+                    <TableCell className="so text-[11px] text-muc-nhat">{ngayVN(o.ngay)}</TableCell>
+                    <TableCell>
                       <div className="font-semibold text-muc">{o.hoTen}</div>
                       <div className="font-mono text-[10px] tracking-[0.01em] text-muc-mo">
                         {o.namSinh ? `SN ${o.namSinh}` : "—"} · {o.buongGiam || "—"}
                       </div>
-                    </td>
-                    <td className="so text-center text-[12px] text-muc-nhat">{o.items.length}</td>
-                    <td className="so text-right text-[12px] text-muc">
+                    </TableCell>
+                    <TableCell className="so text-center text-[12px] text-muc-nhat">{o.items.length}</TableCell>
+                    <TableCell className="so text-right text-[12px] text-muc">
                       {o.tongTien > 0 ? so(o.tongTien) : "—"}
-                    </td>
-                    <td className="text-[12px]">
+                    </TableCell>
+                    <TableCell className="text-[12px]">
                       {o.lyDoXoa ? (
                         <span className="text-muc-nhat">{o.lyDoXoa}</span>
                       ) : (
                         <span className="text-muc-mo">—</span>
                       )}
-                    </td>
-                    <td>
+                    </TableCell>
+                    <TableCell>
                       <div className="so text-[10.5px] text-muc-nhat">
                         {o.xoaLuc
                           ? new Date(o.xoaLuc).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })
@@ -219,8 +220,8 @@ export function HopThungRac({
                           </div>
                         );
                       })()}
-                    </td>
-                    <td>
+                    </TableCell>
+                    <TableCell>
                       <div
                         className="flex items-center justify-end gap-1.5"
                         onClick={(e) => e.stopPropagation()}
@@ -253,11 +254,11 @@ export function HopThungRac({
                           </span>
                         )}
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>

@@ -9,7 +9,8 @@ import type { LineItem, Order } from "@/lib/types";
 import { useNap } from "@/lib/use-nap";
 import { HopChiTietPhieu } from "./hop-chi-tiet-phieu";
 import { HopThieuHang } from "./hop-thieu-hang";
-import { bao, baoLoi, BieuTuong, Nut, OChonKhoang, OKhoangNgay, OText, OTim, Trong } from "./ui";
+import { bao, baoLoi, BieuTuong, Nut, OChon, OChonKhoang, OKhoangNgay, OText, OTim, Trong } from "./ui";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "./ui/table";
 
 type LocKiem = "chua_kiem" | "da_kiem" | "tat_ca";
 
@@ -225,16 +226,16 @@ export function ManKiemPhieu() {
             aria-label="Tìm phiếu để kiểm"
             className="min-w-48"
           />
-          <select
+          <OChon
             value={loc}
             onChange={(e) => setLoc(e.target.value as LocKiem)}
             aria-label="Lọc theo trạng thái kiểm"
-            className="h-9 w-44 rounded-md border border-ke-dam bg-white px-2 text-[13px] text-muc shadow-xs outline-none transition focus:border-muc focus:ring-2 focus:ring-muc/20"
+            className="h-9 w-44 border-ke-dam bg-white px-2 text-[13px] text-muc shadow-xs focus:border-muc focus:ring-2 focus:ring-muc/20"
           >
             <option value="chua_kiem">Chưa kiểm ({tienDo.con})</option>
             <option value="da_kiem">Đã kiểm ({tienDo.daKiem})</option>
             <option value="tat_ca">Tất cả ({tienDo.tong})</option>
-          </select>
+          </OChon>
         </div>
 
         {tienDo.tong > 0 && (
@@ -358,40 +359,40 @@ export function ManKiemPhieu() {
                 </div>
 
                 <div className="mem-cuon max-h-[calc(100vh-340px)] min-h-[220px] overflow-auto">
-                  <table className="w-full min-w-[860px] border-collapse text-sm">
-                    <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-                      <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
-                        <th className="w-10">#</th>
-                        <th className="text-left">Tên mặt hàng</th>
-                        <th className="w-16">ĐVT</th>
-                        <th className="w-28 text-center">Số lượng</th>
-                        <th className="w-24 text-right">Còn thiếu</th>
-                        <th className="w-28 text-right">Đơn giá</th>
-                        <th className="w-32 text-right">Thành tiền</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                  <Table className="w-full min-w-[860px] border-collapse text-sm">
+                    <TableHeader className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+                      <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
+                        <TableHead className="w-10">#</TableHead>
+                        <TableHead className="text-left">Tên mặt hàng</TableHead>
+                        <TableHead className="w-16">ĐVT</TableHead>
+                        <TableHead className="w-28 text-center">Số lượng</TableHead>
+                        <TableHead className="w-24 text-right">Còn thiếu</TableHead>
+                        <TableHead className="w-28 text-right">Đơn giá</TableHead>
+                        <TableHead className="w-32 text-right">Thành tiền</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {dsDong.map((d, i) => {
                         const goc = dangChon.items[i];
                         const lech = goc && d.soLuong !== goc.soLuong;
                         return (
-                          <tr
+                          <TableRow
                             key={d.productId}
                             className={`[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5 ${
                               lech ? "bg-moc-nhat/60" : ""
                             }`}
                           >
-                            <td className="text-center font-mono text-[10.5px] text-muc-mo">{i + 1}</td>
-                            <td className="font-medium text-muc">
+                            <TableCell className="text-center font-mono text-[10.5px] text-muc-mo">{i + 1}</TableCell>
+                            <TableCell className="font-medium text-muc">
                               {d.ten}
                               {lech && (
                                 <span className="ml-2 font-mono text-[10px] font-normal tracking-[0.02em] text-moc">
                                   sổ ghi {so(goc.soLuong)} → sửa thành {so(d.soLuong)}
                                 </span>
                               )}
-                            </td>
-                            <td className="text-center text-[12.5px] text-muc-nhat">{d.donViTinh}</td>
-                            <td className="text-center">
+                            </TableCell>
+                            <TableCell className="text-center text-[12.5px] text-muc-nhat">{d.donViTinh}</TableCell>
+                            <TableCell className="text-center">
                               {duocSua ? (
                                 <div className="inline-flex items-center rounded-sm border border-ke-dam bg-giay-cao shadow-xs">
                                   <button
@@ -434,8 +435,8 @@ export function ManKiemPhieu() {
                               ) : (
                                 <span className="so block text-center text-[13px] text-muc">{so(d.soLuong)}</span>
                               )}
-                            </td>
-                            <td className="text-right">
+                            </TableCell>
+                            <TableCell className="text-right">
                               {goc && conThieu(goc) > 0 ? (
                                 <span className="so inline-block rounded-sm border border-moc/30 bg-moc-nhat px-1.5 py-0.5 text-[11px] font-semibold text-moc">
                                   {so(conThieu(goc))}
@@ -443,24 +444,24 @@ export function ManKiemPhieu() {
                               ) : (
                                 <span className="so text-[12.5px] text-muc-mo">—</span>
                               )}
-                            </td>
-                            <td className="so text-right text-[12.5px] text-muc-nhat">{so(d.donGia)}</td>
-                            <td className="so text-right text-[13px] font-semibold text-muc">{so(d.thanhTien)}</td>
-                          </tr>
+                            </TableCell>
+                            <TableCell className="so text-right text-[12.5px] text-muc-nhat">{so(d.donGia)}</TableCell>
+                            <TableCell className="so text-right text-[13px] font-semibold text-muc">{so(d.thanhTien)}</TableCell>
+                          </TableRow>
                         );
                       })}
-                    </tbody>
-                    <tfoot className="bg-giay">
-                      <tr className="[&>td]:border-t [&>td]:border-ke [&>td]:px-3 [&>td]:py-2.5">
-                        <td colSpan={6} className="nhan-muc text-right">
+                    </TableBody>
+                    <TableFooter className="bg-giay">
+                      <TableRow className="[&>td]:border-t [&>td]:border-ke [&>td]:px-3 [&>td]:py-2.5">
+                        <TableCell colSpan={6} className="nhan-muc text-right">
                           Tổng cộng
-                        </td>
-                        <td className="so text-right text-[15px] font-semibold text-muc">
+                        </TableCell>
+                        <TableCell className="so text-right text-[15px] font-semibold text-muc">
                           {tongSauSua > 0 ? so(tongSauSua) : "—"}
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
+                        </TableCell>
+                      </TableRow>
+                    </TableFooter>
+                  </Table>
                 </div>
               </div>
 

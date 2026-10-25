@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 /*
  * HỆ THỐNG THIẾT KẾ — "SỔ CẤP PHÁT"
@@ -372,4 +376,91 @@ input[type="number"] {
 .phieu-in th {
   text-align: center;
   font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+ * Cầu nối shadcn/ui → hệ token "Sổ cấp phát"
+ *
+ * Không thay bảng màu gốc. Các biến --background, --primary… chỉ là bí danh
+ * trỏ về token giấy / mực / dấu / mộc / ngọc / lam đã có ở @theme phía trên.
+ * Nhờ vậy component shadcn dùng đúng chất liệu của ứng dụng, không kéo theo
+ * giao diện neutral mặc định.
+ * -------------------------------------------------------------------------- */
+
+@theme inline {
+  --font-heading: var(--font-serif);
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+}
+
+:root {
+  --background: var(--color-giay);
+  --foreground: var(--color-muc);
+  --card: var(--color-giay-cao);
+  --card-foreground: var(--color-muc);
+  --popover: var(--color-giay-cao);
+  --popover-foreground: var(--color-muc);
+  --primary: var(--color-muc);
+  --primary-foreground: var(--color-giay-cao);
+  --secondary: var(--color-giay);
+  --secondary-foreground: var(--color-muc);
+  --muted: var(--color-giay);
+  --muted-foreground: var(--color-muc-nhat);
+  --accent: var(--color-giay);
+  --accent-foreground: var(--color-muc);
+  --destructive: var(--color-dau);
+  --destructive-foreground: var(--color-giay-cao);
+  --border: var(--color-ke);
+  --input: var(--color-ke-dam);
+  --ring: var(--color-muc);
+  --chart-1: var(--color-lam);
+  --chart-2: var(--color-ngoc);
+  --chart-3: var(--color-moc);
+  --chart-4: var(--color-dau);
+  --chart-5: var(--color-muc-mo);
+  --radius: 0.375rem;
+  --sidebar: var(--color-muc);
+  --sidebar-foreground: var(--color-giay);
+  --sidebar-primary: var(--color-giay-cao);
+  --sidebar-primary-foreground: var(--color-muc);
+  --sidebar-accent: var(--color-muc-dam);
+  --sidebar-accent-foreground: var(--color-giay-cao);
+  --sidebar-border: rgb(255 255 255 / 0.1);
+  --sidebar-ring: var(--color-giay);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 }

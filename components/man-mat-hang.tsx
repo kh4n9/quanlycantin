@@ -10,6 +10,7 @@ import type { Order, Product } from "@/lib/types";
 import { useNap } from "@/lib/use-nap";
 import { HopChiTietPhieu } from "./hop-chi-tiet-phieu";
 import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, OChon, OChonKhoang, OKhoangNgay, ONhan, OTim, OText, TheSo, Trong } from "./ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
 const NHOM_GOI_Y = [
   "Thực phẩm",
@@ -573,45 +574,45 @@ export function ManMatHang() {
         </div>
 
         <div className="mem-cuon hidden max-h-[66vh] overflow-auto sm:block">
-          <table
+          <Table
             className={`w-full ${coDungTien && xemDuocPhieu ? "min-w-[1120px]" : xemDuocPhieu ? "min-w-[1000px]" : "min-w-[880px]"} table-fixed border-collapse text-sm`}
           >
-            <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-              <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
-                <th className="w-24">Mã</th>
-                <th>Tên mặt hàng</th>
-                <th className="w-28">Nhóm</th>
-                <th className="w-16">ĐVT</th>
-                <th className="w-28 text-right">Giá bán</th>
+            <TableHeader className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+              <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
+                <TableHead className="w-24">Mã</TableHead>
+                <TableHead>Tên mặt hàng</TableHead>
+                <TableHead className="w-28">Nhóm</TableHead>
+                <TableHead className="w-16">ĐVT</TableHead>
+                <TableHead className="w-28 text-right">Giá bán</TableHead>
                 {xemDuocPhieu && (
-                  <th
+                  <TableHead
                     className="w-28 text-right"
                     title="Tổng số lượng bán trên các phiếu trong khoảng ngày đang chọn"
                   >
                     Đã bán
-                  </th>
+                  </TableHead>
                 )}
                 {xemDuocPhieu && (
-                  <th
+                  <TableHead
                     className="w-28 text-right"
                     title="Số lượng còn nợ can phạm, chưa bù, trong khoảng ngày đang chọn"
                   >
                     Còn thiếu
-                  </th>
+                  </TableHead>
                 )}
                 {xemDuocPhieu && coDungTien && (
-                  <th className="w-32 text-right" title="Doanh thu của mặt hàng trong khoảng ngày đang chọn">
+                  <TableHead className="w-32 text-right" title="Doanh thu của mặt hàng trong khoảng ngày đang chọn">
                     Doanh thu
-                  </th>
+                  </TableHead>
                 )}
-                <th className="w-32">Trạng thái</th>
-                <th className="w-24" />
-              </tr>
-            </thead>
-            <tbody>
+                <TableHead className="w-32">Trạng thái</TableHead>
+                <TableHead className="w-24" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {danhSach.length === 0 && (
-                <tr>
-                  <td colSpan={soCot}>
+                <TableRow>
+                  <TableCell colSpan={soCot}>
                     <Trong
                       tieuDe={dangTai ? "Đang tải dữ liệu…" : "Chưa có mặt hàng nào"}
                       moTa={dangTai ? undefined : "Thêm mặt hàng mới, hoặc nạp danh mục mẫu trong Cài đặt."}
@@ -623,32 +624,32 @@ export function ManMatHang() {
                         )
                       }
                     />
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )}
               {danhSach.map((p) => {
                 const ban = banTheoHang.get(p.id);
                 const thieu = thieuTheoHang.get(p.id);
                 return (
-                  <tr
+                  <TableRow
                     key={p.id}
                     onClick={() => setChiTiet(p)}
                     className={`cursor-pointer [&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-2.5 transition-colors hover:bg-giay/60 ${
                       !p.dangDung ? "opacity-50" : ""
                     }`}
                   >
-                    <td className="so text-[11.5px] text-muc-mo">{p.ma}</td>
-                    <td>
+                    <TableCell className="so text-[11.5px] text-muc-mo">{p.ma}</TableCell>
+                    <TableCell>
                       <div className="font-semibold text-muc">{p.ten}</div>
                       {p.ghiChu && <div className="text-[11px] text-muc-mo">{p.ghiChu}</div>}
-                    </td>
-                    <td className="text-[13px] text-muc-nhat">{p.nhom}</td>
-                    <td className="text-[13px] text-muc-nhat">{p.donViTinh}</td>
-                    <td className="so text-right text-[13px] font-medium text-muc">
+                    </TableCell>
+                    <TableCell className="text-[13px] text-muc-nhat">{p.nhom}</TableCell>
+                    <TableCell className="text-[13px] text-muc-nhat">{p.donViTinh}</TableCell>
+                    <TableCell className="so text-right text-[13px] font-medium text-muc">
                       {p.giaBan > 0 ? so(p.giaBan) : "—"}
-                    </td>
+                    </TableCell>
                     {xemDuocPhieu && (
-                      <td className="so text-right text-[13px] font-medium">
+                      <TableCell className="so text-right text-[13px] font-medium">
                         {ban ? (
                           <span className="text-muc">
                             {so(ban.soLuong)}
@@ -657,10 +658,10 @@ export function ManMatHang() {
                         ) : (
                           <span className="text-muc-mo">—</span>
                         )}
-                      </td>
+                      </TableCell>
                     )}
                     {xemDuocPhieu && (
-                      <td className="text-right">
+                      <TableCell className="text-right">
                         {thieu && thieu.soLuong > 0 ? (
                           <span
                             className="so inline-flex items-center rounded-sm border border-moc/25 bg-moc-nhat px-1.5 py-0.5 text-[11.5px] font-semibold text-moc"
@@ -672,20 +673,20 @@ export function ManMatHang() {
                         ) : (
                           <span className="so text-[13px] text-muc-mo">—</span>
                         )}
-                      </td>
+                      </TableCell>
                     )}
                     {xemDuocPhieu && coDungTien && (
-                      <td className="so text-right text-[13px] text-muc-nhat">
+                      <TableCell className="so text-right text-[13px] text-muc-nhat">
                         {ban && ban.doanhThu > 0 ? so(ban.doanhThu) : "—"}
-                      </td>
+                      </TableCell>
                     )}
-                    <td>{nutTrangThai(p)}</td>
-                    <td>{thaoTacHang(p)}</td>
-                  </tr>
+                    <TableCell>{nutTrangThai(p)}</TableCell>
+                    <TableCell>{thaoTacHang(p)}</TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </section>
 
@@ -790,19 +791,19 @@ export function ManMatHang() {
                   </div>
                 ) : (
                   <div className="mem-cuon max-h-60 overflow-auto rounded-sm border border-ke">
-                    <table className="w-full min-w-[560px] border-collapse text-[13px]">
-                      <thead className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-                        <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
-                          <th className="w-24">Số phiếu</th>
-                          <th className="w-24">Ngày</th>
-                          <th>Can phạm</th>
-                          <th className="w-16 text-right">SL</th>
-                          <th className="w-24 text-right">Còn thiếu</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <Table className="w-full min-w-[560px] border-collapse text-[13px]">
+                      <TableHeader className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+                        <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
+                          <TableHead className="w-24">Số phiếu</TableHead>
+                          <TableHead className="w-24">Ngày</TableHead>
+                          <TableHead>Can phạm</TableHead>
+                          <TableHead className="w-16 text-right">SL</TableHead>
+                          <TableHead className="w-24 text-right">Còn thiếu</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {phieuCuaChiTiet.map((d) => (
-                          <tr
+                          <TableRow
                             key={d.order.id}
                             role="button"
                             tabIndex={0}
@@ -816,17 +817,17 @@ export function ManMatHang() {
                             title="Bấm để xem chi tiết phiếu, bù hàng hoặc chỉnh sửa"
                             className="cursor-pointer transition-colors hover:bg-giay/70 [&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5"
                           >
-                            <td className="so text-[11px] font-medium text-muc">{d.order.soPhieu}</td>
-                            <td className="so whitespace-nowrap text-[11px] text-muc-nhat">{ngayVN(d.order.ngay)}</td>
-                            <td>
+                            <TableCell className="so text-[11px] font-medium text-muc">{d.order.soPhieu}</TableCell>
+                            <TableCell className="so whitespace-nowrap text-[11px] text-muc-nhat">{ngayVN(d.order.ngay)}</TableCell>
+                            <TableCell>
                               <div className="font-medium text-muc">{d.order.hoTen}</div>
                               <div className="font-mono text-[10px] text-muc-mo">
                                 {d.order.buongGiam || "—"}
                                 {d.order.namSinh ? ` · SN ${d.order.namSinh}` : ""}
                               </div>
-                            </td>
-                            <td className="so text-right text-[12px] text-muc-nhat">{so(d.soLuong)}</td>
-                            <td className="text-right">
+                            </TableCell>
+                            <TableCell className="so text-right text-[12px] text-muc-nhat">{so(d.soLuong)}</TableCell>
+                            <TableCell className="text-right">
                               {d.conThieu > 0 ? (
                                 <span className="so inline-block rounded-sm border border-moc/30 bg-moc-nhat px-1.5 py-0.5 text-[11px] font-semibold text-moc">
                                   {so(d.conThieu)}
@@ -834,11 +835,11 @@ export function ManMatHang() {
                               ) : (
                                 <span className="so text-[12px] text-muc-mo">—</span>
                               )}
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         ))}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
                 )}
               </div>

@@ -6,6 +6,7 @@ import { taiExcel } from "@/lib/excel";
 import { homNay, ngayVN, so } from "@/lib/format";
 import { NHAN_LOAI_NHAT_KY, type LoaiNhatKy, type NhatKy } from "@/lib/nhat-ky";
 import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, OChon, OChonKhoang, OKhoangNgay, OPhanTrang, OTim, Trong } from "./ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
 function ngayCach(soNgay: number): string {
   const d = new Date();
@@ -332,56 +333,56 @@ export function ManNhatKy() {
         </div>
 
         <div className="mem-cuon hidden max-h-[68vh] overflow-auto sm:block">
-          <table className="w-full min-w-[880px] table-fixed border-collapse text-sm">
-            <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-              <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
-                <th className="w-24">Lúc</th>
-                <th className="w-40">Người thực hiện</th>
-                <th className="w-40">Thao tác</th>
-                <th className="w-44">Đối tượng</th>
-                <th>Mô tả</th>
-                <th className="w-10" />
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="w-full min-w-[880px] table-fixed border-collapse text-sm">
+            <TableHeader className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+              <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
+                <TableHead className="w-24">Lúc</TableHead>
+                <TableHead className="w-40">Người thực hiện</TableHead>
+                <TableHead className="w-40">Thao tác</TableHead>
+                <TableHead className="w-44">Đối tượng</TableHead>
+                <TableHead>Mô tả</TableHead>
+                <TableHead className="w-10" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {nhatKy.length === 0 && (
-                <tr>
-                  <td colSpan={6}>{trong}</td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={6}>{trong}</TableCell>
+                </TableRow>
               )}
               {nhatKy.map((n) => (
-                <tr
+                <TableRow
                   key={n.id}
                   onClick={() => setChiTiet(n)}
                   className="cursor-pointer [&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-2.5 transition-colors hover:bg-giay/60"
                 >
-                  <td className="so text-[11px] text-muc-nhat">
+                  <TableCell className="so text-[11px] text-muc-nhat">
                     <div className="text-[12px] font-medium text-muc">{gio(n.luc)}</div>
                     <div className="text-[10px]">{ngayVN(n.ngay)}</div>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <div className="truncate font-medium text-muc">{n.hoTen || "Không rõ"}</div>
                     <div className="truncate font-mono text-[10px] text-muc-mo">{n.tenDangNhap || "—"}</div>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <Nhan sac={SAC_LOAI[n.loai]}>{n.hanhDong}</Nhan>
-                  </td>
-                  <td className="truncate font-mono text-[11px] text-muc-nhat">{n.doiTuong || "—"}</td>
-                  <td className="text-[12.5px] text-muc-nhat">
+                  </TableCell>
+                  <TableCell className="truncate font-mono text-[11px] text-muc-nhat">{n.doiTuong || "—"}</TableCell>
+                  <TableCell className="text-[12.5px] text-muc-nhat">
                     <div className="line-clamp-2">{n.moTa || "—"}</div>
                     {n.thayDoi.length > 0 && (
                       <div className="mt-0.5 font-mono text-[10px] text-muc-mo">
                         {so(n.thayDoi.length)} thay đổi
                       </div>
                     )}
-                  </td>
-                  <td className="text-right text-muc-mo">
+                  </TableCell>
+                  <TableCell className="text-right text-muc-mo">
                     <BieuTuong ten="xem" className="h-4 w-4" />
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
 
         <OPhanTrang trang={trang} soTrang={soTrang} tong={tong} onTrang={setTrang} nhan="thao tác" disabled={dangTai} />

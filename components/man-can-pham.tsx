@@ -8,7 +8,8 @@ import { conThieu } from "@/lib/thieu-hang";
 import type { Order } from "@/lib/types";
 import { useNap } from "@/lib/use-nap";
 import { HopChiTietPhieu } from "./hop-chi-tiet-phieu";
-import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, OChonKhoang, OKhoangNgay, OTim, TheSo, Trong } from "./ui";
+import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, OChon, OChonKhoang, OKhoangNgay, OTim, TheSo, Trong } from "./ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
 type MatHangMua = {
   productId: string;
@@ -330,16 +331,17 @@ export function ManCanPham() {
           </div>
           <label className="flex items-center gap-2 text-[12px] text-muc-nhat">
             <span className="whitespace-nowrap">Sắp xếp</span>
-            <select
+            <OChon
               value={sapXep}
               onChange={(e) => setSapXep(e.target.value as KieuSapXep)}
-              className="h-8 rounded-md border border-ke-dam bg-giay-cao px-2 text-[13px] shadow-xs outline-none transition focus:border-muc"
+              aria-label="Sắp xếp"
+              className="h-8 rounded-md border-ke-dam bg-giay-cao px-2 text-[13px] shadow-xs focus:border-muc"
             >
               <option value="gan_nhat">Mua gần nhất</option>
               <option value="chi_tieu">{coDungTien ? "Tổng tiền nhiều" : "Số lượng nhiều"}</option>
               <option value="so_phieu">Số phiếu nhiều</option>
               <option value="ten">Tên A–Z</option>
-            </select>
+            </OChon>
           </label>
         </header>
 
@@ -348,26 +350,26 @@ export function ManCanPham() {
         ) : (
           <>
             <div className="mem-cuon hidden max-h-[62vh] overflow-auto sm:block">
-              <table className="w-full min-w-[940px] border-collapse text-sm">
-                <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-                  <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
-                    <th>Can phạm</th>
-                    <th className="w-24 text-right">Số phiếu</th>
-                    <th className="w-28 text-right">Lượng hàng</th>
-                    {coDungTien && <th className="w-32 text-right">Tổng tiền</th>}
-                    <th className="w-36">Mua gần nhất</th>
-                    <th className="w-32">Mặt hàng</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table className="w-full min-w-[940px] border-collapse text-sm">
+                <TableHeader className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+                  <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
+                    <TableHead>Can phạm</TableHead>
+                    <TableHead className="w-24 text-right">Số phiếu</TableHead>
+                    <TableHead className="w-28 text-right">Lượng hàng</TableHead>
+                    {coDungTien && <TableHead className="w-32 text-right">Tổng tiền</TableHead>}
+                    <TableHead className="w-36">Mua gần nhất</TableHead>
+                    <TableHead className="w-32">Mặt hàng</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {dangHien.map((p) => (
-                    <tr
+                    <TableRow
                       key={p.key}
                       onClick={() => setChiTiet(p)}
                       className="cursor-pointer transition-colors hover:bg-giay/60 [&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-2.5"
                       title="Bấm để xem chi tiết can phạm"
                     >
-                      <td>
+                      <TableCell>
                         <div className="flex items-center gap-2.5">
                           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-ke-dam bg-giay font-mono text-[10px] font-semibold text-muc-nhat">
                             {chuDau(p.hoTen) || "?"}
@@ -379,22 +381,22 @@ export function ManCanPham() {
                             </div>
                           </div>
                         </div>
-                      </td>
-                      <td className="so text-right font-semibold text-muc">{so(p.soPhieu)}</td>
-                      <td className="so text-right text-muc-nhat">{so(p.soLuong)}</td>
+                      </TableCell>
+                      <TableCell className="so text-right font-semibold text-muc">{so(p.soPhieu)}</TableCell>
+                      <TableCell className="so text-right text-muc-nhat">{so(p.soLuong)}</TableCell>
                       {coDungTien && (
-                        <td className="so text-right font-medium text-muc">{tien(p.doanhThu)}</td>
+                        <TableCell className="so text-right font-medium text-muc">{tien(p.doanhThu)}</TableCell>
                       )}
-                      <td className="whitespace-nowrap font-mono text-[11px] tracking-[0.02em] text-muc-nhat">
+                      <TableCell className="whitespace-nowrap font-mono text-[11px] tracking-[0.02em] text-muc-nhat">
                         {ngayVN(p.lanCuoi)}
-                      </td>
-                      <td>
+                      </TableCell>
+                      <TableCell>
                         <Nhan sac="xanh">{so(p.matHang.length)} mặt hàng</Nhan>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
 
             <div className="divide-y divide-ke/60 sm:hidden">
@@ -535,32 +537,32 @@ function HopChiTietCanPham({
             <span className="so text-[10.5px] text-muc-mo">{so(canPham.matHang.length)} mặt hàng</span>
           </div>
           <div className="mem-cuon max-h-[28vh] overflow-auto rounded-md border border-ke">
-            <table className="w-full min-w-[560px] border-collapse text-[13px]">
-              <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-                <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
-                  <th className="w-28">Mã</th>
-                  <th>Mặt hàng</th>
-                  <th className="text-right">Số lượng</th>
-                  {coDungTien && <th className="text-right">Thành tiền</th>}
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="w-full min-w-[560px] border-collapse text-[13px]">
+              <TableHeader className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+                <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
+                  <TableHead className="w-28">Mã</TableHead>
+                  <TableHead>Mặt hàng</TableHead>
+                  <TableHead className="text-right">Số lượng</TableHead>
+                  {coDungTien && <TableHead className="text-right">Thành tiền</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {canPham.matHang.map((h) => (
-                  <tr
+                  <TableRow
                     key={h.productId}
                     className="[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5"
                   >
-                    <td className="so text-[11.5px] text-muc-mo">{h.ma}</td>
-                    <td>
+                    <TableCell className="so text-[11.5px] text-muc-mo">{h.ma}</TableCell>
+                    <TableCell>
                       <div className="font-medium text-muc">{h.ten}</div>
                       <div className="text-[10.5px] text-muc-mo">{h.donViTinh}</div>
-                    </td>
-                    <td className="so text-right text-muc">{so(h.soLuong)}</td>
-                    {coDungTien && <td className="so text-right text-muc">{tien(h.thanhTien)}</td>}
-                  </tr>
+                    </TableCell>
+                    <TableCell className="so text-right text-muc">{so(h.soLuong)}</TableCell>
+                    {coDungTien && <TableCell className="so text-right text-muc">{tien(h.thanhTien)}</TableCell>}
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
 
@@ -570,44 +572,44 @@ function HopChiTietCanPham({
             <span className="text-[10.5px] text-muc-mo">Bấm vào phiếu để xem lại</span>
           </div>
           <div className="mem-cuon max-h-[34vh] overflow-auto rounded-md border border-ke">
-            <table className="w-full min-w-[620px] border-collapse text-[13px]">
-              <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-                <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
-                  <th>Ngày</th>
-                  <th>Số phiếu</th>
-                  <th className="text-center">Mặt hàng</th>
-                  <th className="text-right">SL</th>
-                  {coDungTien && <th className="text-right">Tổng tiền</th>}
-                  <th>Trạng thái</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="w-full min-w-[620px] border-collapse text-[13px]">
+              <TableHeader className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+                <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
+                  <TableHead>Ngày</TableHead>
+                  <TableHead>Số phiếu</TableHead>
+                  <TableHead className="text-center">Mặt hàng</TableHead>
+                  <TableHead className="text-right">SL</TableHead>
+                  {coDungTien && <TableHead className="text-right">Tổng tiền</TableHead>}
+                  <TableHead>Trạng thái</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {canPham.phieu.map((o) => {
                   const tongThieu = o.items.reduce((s, item) => s + conThieu(item), 0);
                   return (
-                    <tr
+                    <TableRow
                       key={o.id}
                       onClick={() => xemPhieu(o)}
                       className="cursor-pointer transition-colors hover:bg-giay/60 [&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-2"
                     >
-                      <td className="whitespace-nowrap font-mono text-[11px] text-muc-nhat">{ngayVN(o.ngay)}</td>
-                      <td className="so text-[11.5px] font-semibold text-muc">{o.soPhieu}</td>
-                      <td className="so text-center text-muc-nhat">{so(o.items.length)}</td>
-                      <td className="so text-right text-muc">
+                      <TableCell className="whitespace-nowrap font-mono text-[11px] text-muc-nhat">{ngayVN(o.ngay)}</TableCell>
+                      <TableCell className="so text-[11.5px] font-semibold text-muc">{o.soPhieu}</TableCell>
+                      <TableCell className="so text-center text-muc-nhat">{so(o.items.length)}</TableCell>
+                      <TableCell className="so text-right text-muc">
                         {so(o.items.reduce((s, item) => s + item.soLuong, 0))}
-                      </td>
-                      {coDungTien && <td className="so text-right text-muc">{tien(o.tongTien)}</td>}
-                      <td>
+                      </TableCell>
+                      {coDungTien && <TableCell className="so text-right text-muc">{tien(o.tongTien)}</TableCell>}
+                      <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {tongThieu > 0 && <Nhan sac="vang">Thiếu {so(tongThieu)}</Nhan>}
                           {o.kiemLuc ? <Nhan sac="luc">Đã kiểm</Nhan> : <Nhan>Chưa kiểm</Nhan>}
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
       </div>

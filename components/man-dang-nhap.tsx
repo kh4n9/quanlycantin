@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { apiClient } from "@/lib/client";
 import { useStore } from "@/lib/store";
+import { DappledLight } from "./dappled-light";
 import { Logo } from "./logo";
 import { baoLoi, BieuTuong, Nut, ONhan, OText } from "./ui";
 
@@ -37,6 +38,8 @@ export function ManDangNhap() {
 
   return (
     <div className="khong-in relative flex min-h-screen items-center justify-center overflow-hidden bg-giay p-4 sm:p-6">
+      {/* Nắng xuyên qua tán lá, trôi rất chậm trên mặt giấy */}
+      <DappledLight />
       {/* Nền giấy kẻ dòng, rất nhạt — chỉ để mặt phẳng không trơn như màn hình */}
       <div
         aria-hidden

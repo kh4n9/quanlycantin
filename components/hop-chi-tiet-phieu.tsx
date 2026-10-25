@@ -10,6 +10,7 @@ import { HopThieuHang } from "./hop-thieu-hang";
 import { PhieuBanForm } from "./phieu-ban-form";
 import { useInPhieu } from "./print";
 import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, Trong } from "./ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
 function OSo({ nhan, giaTri }: { nhan: string; giaTri: string }) {
   return (
@@ -230,42 +231,42 @@ export function HopChiTietPhieu({
                 </span>
               </div>
               <div className="mem-cuon overflow-auto rounded-sm border border-ke">
-                <table className="w-full min-w-[680px] border-collapse text-[13px]">
-                  <thead className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-                    <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
-                      <th className="w-8 text-center">#</th>
-                      <th>Mặt hàng</th>
-                      <th className="w-14">ĐVT</th>
-                      <th className="w-16 text-right">SL</th>
-                      {coTien && <th className="w-24 text-right">Đơn giá</th>}
-                      {coTien && <th className="w-28 text-right">Thành tiền</th>}
-                      <th className="w-20 text-right">Còn thiếu</th>
-                      <th className="w-16 text-right">Đã bù</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table className="w-full min-w-[680px] border-collapse text-[13px]">
+                  <TableHeader className="sticky top-0 z-10 bg-giay font-mono text-[9.5px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+                    <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
+                      <TableHead className="w-8 text-center">#</TableHead>
+                      <TableHead>Mặt hàng</TableHead>
+                      <TableHead className="w-14">ĐVT</TableHead>
+                      <TableHead className="w-16 text-right">SL</TableHead>
+                      {coTien && <TableHead className="w-24 text-right">Đơn giá</TableHead>}
+                      {coTien && <TableHead className="w-28 text-right">Thành tiền</TableHead>}
+                      <TableHead className="w-20 text-right">Còn thiếu</TableHead>
+                      <TableHead className="w-16 text-right">Đã bù</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {phieu.items.map((i, idx) => {
                       const con = conThieu(i);
                       const bu = daBu(i);
                       return (
-                        <tr
+                        <TableRow
                           key={`${i.productId}-${idx}`}
                           className={`[&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-1.5 ${
                             con > 0 ? "bg-moc-nhat/45" : ""
                           }`}
                         >
-                          <td className="text-center font-mono text-[10px] text-muc-mo">{idx + 1}</td>
-                          <td>
+                          <TableCell className="text-center font-mono text-[10px] text-muc-mo">{idx + 1}</TableCell>
+                          <TableCell>
                             <div className="font-medium text-muc">{i.ten}</div>
                             <div className="font-mono text-[10px] tracking-[0.01em] text-muc-mo">{i.ma}</div>
-                          </td>
-                          <td className="text-[12px] text-muc-nhat">{i.donViTinh}</td>
-                          <td className="so text-right text-[12.5px] text-muc">{so(i.soLuong)}</td>
-                          {coTien && <td className="so text-right text-[12px] text-muc-nhat">{so(i.donGia)}</td>}
+                          </TableCell>
+                          <TableCell className="text-[12px] text-muc-nhat">{i.donViTinh}</TableCell>
+                          <TableCell className="so text-right text-[12.5px] text-muc">{so(i.soLuong)}</TableCell>
+                          {coTien && <TableCell className="so text-right text-[12px] text-muc-nhat">{so(i.donGia)}</TableCell>}
                           {coTien && (
-                            <td className="so text-right text-[12px] text-muc-nhat">{so(i.thanhTien)}</td>
+                            <TableCell className="so text-right text-[12px] text-muc-nhat">{so(i.thanhTien)}</TableCell>
                           )}
-                          <td className="text-right">
+                          <TableCell className="text-right">
                             {con > 0 ? (
                               <span className="so inline-block rounded-sm border border-moc/30 bg-moc-nhat px-1.5 py-0.5 text-[11.5px] font-semibold text-moc">
                                 {so(con)}
@@ -273,13 +274,13 @@ export function HopChiTietPhieu({
                             ) : (
                               <span className="so text-[12px] text-muc-mo">—</span>
                             )}
-                          </td>
-                          <td className="so text-right text-[12px] text-ngoc">{bu || "—"}</td>
-                        </tr>
+                          </TableCell>
+                          <TableCell className="so text-right text-[12px] text-ngoc">{bu || "—"}</TableCell>
+                        </TableRow>
                       );
                     })}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </div>
 

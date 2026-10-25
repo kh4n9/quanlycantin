@@ -28,6 +28,7 @@ import {
   OVung,
   Trong,
 } from "./ui";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "./ui/table";
 
 function dauThang(): string {
   const d = new Date();
@@ -417,42 +418,42 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
       </div>
 
       <div className="mem-cuon hidden max-h-[calc(100vh-260px)] min-h-[320px] overflow-auto sm:block">
-        <table className="w-full min-w-[1040px] border-collapse text-sm">
-          <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-            <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
-              <th className="w-36">Số phiếu</th>
-              <th className="w-28">Ngày</th>
-              <th>Can phạm</th>
-              <th className="w-32">Buồng giam</th>
-              <th className="w-24 text-center">{monLoc ? "SL món lọc" : "Mặt hàng"}</th>
-              <th className="w-32 text-right">Tổng tiền</th>
-              <th className="w-44" />
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="w-full min-w-[1040px] border-collapse text-sm">
+          <TableHeader className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+            <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
+              <TableHead className="w-36">Số phiếu</TableHead>
+              <TableHead className="w-28">Ngày</TableHead>
+              <TableHead>Can phạm</TableHead>
+              <TableHead className="w-32">Buồng giam</TableHead>
+              <TableHead className="w-24 text-center">{monLoc ? "SL món lọc" : "Mặt hàng"}</TableHead>
+              <TableHead className="w-32 text-right">Tổng tiền</TableHead>
+              <TableHead className="w-44" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {hienThi.length === 0 && (
-              <tr>
-                <td colSpan={7}>
+              <TableRow>
+                <TableCell colSpan={7}>
                   <Trong tieuDe={tieuDeTrong} moTa={moTaTrong} />
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
             {dangXemDay.map((o) => (
-              <tr
+              <TableRow
                 key={o.id}
                 onClick={() => setPhieuDangXem(o)}
                 className="group cursor-pointer [&>td]:border-b [&>td]:border-ke/70 [&>td]:px-3 [&>td]:py-2.5 hover:bg-giay/70"
               >
-                <td className="so text-[11.5px] font-medium text-muc">{o.soPhieu}</td>
-                <td className="text-[13px] text-muc-nhat">{ngayVN(o.ngay)}</td>
-                <td>
+                <TableCell className="so text-[11.5px] font-medium text-muc">{o.soPhieu}</TableCell>
+                <TableCell className="text-[13px] text-muc-nhat">{ngayVN(o.ngay)}</TableCell>
+                <TableCell>
                   <div className="font-semibold text-muc">{o.hoTen}</div>
                   <div className="text-[11px] text-muc-mo">
                     {o.namSinh ? `SN ${o.namSinh}` : "Chưa rõ năm sinh"}
                   </div>
-                </td>
-                <td className="text-[13px] text-muc-nhat">{o.buongGiam || "—"}</td>
-                <td className="text-center">
+                </TableCell>
+                <TableCell className="text-[13px] text-muc-nhat">{o.buongGiam || "—"}</TableCell>
+                <TableCell className="text-center">
                   <div className="flex flex-col items-center gap-1">
                     {monLoc ? (
                       <span className="so text-[13px] font-medium text-muc">{so(luongMonTrong(o))}</span>
@@ -469,18 +470,18 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
                       </span>
                     )}
                   </div>
-                </td>
-                <td className="so text-right text-[13px] font-semibold text-muc">
+                </TableCell>
+                <TableCell className="so text-right text-[13px] font-semibold text-muc">
                   {o.tongTien > 0 ? so(o.tongTien) : "—"}
-                </td>
-                <td onClick={(e) => e.stopPropagation()}>{thaoTacPhieu(o)}</td>
-              </tr>
+                </TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>{thaoTacPhieu(o)}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
+          </TableBody>
           {hienThi.length > 0 && (
-            <tfoot className="sticky bottom-0 bg-giay/95 backdrop-blur">
-              <tr className="[&>td]:border-t [&>td]:border-ke [&>td]:px-3 [&>td]:py-2.5">
-                <td colSpan={4} className="text-[12px] font-medium text-muc-nhat">
+            <TableFooter className="sticky bottom-0 bg-giay/95 backdrop-blur">
+              <TableRow className="[&>td]:border-t [&>td]:border-ke [&>td]:px-3 [&>td]:py-2.5">
+                <TableCell colSpan={4} className="text-[12px] font-medium text-muc-nhat">
                   {soTrang > 1 ? (
                     <>
                       Trang {so(trangHien)}/{so(soTrang)} · tổng cả kỳ {so(hienThi.length)} phiếu
@@ -488,16 +489,16 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
                   ) : (
                     <>Tổng {so(hienThi.length)} phiếu</>
                   )}
-                </td>
-                <td className="so text-center text-[12px] text-muc-nhat">{so(tongDonVi)} đơn vị</td>
-                <td className="so text-right text-[15px] font-semibold whitespace-nowrap text-muc">
+                </TableCell>
+                <TableCell className="so text-center text-[12px] text-muc-nhat">{so(tongDonVi)} đơn vị</TableCell>
+                <TableCell className="so text-right text-[15px] font-semibold whitespace-nowrap text-muc">
                   {coTien ? tien(tongTien) : "—"}
-                </td>
-                <td />
-              </tr>
-            </tfoot>
+                </TableCell>
+                <TableCell />
+              </TableRow>
+            </TableFooter>
           )}
-        </table>
+        </Table>
       </div>
 
       {hienThi.length > 0 && (

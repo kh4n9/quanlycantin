@@ -6,7 +6,7 @@ import { DS_BAT_TAT, DS_NHAN, MAU_IN_MAC_DINH, chuanHoaMauIn } from "@/lib/mau-i
 import { useStore } from "@/lib/store";
 import type { MauInPhieu, NhanPhieu, Order } from "@/lib/types";
 import { MauPhieuBan } from "./print";
-import { bao, baoLoi, BieuTuong, Nut, ONhan, OText, The, Trong } from "./ui";
+import { bao, baoLoi, BieuTuong, Nut, OChon, ONhan, OText, The, Trong } from "./ui";
 
 /** Phiếu giả để xem trước mẫu in. */
 const DON_MAU: Order = {
@@ -164,18 +164,19 @@ export function ManMauIn() {
               <span className="nhan-muc">Chữ ký cuối phiếu</span>
               <div className="flex items-center gap-2">
                 <label className="text-[12px] text-muc-nhat">Số chữ ký mỗi hàng</label>
-                <select
+                <OChon
                   value={mau.soCotChuKy}
                   disabled={!duocSua}
+                  aria-label="Số chữ ký mỗi hàng"
                   onChange={(e) => setMau({ ...mau, soCotChuKy: Number(e.target.value) })}
-                  className="h-8 rounded-sm border border-ke-dam bg-white px-2 font-mono text-[12px] text-muc outline-none transition focus:border-muc disabled:bg-giay"
+                  className="h-8 rounded-sm border-ke-dam bg-white px-2 font-mono text-[12px] text-muc focus:border-muc disabled:bg-giay"
                 >
                   {[1, 2, 3, 4].map((n) => (
                     <option key={n} value={n}>
                       {n}
                     </option>
                   ))}
-                </select>
+                </OChon>
               </div>
             </div>
 

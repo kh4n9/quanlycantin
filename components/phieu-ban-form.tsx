@@ -8,6 +8,7 @@ import type { CanPhamGoiY, LineItem, Order, Product } from "@/lib/types";
 import { ChonHang, OTenCanPham } from "./pickers";
 import { useInPhieu } from "./print";
 import { baoLoi, BieuTuong, Nut, ONhan, OText, SoTo, Trong } from "./ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
 /**
  * Form lập / sửa phiếu bán.
@@ -275,7 +276,9 @@ export function PhieuBanForm({
   return (
     <div className="flex flex-col gap-3">
       {/* --- Thông tin can phạm, ghi thẳng trên phiếu --- */}
-      <section className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
+      {/* Không dùng `overflow-hidden`: danh sách gợi ý họ tên bung xuống dưới sẽ bị cắt
+          mất bởi khối kế tiếp. Đầu mục không có nền riêng nên không cần cắt góc. */}
+      <section className="rounded-lg border border-ke bg-giay-cao shadow-the">
         <header className="khia flex flex-wrap items-baseline justify-between gap-2 px-4 py-3">
           <div className="flex items-baseline gap-2.5">
             <SoTo so="01" />
@@ -337,7 +340,7 @@ export function PhieuBanForm({
       </section>
 
       {/* --- Thêm mặt hàng --- */}
-      <section className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
+      <section className="rounded-lg border border-ke bg-giay-cao shadow-the">
         <header className="khia flex flex-wrap items-baseline justify-between gap-2 px-4 py-3">
           <div className="flex items-baseline gap-2.5">
             <SoTo so="02" />
@@ -402,38 +405,38 @@ export function PhieuBanForm({
             </div>
 
             <div className="mem-cuon hidden max-h-[50vh] min-h-[180px] overflow-auto sm:block">
-              <table className="w-full min-w-[680px] border-collapse text-sm">
-                <thead className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
-                  <tr className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
-                    <th className="w-10">#</th>
-                    <th className="text-left">Tên mặt hàng</th>
-                    <th className="w-16">ĐVT</th>
-                    <th className="w-28 text-center">Số lượng</th>
-                    <th className="w-28 text-right">Đơn giá</th>
-                    <th className="w-32 text-right">Thành tiền</th>
-                    <th className="w-10" />
-                  </tr>
-                </thead>
-                <tbody>
+              <Table className="w-full min-w-[680px] border-collapse text-sm">
+                <TableHeader className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
+                  <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
+                    <TableHead className="w-10">#</TableHead>
+                    <TableHead className="text-left">Tên mặt hàng</TableHead>
+                    <TableHead className="w-16">ĐVT</TableHead>
+                    <TableHead className="w-28 text-center">Số lượng</TableHead>
+                    <TableHead className="w-28 text-right">Đơn giá</TableHead>
+                    <TableHead className="w-32 text-right">Thành tiền</TableHead>
+                    <TableHead className="w-10" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {dsDong.map((d, i) => (
-                    <tr
+                    <TableRow
                       key={d.productId}
                       className="group [&>td]:border-b [&>td]:border-ke/70 [&>td]:px-3 [&>td]:py-2.5 hover:bg-giay/70"
                     >
-                      <td className="so text-center text-[10.5px] text-muc-mo">{i + 1}</td>
-                      <td>
+                      <TableCell className="so text-center text-[10.5px] text-muc-mo">{i + 1}</TableCell>
+                      <TableCell>
                         <div className="font-semibold text-muc">{d.ten}</div>
                         <div className="font-mono text-[10.5px] text-muc-mo">{d.ma}</div>
-                      </td>
-                      <td className="text-center text-[12px] text-muc-nhat">{d.donViTinh}</td>
-                      <td className="text-center">{oSoLuong(d, i)}</td>
-                      <td>{oDonGia(d, i)}</td>
-                      <td className="so text-right font-semibold text-muc">{so(d.thanhTien)}</td>
-                      <td className="text-center">{nutXoaDong(d, i)}</td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="text-center text-[12px] text-muc-nhat">{d.donViTinh}</TableCell>
+                      <TableCell className="text-center">{oSoLuong(d, i)}</TableCell>
+                      <TableCell>{oDonGia(d, i)}</TableCell>
+                      <TableCell className="so text-right font-semibold text-muc">{so(d.thanhTien)}</TableCell>
+                      <TableCell className="text-center">{nutXoaDong(d, i)}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </>
         )}
