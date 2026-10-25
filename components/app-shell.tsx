@@ -253,7 +253,6 @@ function Khung() {
     .join("")
     .toUpperCase();
   const vaiTro = vaiTroCua(nguoiDung.quyen)?.ten ?? "Quyền tuỳ chỉnh";
-  const viTriMuc = mucChoPhep.findIndex((m) => m.khoa === mucHienTai) + 1;
 
   return (
     <>
@@ -331,7 +330,7 @@ function Khung() {
                   title={`${m.nhan} — ${m.moTa} (Alt+${i + 1})`}
                   aria-current={chon ? "page" : undefined}
                   aria-label={m.nhan}
-                  className={`relative flex h-9 w-9 shrink-0 items-center justify-center gap-2.5 rounded-md text-left text-[13px] transition-colors lg:h-auto lg:w-full lg:justify-start lg:gap-2.5 lg:py-2 ${
+                  className={`relative flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md px-2.5 text-left text-[12.5px] transition-colors lg:h-auto lg:w-full lg:justify-start lg:gap-2.5 lg:py-2 ${
                     thuGonSidebar ? "lg:justify-center lg:px-2 lg:py-2.5" : "lg:px-2.5"
                   } ${
                     chon
@@ -352,8 +351,13 @@ function Khung() {
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <BieuTuong ten={m.icon} className={`h-4 w-4 shrink-0 ${chon ? "text-muc" : "text-giay/40"}`} />
-                  <span className="hidden min-w-0 flex-1 truncate whitespace-nowrap lg:inline">
-                    {!thuGonSidebar && m.nhan}
+                  <span className="min-w-0 shrink-0 truncate whitespace-nowrap lg:hidden">{m.tenNgan}</span>
+                  <span
+                    className={`hidden min-w-0 truncate whitespace-nowrap ${
+                      thuGonSidebar ? "" : "lg:inline lg:flex-1"
+                    }`}
+                  >
+                    {m.nhan}
                   </span>
                   <span
                     className={`hidden shrink-0 font-mono text-[9.5px] tracking-wider whitespace-nowrap lg:inline ${
@@ -407,65 +411,6 @@ function Khung() {
           id="khung-noi-dung"
           className="mem-cuon flex min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain"
         >
-          <header className="sticky top-0 z-20 border-b border-ke bg-giay/88 backdrop-blur-md">
-            {/* Dòng nhãn + người dùng */}
-            <div className="flex items-center justify-between gap-4 px-4 pt-2.5 pb-2 lg:px-7">
-              <div className="flex min-w-0 items-baseline gap-2.5 font-mono text-[9.5px] tracking-[0.16em] text-muc-mo uppercase">
-                <span className="hidden truncate sm:inline">Sổ cấp phát</span>
-                <span aria-hidden className="hidden text-ke-dam sm:inline">
-                  ·
-                </span>
-                <span className="so shrink-0 text-muc-nhat">
-                  Tờ {String(viTriMuc).padStart(2, "0")}/{String(mucChoPhep.length).padStart(2, "0")}
-                </span>
-              </div>
-
-              <div className="flex shrink-0 items-center gap-2.5">
-                <div className="hidden text-right sm:block">
-                  <div className="truncate text-[12px] leading-tight font-semibold text-muc">{nguoiDung.hoTen}</div>
-                  <div className="mt-0.5 font-mono text-[9px] tracking-[0.12em] text-muc-mo uppercase">{vaiTro}</div>
-                </div>
-                <div className="flex h-7 w-7 items-center justify-center rounded-sm border border-muc/30 bg-giay font-mono text-[10px] font-semibold tracking-[0.02em] text-muc">
-                  {chuDau || "?"}
-                </div>
-              </div>
-            </div>
-
-            {/* Dải tab như mép các tờ sổ: tờ đang mở là tờ nối liền với trang */}
-            <nav
-              aria-label="Mục của sổ"
-              className="mem-cuon -mb-px flex gap-0.5 overflow-x-auto px-4 lg:px-7"
-            >
-              {mucChoPhep.map((m, i) => {
-                const chon = m.khoa === mucHienTai;
-                return (
-                  <button
-                    key={m.khoa}
-                    onClick={() => chonMuc(m.khoa)}
-                    aria-current={chon ? "page" : undefined}
-                    title={`${m.nhan} — ${m.moTa} (Alt+${i + 1})`}
-                    className={`group relative -mb-px flex shrink-0 items-center gap-1.5 rounded-t-md border border-b-0 px-3 py-2 text-[12.5px] transition-colors ${
-                      chon
-                        ? "z-10 border-ke bg-giay-cao font-semibold text-muc"
-                        : "border-transparent text-muc-nhat hover:bg-white/50 hover:text-muc"
-                    }`}
-                  >
-                    {/* "Gáy" của tờ đang mở: vạch đỏ trên mép tab, như dấu đánh dấu trang đang đọc */}
-                    <span
-                      aria-hidden
-                      className={`absolute inset-x-0 top-0 h-[2px] rounded-full ${chon ? "bg-dau" : "bg-transparent"}`}
-                    />
-                    <BieuTuong
-                      ten={m.icon}
-                      className={`h-3.5 w-3.5 shrink-0 ${chon ? "text-muc" : "text-muc-mo group-hover:text-muc-nhat"}`}
-                    />
-                    <span className={chon ? "" : "hidden sm:inline"}>{m.tenNgan}</span>
-                  </button>
-                );
-              })}
-            </nav>
-          </header>
-
           <div className="flex-1 px-4 py-4 lg:px-7 lg:py-5">
             <div className="mx-auto w-full max-w-[1600px]">
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
