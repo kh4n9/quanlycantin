@@ -354,6 +354,76 @@ export async function ghiBuHang(
   return timPhieuBan(id);
 }
 
+/**
+ * Sửa một lần bù hàng đã ghi (bù nhầm số lượng, ngày hoặc ghi chú).
+ *
+ * `viTri` là chỉ số của lần bù trong `items[].bu` tại thời điểm đọc. Tổng các
+ * lần bù sau khi sửa vẫn không được vượt quá số lượng còn thiếu của dòng hàng,
+ * nếu không công nợ sẽ thành số âm.
+ */
+export async function suaLanBuHang(
+  id: string,
+  productId: string,
+  viTri: number,
+  moi: { soLuong: number; ngay: string; ghiChu: string },
+): Promise<Order | null> {
+  const db = await getDb();
+  const phieu = await timPhieuBan(id);
+  if (!phieu) return null;
+
+  const item = phieu.items.find((i) => i.productId === productId);
+  if (!item) throw new Error("Không tìm thấy mặt hàng trên phiếu");
+  const bu = item.bu ?? [];
+  if (!Number.isInteger(viTri) || viTri < 0 || viTri >= bu.length) {
+    throw new Error("Không tìm thấy lần bù cần sửa");
+  }
+
+  const soLuong = Math.round(Number(moi.soLuong) || 0);
+  if (soLuong <= 0) throw new Error("Số lượng bù phải lớn hơn 0");
+
+  // Tổng các lần bù khác, để biết lần này còn được sửa lên tối đa bao nhiêu.
+  const daBuKhac = bu.reduce((s, b, k) => (k === viTri ? s : s + (Number(b.soLuong) || 0)), 0);
+  const conLai = Math.max(0, (Number(item.thieu) || 0) - daBuKhac);
+  if (soLuong > conLai) {
+    throw new Error(`"${item.ten}" chỉ còn thiếu ${conLai} ${item.donViTinh}, không thể bù ${soLuong}`);
+  }
+
+  const items = phieu.items.map((i) => {
+    if (i.productId !== productId) return i;
+    const ds = [...(i.bu ?? [])];
+    // Giữ nguyên người bù ban đầu; người sửa được ghi ở nhật ký.
+    ds[viTri] = { ...ds[viTri], soLuong, ngay: moi.ngay, ghiChu: moi.ghiChu };
+    return { ...i, bu: ds };
+  });
+
+  await db.collection(COL.phieuBan).updateOne({ id }, { $set: { items } });
+  return timPhieuBan(id);
+}
+
+/** Xoá một lần bù hàng đã ghi nhầm. */
+export async function xoaLanBuHang(
+  id: string,
+  productId: string,
+  viTri: number,
+): Promise<Order | null> {
+  const db = await getDb();
+  const phieu = await timPhieuBan(id);
+  if (!phieu) return null;
+
+  const item = phieu.items.find((i) => i.productId === productId);
+  if (!item) throw new Error("Không tìm thấy mặt hàng trên phiếu");
+  if (!Number.isInteger(viTri) || viTri < 0 || viTri >= (item.bu ?? []).length) {
+    throw new Error("Không tìm thấy lần bù cần xoá");
+  }
+
+  const items = phieu.items.map((i) =>
+    i.productId === productId ? { ...i, bu: (i.bu ?? []).filter((_, k) => k !== viTri) } : i,
+  );
+
+  await db.collection(COL.phieuBan).updateOne({ id }, { $set: { items } });
+  return timPhieuBan(id);
+}
+
 /** Xoá hẳn khỏi cơ sở dữ liệu. Không hoàn tác được. */
 export async function xoaVinhVienPhieuBan(id: string): Promise<Order | null> {
   const db = await getDb();

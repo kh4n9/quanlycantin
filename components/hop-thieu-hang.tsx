@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "@/lib/client";
 import { homNay, ngayVN, so } from "@/lib/format";
 import { conThieu, daBu } from "@/lib/thieu-hang";
-import type { Order } from "@/lib/types";
+import type { BuHang, Order } from "@/lib/types";
 import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, ONhan, OText } from "./ui";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
@@ -36,6 +36,12 @@ export function HopThieuHang({
   const [ngayBu, setNgayBu] = useState(homNay());
   const [ghiChuBu, setGhiChuBu] = useState("");
   const [dangLuu, setDangLuu] = useState(false);
+  /** Lần bù đang sửa (dòng hàng + chỉ số trong danh sách lần bù). */
+  const [dangSuaLanBu, setDangSuaLanBu] = useState<{ productId: string; viTri: number } | null>(null);
+  const [suaSoLuong, setSuaSoLuong] = useState("");
+  const [suaNgay, setSuaNgay] = useState("");
+  const [suaGhiChu, setSuaGhiChu] = useState("");
+  const [dangXuLyLanBu, setDangXuLyLanBu] = useState(false);
 
   const tongConThieu = useMemo(
     () => (phieu ? phieu.items.reduce((s, i) => s + conThieu(i), 0) : 0),
@@ -98,6 +104,63 @@ export function HopThieuHang({
       setDangLuu(false);
     }
   }, [phieu, dsBu, ngayBu, ghiChuBu, onLuu, dong]);
+
+  /** Mở form sửa tại chỗ cho một lần bù đã ghi. */
+  const moSuaLanBu = (productId: string, viTri: number, b: BuHang) => {
+    setDangSuaLanBu({ productId, viTri });
+    setSuaSoLuong(String(b.soLuong));
+    setSuaNgay(b.ngay || homNay());
+    setSuaGhiChu(b.ghiChu ?? "");
+  };
+
+  const luuSuaLanBu = async () => {
+    if (!phieu || !dangSuaLanBu) return;
+    const n = Number(suaSoLuong);
+    if (!Number.isInteger(n) || n < 1) {
+      baoLoi("Số lượng bù phải là số nguyên từ 1 trở lên");
+      return;
+    }
+    setDangXuLyLanBu(true);
+    try {
+      const kq = await apiClient.suaLanBuHang(
+        phieu.id,
+        dangSuaLanBu.productId,
+        dangSuaLanBu.viTri,
+        n,
+        suaNgay || homNay(),
+        suaGhiChu.trim(),
+      );
+      bao(`Đã sửa lần bù hàng của phiếu ${kq.order.soPhieu}`);
+      setDangSuaLanBu(null);
+      onLuu(kq.order);
+    } catch (e) {
+      baoLoi((e as Error).message);
+    } finally {
+      setDangXuLyLanBu(false);
+    }
+  };
+
+  const xoaLanBu = async (i: { productId: string; ten: string; donViTinh: string }, viTri: number, b: BuHang) => {
+    if (!phieu) return;
+    const ok = window.confirm(
+      `Xoá lần bù ${so(b.soLuong)} ${i.donViTinh} ngày ${ngayVN(b.ngay)} của “${i.ten}”?\n` +
+        "Số lượng này sẽ trở lại phần còn thiếu của phiếu.",
+    );
+    if (!ok) return;
+    setDangXuLyLanBu(true);
+    try {
+      const kq = await apiClient.xoaLanBuHang(phieu.id, i.productId, viTri);
+      bao(`Đã xoá lần bù hàng của phiếu ${kq.order.soPhieu}`);
+      if (dangSuaLanBu?.productId === i.productId && dangSuaLanBu.viTri === viTri) {
+        setDangSuaLanBu(null);
+      }
+      onLuu(kq.order);
+    } catch (e) {
+      baoLoi((e as Error).message);
+    } finally {
+      setDangXuLyLanBu(false);
+    }
+  };
 
   // Ctrl+Enter lưu theo đúng thao tác của tab đang mở
   useEffect(() => {
@@ -299,28 +362,124 @@ export function HopThieuHang({
           </div>
         )}
 
-        {/* Lịch sử bù hàng */}
+        {/* Lịch sử bù hàng — sửa/xoá được vì có thể đã bù nhầm */}
         {phieu.items.some((i) => (i.bu ?? []).length > 0) && (
           <div>
             <div className="nhan-muc mb-1.5">Đã bù những gì</div>
             <div className="flex flex-col gap-1">
               {phieu.items.flatMap((i) =>
-                (i.bu ?? []).map((b, idx) => (
-                  <div
-                    key={`${i.productId}-${idx}`}
-                    className="flex flex-wrap items-center gap-x-3 rounded-sm border border-ke bg-giay px-3 py-1.5 text-[12px]"
-                  >
-                    <span className="font-medium text-muc">{i.ten}</span>
-                    <span className="font-mono text-[11px] text-ngoc">
-                      bù {so(b.soLuong)} {i.donViTinh}
-                    </span>
-                    <span className="font-mono text-[10.5px] text-muc-nhat">{ngayVN(b.ngay)}</span>
-                    {b.ghiChu && <span className="text-muc-nhat">· {b.ghiChu}</span>}
-                    {b.boi && <span className="ml-auto text-[11px] text-muc-mo">bởi {b.boi}</span>}
-                  </div>
-                )),
+                (i.bu ?? []).map((b, idx) => {
+                  const dangSuaDay =
+                    dangSuaLanBu?.productId === i.productId && dangSuaLanBu.viTri === idx;
+
+                  if (dangSuaDay) {
+                    // Lần bù này cộng với các lần khác không được vượt quá số đã ghi thiếu.
+                    const toiDa = conThieu(i) + (Number(b.soLuong) || 0);
+                    return (
+                      <div
+                        key={`${i.productId}-${idx}`}
+                        className="rounded-sm border border-muc/35 bg-giay px-3 py-2 shadow-the"
+                      >
+                        <div className="flex flex-wrap items-center gap-x-3 text-[12px]">
+                          <span className="font-medium text-muc">{i.ten}</span>
+                          <span className="font-mono text-[10.5px] text-muc-nhat">
+                            đang sửa lần bù {ngayVN(b.ngay)}
+                          </span>
+                          <span className="ml-auto font-mono text-[10.5px] text-muc-mo">
+                            tối đa {so(toiDa)} {i.donViTinh}
+                          </span>
+                        </div>
+                        <div className="mt-2 grid gap-2 sm:grid-cols-[7rem_9.5rem_1fr]">
+                          <label className="block">
+                            <span className="nhan-muc">Số lượng ({i.donViTinh})</span>
+                            <OText
+                              type="number"
+                              min={1}
+                              max={toiDa}
+                              value={suaSoLuong}
+                              onChange={(e) => setSuaSoLuong(e.target.value)}
+                              onFocus={(e) => e.target.select()}
+                            />
+                          </label>
+                          <label className="block">
+                            <span className="nhan-muc">Ngày bù</span>
+                            <OText
+                              type="date"
+                              value={suaNgay}
+                              onChange={(e) => setSuaNgay(e.target.value)}
+                            />
+                          </label>
+                          <label className="block">
+                            <span className="nhan-muc">Ghi chú</span>
+                            <OText
+                              value={suaGhiChu}
+                              onChange={(e) => setSuaGhiChu(e.target.value)}
+                              placeholder="Ví dụ: hàng về đợt 2"
+                            />
+                          </label>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <Nut
+                            co="sm"
+                            kieu="chinh"
+                            onClick={() => void luuSuaLanBu()}
+                            disabled={dangXuLyLanBu}
+                          >
+                            <BieuTuong ten="check" className="h-3.5 w-3.5" />
+                            {dangXuLyLanBu ? "Đang lưu…" : "Lưu thay đổi"}
+                          </Nut>
+                          <Nut co="sm" onClick={() => setDangSuaLanBu(null)} disabled={dangXuLyLanBu}>
+                            Huỷ
+                          </Nut>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={`${i.productId}-${idx}`}
+                      className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-sm border border-ke bg-giay px-3 py-1.5 text-[12px]"
+                    >
+                      <span className="font-medium text-muc">{i.ten}</span>
+                      <span className="font-mono text-[11px] text-ngoc">
+                        bù {so(b.soLuong)} {i.donViTinh}
+                      </span>
+                      <span className="font-mono text-[10.5px] text-muc-nhat">{ngayVN(b.ngay)}</span>
+                      {b.ghiChu && <span className="text-muc-nhat">· {b.ghiChu}</span>}
+                      <span className="ml-auto flex items-center gap-1.5">
+                        {b.boi && <span className="text-[11px] text-muc-mo">bởi {b.boi}</span>}
+                        <Nut
+                          co="sm"
+                          kieu="mo"
+                          className="h-7 px-2 text-[11.5px]"
+                          onClick={() => moSuaLanBu(i.productId, idx, b)}
+                          disabled={dangXuLyLanBu || Boolean(dangSuaLanBu)}
+                          title="Sửa lần bù này"
+                        >
+                          <BieuTuong ten="sua" className="h-3.5 w-3.5" />
+                          Sửa
+                        </Nut>
+                        <Nut
+                          co="sm"
+                          kieu="mo"
+                          className="h-7 px-2 text-[11.5px] text-dau hover:bg-dau/6"
+                          onClick={() => void xoaLanBu(i, idx, b)}
+                          disabled={dangXuLyLanBu || Boolean(dangSuaLanBu)}
+                          title="Xoá lần bù này"
+                        >
+                          <BieuTuong ten="xoa" className="h-3.5 w-3.5" />
+                          Xoá
+                        </Nut>
+                      </span>
+                    </div>
+                  );
+                }),
               )}
             </div>
+            <p className="mt-1.5 text-[11px] text-muc-mo">
+              Bù nhầm thì bấm Sửa để chỉnh số lượng, ngày hoặc ghi chú; Xoá để trả phần hàng đó về mục còn thiếu.
+            </p>
           </div>
         )}
       </div>

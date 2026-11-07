@@ -232,6 +232,25 @@ export const apiClient = {
       method: "POST",
       body: JSON.stringify({ bu, ngay, ghiChu }),
     }),
+  /** Sửa một lần bù đã ghi: `viTri` là chỉ số trong danh sách lần bù của dòng hàng. */
+  suaLanBuHang: (
+    id: string,
+    productId: string,
+    viTri: number,
+    soLuong: number,
+    ngay: string,
+    ghiChu: string,
+  ) =>
+    api<{ order: Order }>(`/api/orders/${id}/bu-hang`, {
+      method: "PATCH",
+      body: JSON.stringify({ productId, viTri, soLuong, ngay, ghiChu }),
+    }),
+  /** Xoá một lần bù đã ghi nhầm. */
+  xoaLanBuHang: (id: string, productId: string, viTri: number) =>
+    api<{ order: Order }>(`/api/orders/${id}/bu-hang`, {
+      method: "DELETE",
+      body: JSON.stringify({ productId, viTri }),
+    }),
 
   danhDauDaKiem: (id: string, ghiChu: string) =>
     api<{ order: Order }>(`/api/orders/${id}/kiem`, { method: "POST", body: JSON.stringify({ ghiChu }) }),
