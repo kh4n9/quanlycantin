@@ -27,9 +27,9 @@ export function ManCaiDat() {
 
   const demDuLieu = useCallback(async () => {
     try {
-      const [sp, dh] = await Promise.all([apiClient.products(), apiClient.orders()]);
-      setSoHang(sp.products.length);
-      setSoPhieu(dh.orders.length);
+      const kq = await apiClient.demDuLieu();
+      setSoHang(kq.soHang);
+      setSoPhieu(kq.soPhieu);
     } catch {
       /* để trống, chỉ là số liệu cho biết */
     }

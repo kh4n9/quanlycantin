@@ -155,16 +155,30 @@ export const loiChuaDangNhap = () =>
 export const loiKhongCoQuyen = (quyen: Quyen) =>
   NextResponse.json({ error: `Tài khoản không có quyền: ${TEN_QUYEN[quyen] ?? quyen}` }, { status: 403 });
 
+export const loiPhaiDoiMatKhau = () =>
+  NextResponse.json(
+    { error: "Tài khoản đang dùng mật khẩu ban đầu, phải đổi mật khẩu trước khi tiếp tục", phaiDoiMatKhau: true },
+    { status: 403 },
+  );
+
 /**
  * Dùng trong các route API:
  *
  *   const kq = await yeuCau("ban_hang");
  *   if ("res" in kq) return kq.res;
  *   // kq.nd là người dùng đã đăng nhập và đủ quyền
+ *
+ * Tài khoản còn dùng mật khẩu ban đầu (tài khoản admin/admin tạo sẵn) bị chặn ở
+ * mọi nghiệp vụ cho tới khi tự đổi mật khẩu. Chỉ những route cần cho việc đổi
+ * mật khẩu hoặc duy trì phiên mới truyền `choPhepMatKhauBanDau`.
  */
-export async function yeuCau(quyen?: Quyen): Promise<{ nd: NguoiDung } | { res: NextResponse }> {
+export async function yeuCau(
+  quyen?: Quyen,
+  tuyChon: { choPhepMatKhauBanDau?: boolean } = {},
+): Promise<{ nd: NguoiDung } | { res: NextResponse }> {
   const nd = await nguoiDungHienTai();
   if (!nd) return { res: loiChuaDangNhap() };
+  if (nd.phaiDoiMatKhau && !tuyChon.choPhepMatKhauBanDau) return { res: loiPhaiDoiMatKhau() };
   if (quyen && !nd.quyen.includes(quyen)) return { res: loiKhongCoQuyen(quyen) };
   return { nd };
 }

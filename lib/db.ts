@@ -33,9 +33,17 @@ async function chayKhoiTao(): Promise<void> {
     db.collection(COL.nguoiDung).createIndex({ tenDangNhap: 1 }, { unique: true }),
     db.collection(COL.nguoiDung).createIndex({ id: 1 }, { unique: true }),
     db.collection(COL.sanPham).createIndex({ id: 1 }, { unique: true }),
+    // Kiểm trùng mã hàng chạy trên mọi lần thêm/sửa mặt hàng
+    db.collection(COL.sanPham).createIndex({ ma: 1 }),
     db.collection(COL.phieuBan).createIndex({ id: 1 }, { unique: true }),
     db.collection(COL.phieuBan).createIndex({ ngay: -1 }),
     db.collection(COL.phieuBan).createIndex({ hoTen: 1 }),
+    // Đúng thứ tự sắp của danh sách phiếu: ngày mới trước, cùng ngày thì mới tạo trước
+    db.collection(COL.phieuBan).createIndex({ ngay: -1, createdAt: -1 }),
+    // Lọc phiếu còn dùng / trong thùng rác rồi sắp theo ngày
+    db.collection(COL.phieuBan).createIndex({ xoaLuc: 1, ngay: -1 }),
+    // Kiểm một mặt hàng đã lên phiếu chưa trước khi cho xoá
+    db.collection(COL.phieuBan).createIndex({ "items.productId": 1 }),
     db.collection(COL.nhatKy).createIndex({ id: 1 }, { unique: true }),
     db.collection(COL.nhatKy).createIndex({ luc: -1 }),
     db.collection(COL.nhatKy).createIndex({ ngay: -1 }),
@@ -239,6 +247,21 @@ export async function layThungRac(): Promise<Order[]> {
     .sort({ xoaLuc: -1 })
     .toArray();
   return (ds as Record<string, unknown>[]).map(chuanHoaPhieu);
+}
+
+/**
+ * Đếm số mặt hàng và số phiếu đang dùng mà không kéo nội dung về.
+ *
+ * Trang Cài đặt chỉ cần hai con số này; trước đây nó tải nguyên danh sách phiếu
+ * kèm mọi dòng hàng chỉ để lấy `.length`.
+ */
+export async function demDuLieu(): Promise<{ soHang: number; soPhieu: number }> {
+  const db = await getDb();
+  const [soHang, soPhieu] = await Promise.all([
+    db.collection(COL.sanPham).countDocuments(),
+    db.collection(COL.phieuBan).countDocuments(CHUA_XOA),
+  ]);
+  return { soHang, soPhieu };
 }
 
 export async function timPhieuBan(id: string): Promise<Order | null> {
@@ -557,9 +580,19 @@ export async function dungDongHang(
    */
   giuLai: LineItem[] = [],
 ): Promise<{ items: LineItem[]; tongTien: number }> {
+  // Lấy một lượt mọi mặt hàng được nhắc tới thay vì hỏi cơ sở dữ liệu từng dòng.
+  // Một phiếu mười món trước đây tốn mười lượt đi-về nối đuôi.
+  const ids = [...new Set(inputs.map((input) => String(input.productId || "")))];
+  const db = await getDb();
+  const timThay = await db
+    .collection(COL.sanPham)
+    .find({ id: { $in: ids } }, KHONG_LAY_ID)
+    .toArray();
+  const theoId = new Map((timThay as unknown as Product[]).map((p) => [p.id, p]));
+
   const items: LineItem[] = [];
   for (const input of inputs) {
-    const p = await timSanPham(String(input.productId || ""));
+    const p = theoId.get(String(input.productId || ""));
     if (!p) throw new Error(`Không tìm thấy mặt hàng: ${input.productId}`);
     const soLuong = Math.round(Number(input.soLuong) || 0);
     if (soLuong <= 0) throw new Error(`Số lượng không hợp lệ cho "${p.ten}"`);

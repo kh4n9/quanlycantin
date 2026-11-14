@@ -476,7 +476,7 @@ function Khung() {
                 <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border border-moc/25 border-l-[3px] border-l-moc bg-moc-nhat px-3.5 py-2.5 text-[13px] text-muc shadow-xs">
                   <BieuTuong ten="canh" className="h-4 w-4 shrink-0 text-moc" />
                   <span className="flex-1">
-                    Tài khoản của bạn đang dùng mật khẩu ban đầu. Nên đổi ngay để bảo đảm an toàn.
+                    Tài khoản của bạn đang dùng mật khẩu ban đầu. Phải đổi mật khẩu trước khi dùng các chức năng khác.
                   </span>
                   <Nut co="sm" kieu="chinh" onClick={() => setDoiMatKhau(true)}>
                     Đổi mật khẩu
@@ -484,7 +484,17 @@ function Khung() {
                 </div>
               )}
 
-              {mucChoPhep.length === 0 ? (
+              {nguoiDung.phaiDoiMatKhau ? (
+                // Máy chủ cũng chặn mọi nghiệp vụ trong tình trạng này, nên không
+                // mở màn hình nào để tránh hiện lỗi 403 hàng loạt.
+                <div className="rounded-lg border border-ke bg-giay-cao shadow-the">
+                  <Trong
+                    icon="khoa"
+                    tieuDe="Cần đổi mật khẩu trước"
+                    moTa="Tài khoản đang dùng mật khẩu ban đầu. Bấm “Đổi mật khẩu” ở trên để tiếp tục sử dụng ứng dụng."
+                  />
+                </div>
+              ) : mucChoPhep.length === 0 ? (
                 <div className="rounded-lg border border-ke bg-giay-cao shadow-the">
                   <Trong
                     icon="khoa"

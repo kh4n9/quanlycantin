@@ -9,10 +9,40 @@ export const dynamic = "force-dynamic";
 /**
  * Chặn dò mật khẩu: sau 5 lần sai liên tiếp thì tạm khoá 60 giây.
  * Bộ đếm giữ trong bộ nhớ, đủ dùng cho một máy chủ căn tin.
+ *
+ * Khoá theo cặp (tên đăng nhập, IP) chứ không chỉ theo tên: nếu khoá theo tên
+ * thì ai cũng có thể gõ sai 5 lần để chặn chính người dùng thật. Kèm IP vẫn
+ * chặn được dò mật khẩu trên một tài khoản từ cùng một máy.
+ *
+ * Mỗi lần ghi có dọn bớt mục đã hết hạn để bộ đếm không phình mãi khi bị dò
+ * bằng vô số tên đăng nhập ngẫu nhiên.
  */
 const soLanSai = new Map<string, { dem: number; khoaDen: number }>();
 const TOI_DA = 5;
 const THOI_GIAN_KHOA = 60_000;
+/** Quá số này thì quét dọn trước khi thêm mục mới. */
+const NGUONG_DON = 500;
+
+function khoaTheoDoi(tenDangNhap: string, ip: string): string {
+  return `${tenDangNhap}\u0000${ip}`;
+}
+
+function donMucHetHan(): void {
+  if (soLanSai.size < NGUONG_DON) return;
+  const bayGio = Date.now();
+  for (const [khoa, muc] of soLanSai) {
+    // Mục đã qua thời gian khoá và không còn trong đợt khoá nào thì bỏ
+    if (muc.khoaDen !== 0 && muc.khoaDen <= bayGio) soLanSai.delete(khoa);
+    else if (muc.khoaDen === 0 && muc.dem <= 0) soLanSai.delete(khoa);
+  }
+}
+
+/** IP của máy gọi, ưu tiên header do proxy đặt rồi tới header chuẩn. */
+function ipCua(req: Request): string {
+  const fwd = req.headers.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  return req.headers.get("x-real-ip")?.trim() || "khong-ro";
+}
 
 export async function POST(req: Request) {
   try {
@@ -25,7 +55,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Chưa nhập tên đăng nhập hoặc mật khẩu" }, { status: 400 });
     }
 
-    const theoDoi = soLanSai.get(tenDangNhap);
+    const khoa = khoaTheoDoi(tenDangNhap, ipCua(req));
+    const theoDoi = soLanSai.get(khoa);
     if (theoDoi && theoDoi.khoaDen > Date.now()) {
       const con = Math.ceil((theoDoi.khoaDen - Date.now()) / 1000);
       return NextResponse.json({ error: `Sai quá nhiều lần. Thử lại sau ${con} giây.` }, { status: 429 });
@@ -36,7 +67,8 @@ export async function POST(req: Request) {
 
     if (!nd || !dung) {
       const dem = (theoDoi?.dem ?? 0) + 1;
-      soLanSai.set(tenDangNhap, {
+      donMucHetHan();
+      soLanSai.set(khoa, {
         dem,
         khoaDen: dem >= TOI_DA ? Date.now() + THOI_GIAN_KHOA : 0,
       });
@@ -60,7 +92,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Tài khoản đã bị khoá" }, { status: 403 });
     }
 
-    soLanSai.delete(tenDangNhap);
+    soLanSai.delete(khoa);
     await moPhien(nd.id);
 
     const db = await getDb();

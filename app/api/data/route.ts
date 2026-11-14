@@ -1,10 +1,23 @@
 import { NextResponse } from "next/server";
 import { yeuCau } from "@/lib/auth";
-import { khoiTao, xoaHetDuLieu } from "@/lib/db";
+import { demDuLieu, khoiTao, xoaHetDuLieu } from "@/lib/db";
 import { so } from "@/lib/format";
 import { ghiNhatKy } from "@/lib/nhat-ky-server";
 
 export const dynamic = "force-dynamic";
+
+/** Số lượng hiện có, chỉ trả hai con số thay vì toàn bộ danh sách. */
+export async function GET() {
+  try {
+    await khoiTao();
+    const kq = await yeuCau();
+    if ("res" in kq) return kq.res;
+
+    return NextResponse.json(await demDuLieu());
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  }
+}
 
 /** Xoá sạch mặt hàng và phiếu bán. Giữ lại tài khoản và thông tin đơn vị. */
 export async function DELETE() {

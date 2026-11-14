@@ -10,7 +10,8 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   try {
     await khoiTao();
-    const kq = await yeuCau();
+    // Chính việc đổi mật khẩu phải chạy được khi tài khoản còn mật khẩu ban đầu
+    const kq = await yeuCau(undefined, { choPhepMatKhauBanDau: true });
     if ("res" in kq) return kq.res;
 
     const body = await req.json();

@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# ảnh tư liệu tạm, không thuộc ứng dụng
+/toan2026/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

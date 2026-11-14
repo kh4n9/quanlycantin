@@ -24,6 +24,31 @@ export async function api<T>(url: string, init?: RequestInit): Promise<T> {
   return data as T;
 }
 
+/**
+ * Dạng báo cáo trên đường truyền.
+ *
+ * Mỗi phiếu chỉ được gửi một lần trong `phieuTomTat`; hai bảng theo ngày và
+ * theo can phạm giữ danh sách id thay vì chép lại nguyên nội dung phiếu. Trước
+ * đây cùng một phiếu được gửi hai lần nên gói tin phình gần gấp đôi.
+ */
+export type BaoCaoThuGon = Omit<BaoCao, "theoNgay" | "theoCanPham"> & {
+  phieuTomTat: PhieuTomTat[];
+  theoNgay: (Omit<BaoCao["theoNgay"][number], "phieu"> & { phieu: string[] })[];
+  theoCanPham: (Omit<BaoCao["theoCanPham"][number], "phieu"> & { phieu: string[] })[];
+};
+
+/** Nối id trở lại thành nội dung phiếu để phần giao diện dùng như cũ. */
+export function noiPhieuBaoCao(kq: BaoCaoThuGon): BaoCao {
+  const theo = new Map(kq.phieuTomTat.map((p) => [p.id, p]));
+  const noi = (ids: string[]) => ids.map((id) => theo.get(id)).filter((p): p is PhieuTomTat => p !== undefined);
+  const { phieuTomTat: _bo, ...con } = kq;
+  return {
+    ...con,
+    theoNgay: kq.theoNgay.map((n) => ({ ...n, phieu: noi(n.phieu) })),
+    theoCanPham: kq.theoCanPham.map((p) => ({ ...p, phieu: noi(p.phieu) })),
+  };
+}
+
 /** Thông tin vắn tắt của một phiếu, dùng trong các hộp chi tiết của báo cáo. */
 export type PhieuTomTat = {
   id: string;
@@ -257,8 +282,11 @@ export const apiClient = {
   boDanhDauKiem: (id: string) =>
     api<{ order: Order }>(`/api/orders/${id}/kiem`, { method: "DELETE" }),
 
-  baoCao: (tu: string, den: string) =>
-    api<BaoCao>(`/api/reports?tu=${encodeURIComponent(tu)}&den=${encodeURIComponent(den)}`),
+  /** Máy chủ gửi dạng thu gọn; nối lại ngay tại đây để phần giao diện không đổi. */
+  baoCao: async (tu: string, den: string) =>
+    noiPhieuBaoCao(
+      await api<BaoCaoThuGon>(`/api/reports?tu=${encodeURIComponent(tu)}&den=${encodeURIComponent(den)}`),
+    ),
 
   nhatKy: (q = "") =>
     api<{ nhatKy: NhatKy[]; tong: number; trang: number; coTrang: number; soTrang: number }>(
@@ -271,6 +299,8 @@ export const apiClient = {
 
   xoaHetDuLieu: () =>
     api<{ ok: boolean; soHang: number; soPhieu: number }>("/api/data", { method: "DELETE" }),
+  /** Chỉ đếm số mặt hàng và số phiếu, không tải nội dung. */
+  demDuLieu: () => api<{ soHang: number; soPhieu: number }>("/api/data"),
 
   napDuLieuMau: (ghiDe = false) =>
     api<{ soHang: number }>("/api/seed", { method: "POST", body: JSON.stringify({ ghiDe }) }),

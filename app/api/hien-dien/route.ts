@@ -15,7 +15,8 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   try {
     await khoiTao();
-    const kq = await yeuCau();
+    // Tín hiệu hiện diện vẫn phải chạy để màn Tài khoản thấy phiên đang mở
+    const kq = await yeuCau(undefined, { choPhepMatKhauBanDau: true });
     if ("res" in kq) return kq.res;
 
     const body = (await req.json().catch(() => ({}))) as { trang?: unknown; thietBi?: unknown };

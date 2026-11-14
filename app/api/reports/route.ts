@@ -67,7 +67,7 @@ type CanPhamTichLuy = {
   lanDau: string;
   lanCuoi: string;
   hang: Map<string, MatHangTomTat>;
-  phieu: PhieuTomTat[];
+  phieu: string[];
 };
 
 type NgayTichLuy = {
@@ -75,7 +75,7 @@ type NgayTichLuy = {
   soPhieu: number;
   soLuongHang: number;
   doanhThu: number;
-  phieu: PhieuTomTat[];
+  phieu: string[];
 };
 
 function tomTatPhieu(o: Order): PhieuTomTat {
@@ -167,6 +167,11 @@ export async function GET(req: Request) {
     const theoHang = new Map<string, HangTichLuy>();
     const theoNgay = new Map<string, NgayTichLuy>();
     const theoCanPham = new Map<string, CanPhamTichLuy>();
+    /**
+     * Nội dung từng phiếu, mỗi phiếu đúng một bản. Hai bảng bên dưới chỉ giữ id
+     * nên gói tin không còn chép lại cùng một phiếu nhiều lần.
+     */
+    const phieuTomTat: PhieuTomTat[] = [];
 
     /** Hàng còn nợ can phạm, gom theo mặt hàng để tiện đối chiếu khi hàng về */
     const theoThieu = new Map<
@@ -206,6 +211,7 @@ export async function GET(req: Request) {
     for (const o of orders) {
       doanhThu += o.tongTien;
       const phieu = tomTatPhieu(o);
+      phieuTomTat.push(phieu);
       const soLuongPhieu = phieu.soLuong;
       const khoa = o.hoTen.trim().toLowerCase().replace(/\s+/g, " ");
 
@@ -259,7 +265,7 @@ export async function GET(req: Request) {
       n.soPhieu += 1;
       n.soLuongHang += soLuongPhieu;
       n.doanhThu += o.tongTien;
-      n.phieu.push(phieu);
+      n.phieu.push(phieu.id);
       theoNgay.set(o.ngay, n);
 
       // Can phạm gộp theo họ tên, giữ thông tin của phiếu mới nhất
@@ -279,7 +285,7 @@ export async function GET(req: Request) {
       p.soPhieu += 1;
       p.soLuongHang += soLuongPhieu;
       p.doanhThu += o.tongTien;
-      p.phieu.push(phieu);
+      p.phieu.push(phieu.id);
       if (!p.lanDau || o.ngay < p.lanDau) p.lanDau = o.ngay;
       if (o.ngay >= p.lanCuoi) {
         p.lanCuoi = o.ngay;
@@ -341,6 +347,11 @@ export async function GET(req: Request) {
     // Nếu mọi phiếu đều để giá 0 thì báo cáo chỉ nói về số lượng
     const coDungTien = orders.some((o) => o.tongTien > 0);
 
+    // Hai bảng dưới chỉ còn giữ id phiếu nên phải tra lại thông tin để sắp xếp.
+    const theoId = new Map(phieuTomTat.map((p) => [p.id, p]));
+    const soTheoId = (id: string) => theoId.get(id)?.soPhieu ?? "";
+    const ngayTheoId = (id: string) => theoId.get(id)?.ngay ?? "";
+
     return NextResponse.json({
       tongQuan: {
         doanhThu,
@@ -353,6 +364,7 @@ export async function GET(req: Request) {
         coDungTien,
       },
       soSanh,
+      phieuTomTat,
       hangThieu: [...theoThieu.values()]
         .map((t) => ({ ...t, phieu: t.phieu.sort((a, b) => a.ngay.localeCompare(b.ngay)) }))
         .sort((a, b) => b.conThieu - a.conThieu),
@@ -367,9 +379,8 @@ export async function GET(req: Request) {
       theoNgay: [...theoNgay.values()]
         .map((n) => ({
           ...n,
-          phieu: [...n.phieu].sort((a, b) =>
-            b.ngay.localeCompare(a.ngay) || b.soPhieu.localeCompare(a.soPhieu, "vi", { numeric: true }),
-          ),
+          // Trong cùng một ngày, phiếu số lớn (mới hơn) lên trước
+          phieu: [...n.phieu].sort((a, b) => soTheoId(b).localeCompare(soTheoId(a), "vi", { numeric: true })),
         }))
         .sort((a, b) => a.ngay.localeCompare(b.ngay)),
       theoHang: [...theoHang.values()]
@@ -384,7 +395,7 @@ export async function GET(req: Request) {
           ...p,
           soMatHang: hang.size,
           hang: [...hang.values()].sort((a, b) => b.soLuong - a.soLuong),
-          phieu: [...p.phieu].sort((a, b) => b.ngay.localeCompare(a.ngay)),
+          phieu: [...p.phieu].sort((a, b) => ngayTheoId(b).localeCompare(ngayTheoId(a))),
         }))
         .sort((a, b) => (coDungTien ? b.doanhThu - a.doanhThu : b.soLuongHang - a.soLuongHang)),
     });
