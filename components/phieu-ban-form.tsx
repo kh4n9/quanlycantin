@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { DuLieuPhieu } from "@/lib/client";
+import { apiClient, type DuLieuPhieu } from "@/lib/client";
 import { homNay, so, tien } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import type { CanPhamGoiY, LineItem, Order, Product } from "@/lib/types";
@@ -41,18 +41,75 @@ export function PhieuBanForm({
   const [namSinh, setNamSinh] = useState(banDau?.namSinh ? String(banDau.namSinh) : "");
   const [buongGiam, setBuongGiam] = useState(banDau?.buongGiam ?? "");
   const [ngay, setNgay] = useState(banDau?.ngay ?? homNay());
+  const [soThuTu, setSoThuTu] = useState(banDau?.soThuTu ? String(banDau.soThuTu) : "");
   const [ghiChu, setGhiChu] = useState(banDau?.ghiChu ?? "");
   const [dsDong, setDsDong] = useState<LineItem[]>(banDau?.items ? [...banDau.items] : []);
   const [dangLuu, setDangLuu] = useState(false);
+  /** Người dùng đã tự sửa số thứ tự — lúc lưu gửi đúng số này thay vì tự chọn. */
+  const [daSuaSo, setDaSuaSo] = useState(false);
+  /** Đã bấm “Tự động” — lúc lưu yêu cầu máy chủ đánh lại số trống nhỏ nhất. */
+  const [buocTuDong, setBuocTuDong] = useState(false);
 
   const oHoTen = useRef<HTMLInputElement>(null);
   const oNamSinh = useRef<HTMLInputElement>(null);
   const oBuongGiam = useRef<HTMLInputElement>(null);
   const oTimHang = useRef<HTMLInputElement>(null);
+  /** Lần xin số gợi ý gần nhất — bỏ qua kết quả cũ về muộn hoặc đã bị gõ tay đè. */
+  const lanGoiSo = useRef(0);
 
   useEffect(() => {
     if (!suaDoi) setTimeout(() => oHoTen.current?.focus(), 80);
   }, [suaDoi]);
+
+  /**
+   * Xin máy chủ số thứ tự còn trống nhỏ nhất trong một ngày và điền vào ô.
+   * Lỗi mạng ở đây không chặn việc lập phiếu: ô để trống thì lúc lưu máy chủ vẫn
+   * tự chọn số, nên chỉ cần bỏ qua.
+   */
+  const laySoThuTu = useCallback(async (ngayChon: string, boQua = "") => {
+    const lan = (lanGoiSo.current += 1);
+    try {
+      const kq = await apiClient.soThuTuTrong(ngayChon, boQua);
+      // Đổi ngày / bấm Tự động lần nữa hoặc người dùng đã gõ tay thì bỏ kết quả này
+      if (lan === lanGoiSo.current) setSoThuTu(String(kq.soThuTu));
+    } catch {
+      /* để trống, lúc lưu máy chủ tự chọn */
+    }
+  }, []);
+
+  // Lần đầu mở form: lập phiếu mới thì lấy số gợi ý cho hôm nay; sửa phiếu cũ
+  // chưa từng được đánh số thì lấy số trống cho ngày của phiếu đó. Đặt trong
+  // hẹn giờ 0ms để việc gọi API không chạy ngay trong thân effect.
+  useEffect(() => {
+    const hen = setTimeout(() => {
+      if (suaDoi) {
+        if (banDau && banDau.soThuTu <= 0) void laySoThuTu(banDau.ngay, banDau.id);
+      } else {
+        void laySoThuTu(ngay);
+      }
+    }, 0);
+    return () => clearTimeout(hen);
+    // Chỉ chạy một lần khi mở form.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /**
+   * Đổi ngày bán: số thứ tự tính riêng từng ngày nên phải chọn lại — bỏ số
+   * người dùng đã gõ tay và lấy số trống nhỏ nhất của ngày mới. Quay lại đúng
+   * ngày cũ của phiếu đang sửa thì hiện lại số hiện tại của phiếu.
+   */
+  const doiNgay = (ngayMoi: string) => {
+    setNgay(ngayMoi);
+    setDaSuaSo(false);
+    setBuocTuDong(false);
+    if (banDau && ngayMoi === banDau.ngay && banDau.soThuTu > 0) {
+      // Huỷ kết quả gợi ý của ngày vừa chọn nhầm đang trên đường về
+      lanGoiSo.current += 1;
+      setSoThuTu(String(banDau.soThuTu));
+      return;
+    }
+    void laySoThuTu(ngayMoi, banDau?.id ?? "");
+  };
 
   const isDirty = useMemo(() => {
     if (suaDoi) {
@@ -62,7 +119,10 @@ export function PhieuBanForm({
       const buongKhac = buongGiam.trim() !== (banDau.buongGiam || "");
       const ghiChuKhac = ghiChu.trim() !== (banDau.ghiChu || "");
       const ngayKhac = ngay !== banDau.ngay;
-      if (hoTenKhac || namSinhKhac || buongKhac || ghiChuKhac || ngayKhac) return true;
+      // Chỉ tính là thay đổi khi số đang hiện khác số hiện tại của phiếu — bấm
+      // “Tự động” mà số vẫn thế thì không cần cảnh báo chưa lưu.
+      const soKhac = daSuaSo && Math.max(0, Math.round(Number(soThuTu) || 0)) !== (banDau.soThuTu || 0);
+      if (hoTenKhac || namSinhKhac || buongKhac || ghiChuKhac || ngayKhac || soKhac) return true;
       if (dsDong.length !== banDau.items.length) return true;
       return dsDong.some((d, idx) => {
         const goc = banDau.items[idx];
@@ -76,7 +136,7 @@ export function PhieuBanForm({
       ghiChu.trim() !== "" ||
       dsDong.length > 0
     );
-  }, [suaDoi, banDau, hoTen, namSinh, buongGiam, ghiChu, ngay, dsDong]);
+  }, [suaDoi, banDau, hoTen, namSinh, buongGiam, ghiChu, ngay, dsDong, daSuaSo, soThuTu]);
 
   useEffect(() => {
     datCoDuLieuChuaLuu(isDirty);
@@ -213,14 +273,20 @@ export function PhieuBanForm({
         return;
       }
     }
+    const homNayMoi = homNay();
     setHoTen("");
     setNamSinh("");
     setBuongGiam("");
     setDsDong([]);
     setGhiChu("");
-    setNgay(homNay());
+    setNgay(homNayMoi);
+    setSoThuTu("");
+    setDaSuaSo(false);
+    setBuocTuDong(false);
+    // Phiếu vừa lưu xong thì gợi ý số thứ tự phải tính lại cho phiếu kế tiếp
+    void laySoThuTu(homNayMoi);
     setTimeout(() => oHoTen.current?.focus(), 50);
-  }, [isDirty]);
+  }, [isDirty, laySoThuTu]);
 
   const xuLyHuy = useCallback(() => {
     if (isDirty) {
@@ -243,6 +309,19 @@ export function PhieuBanForm({
     }
     setDangLuu(true);
     try {
+      const soNhap = Math.round(Number(soThuTu) || 0);
+      const ngayKhac = suaDoi && banDau ? ngay !== banDau.ngay : false;
+      // - Nhập tay: gửi đúng số đã gõ (máy chủ kiểm trùng).
+      // - Ô bị xoá trống: coi như yêu cầu tự động.
+      // - Bấm “Tự động” hoặc vừa đổi ngày: gửi 0 để máy chủ chọn số trống nhỏ nhất.
+      // - Phiếu cũ chưa từng được đánh số: lưu lần này đánh luôn.
+      // - Còn lại (sửa phiếu, không đụng gì): không gửi, giữ nguyên số cũ.
+      const chuaCoSo = suaDoi && banDau !== undefined && banDau.soThuTu <= 0;
+      const soThuTuGui = daSuaSo
+        ? Math.max(0, soNhap)
+        : buocTuDong || ngayKhac || chuaCoSo
+          ? 0
+          : undefined;
       await onLuu({
         ngay,
         hoTen: hoTen.trim(),
@@ -250,6 +329,7 @@ export function PhieuBanForm({
         buongGiam: buongGiam.trim(),
         ghiChu,
         items: dsDong.map((d) => ({ productId: d.productId, soLuong: d.soLuong, donGia: d.donGia })),
+        soThuTu: soThuTuGui,
       });
       if (!suaDoi) lamMoi(true);
     } catch (e) {
@@ -257,7 +337,7 @@ export function PhieuBanForm({
     } finally {
       setDangLuu(false);
     }
-  }, [hoTen, namSinh, buongGiam, dsDong, ngay, ghiChu, onLuu, suaDoi, lamMoi]);
+  }, [hoTen, namSinh, buongGiam, dsDong, ngay, ghiChu, onLuu, suaDoi, lamMoi, soThuTu, daSuaSo, buocTuDong, banDau]);
 
   // Ctrl+Enter để lưu. Khi cửa sổ xem trước đang mở thì nhường phím này cho
   // cửa sổ đó (dùng để đóng), tránh vừa đóng vừa lưu thêm một phiếu trống.
@@ -451,7 +531,50 @@ export function PhieuBanForm({
         <div className="flex flex-wrap items-end gap-x-5 gap-y-4 p-4">
           <div className="w-40 shrink-0">
             <ONhan>Ngày bán</ONhan>
-            <OText type="date" value={ngay} onChange={(e) => setNgay(e.target.value)} />
+            <OText
+              type="date"
+              value={ngay}
+              onChange={(e) => doiNgay(e.target.value)}
+            />
+          </div>
+          <div className="w-48 shrink-0">
+            <ONhan>Số thứ tự trong ngày</ONhan>
+            <div className="flex items-center gap-1.5">
+              <OText
+                type="number"
+                min={1}
+                step={1}
+                value={soThuTu}
+                onChange={(e) => {
+                  // Gõ tay thì huỷ luôn kết quả gợi ý đang trên đường về
+                  lanGoiSo.current += 1;
+                  setSoThuTu(e.target.value);
+                  setDaSuaSo(true);
+                  setBuocTuDong(false);
+                }}
+                onFocus={(e) => e.target.select()}
+                placeholder="Tự động"
+                aria-label="Số thứ tự trong ngày"
+                className="w-16 text-center font-mono font-semibold"
+              />
+              <Nut
+                kieu="mo"
+                co="sm"
+                onClick={() => {
+                  setDaSuaSo(false);
+                  setBuocTuDong(true);
+                  void laySoThuTu(ngay, banDau?.id ?? "");
+                }}
+                disabled={dangLuu}
+                title="Lấy số còn trống nhỏ nhất trong ngày"
+                className="h-9 px-2 text-[11.5px]"
+              >
+                <BieuTuong ten="lammoi" className="h-3.5 w-3.5" /> Tự động
+              </Nut>
+            </div>
+            <div className="mt-1 font-mono text-[9.5px] tracking-[0.03em] text-muc-mo uppercase">
+              Số trống nhỏ nhất của ngày
+            </div>
           </div>
           <div className="min-w-40 flex-1">
             <ONhan>Ghi chú</ONhan>

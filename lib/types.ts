@@ -51,6 +51,11 @@ export type LineItem = {
 export type Order = {
   id: string;
   soPhieu: string;
+  /**
+   * Số thứ tự của phiếu trong ngày, đếm lại từ 1 mỗi ngày.
+   * 0 nghĩa là phiếu lập trước khi có tính năng này và chưa được đánh số.
+   */
+  soThuTu: number;
   ngay: string;
   hoTen: string;
   namSinh: number;
@@ -94,6 +99,8 @@ export type NhanPhieu = {
   namSinh: string;
   buongGiam: string;
   ghiChu: string;
+  /** Nhãn dòng số thứ tự trong ngày, ví dụ “Số thứ tự” */
+  soThuTu: string;
   stt: string;
   tenHang: string;
   donViTinh: string;
@@ -106,6 +113,8 @@ export type NhanPhieu = {
 /** Bật/tắt từng phần của phiếu in. */
 export type HienPhieu = {
   soPhieu: boolean;
+  /** Dòng “Số thứ tự: 3” — số đếm trong ngày */
+  soThuTu: boolean;
   ngay: boolean;
   namSinh: boolean;
   buongGiam: boolean;

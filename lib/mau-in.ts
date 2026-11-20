@@ -16,6 +16,7 @@ export const MAU_IN_MAC_DINH: MauInPhieu = {
     namSinh: "Năm sinh",
     buongGiam: "Buồng giam",
     ghiChu: "Ghi chú",
+    soThuTu: "Số thứ tự",
     stt: "STT",
     tenHang: "Tên mặt hàng",
     donViTinh: "ĐVT",
@@ -26,6 +27,7 @@ export const MAU_IN_MAC_DINH: MauInPhieu = {
   },
   hien: {
     soPhieu: true,
+    soThuTu: true,
     ngay: true,
     namSinh: true,
     buongGiam: true,
@@ -171,6 +173,7 @@ export function chuanHoaMauIn(mau: unknown): MauInPhieu {
 /** Các ô bật/tắt, kèm nhãn hiển thị trong phần Cài đặt. */
 export const DS_BAT_TAT: { khoa: keyof MauInPhieu["hien"]; nhan: string; moTa: string }[] = [
   { khoa: "soPhieu", nhan: "Số phiếu", moTa: "Dòng “Số: PB-2026-0001”" },
+  { khoa: "soThuTu", nhan: "Số thứ tự trong ngày", moTa: "Dòng “Số thứ tự: 3” — số đếm lại từ 1 mỗi ngày" },
   { khoa: "ngay", nhan: "Ngày bán", moTa: "Dòng “Ngày … tháng … năm …”" },
   { khoa: "namSinh", nhan: "Năm sinh can phạm", moTa: "" },
   { khoa: "buongGiam", nhan: "Buồng giam", moTa: "" },
@@ -188,6 +191,7 @@ export const DS_NHAN: { khoa: keyof NhanPhieu; nhan: string }[] = [
   { khoa: "namSinh", nhan: "Nhãn năm sinh" },
   { khoa: "buongGiam", nhan: "Nhãn buồng giam" },
   { khoa: "ghiChu", nhan: "Nhãn ghi chú" },
+  { khoa: "soThuTu", nhan: "Nhãn số thứ tự trong ngày" },
   { khoa: "stt", nhan: "Tiêu đề cột STT" },
   { khoa: "tenHang", nhan: "Tiêu đề cột tên hàng" },
   { khoa: "donViTinh", nhan: "Tiêu đề cột ĐVT" },

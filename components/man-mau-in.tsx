@@ -12,6 +12,7 @@ import { bao, baoLoi, BieuTuong, Nut, OChon, ONhan, OText, The, Trong } from "./
 const DON_MAU: Order = {
   id: "xem-truoc",
   soPhieu: "PB-2026-0001",
+  soThuTu: 3,
   ngay: homNay(),
   hoTen: "Nguyễn Văn A",
   namSinh: 1985,

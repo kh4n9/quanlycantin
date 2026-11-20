@@ -191,6 +191,11 @@ export function MauPhieuBan({
           Số: <b>{order.soPhieu}</b>
         </div>
       )}
+      {mau.hien.soThuTu && (
+        <div style={{ textAlign: "center", fontSize: "12pt" }}>
+          {mau.nhan.soThuTu}: <b>{order.soThuTu || "…"}</b>
+        </div>
+      )}
       {mau.hien.ngay && (
         <div style={{ textAlign: "center", fontSize: "12pt", marginBottom: 14 }}>
           Ngày {ngayTrongThang} tháng {thang} năm {nam}

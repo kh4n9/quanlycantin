@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "@/lib/client";
-import { homNay, khop, ngayVN, so } from "@/lib/format";
+import { homNay, khop, ngayVN, so, tenPhieu } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { conThieu, phieuConThieu } from "@/lib/thieu-hang";
 import type { LineItem, Order } from "@/lib/types";
@@ -65,7 +65,15 @@ export function ManKiemPhieu() {
     let d = ds;
     if (loc === "chua_kiem") d = d.filter((o) => !o.kiemLuc);
     if (loc === "da_kiem") d = d.filter((o) => o.kiemLuc);
-    if (q) d = d.filter((o) => khop(o.soPhieu, q) || khop(o.hoTen, q) || khop(o.buongGiam, q));
+    if (q) {
+      d = d.filter(
+        (o) =>
+          khop(o.soPhieu, q) ||
+          khop(o.hoTen, q) ||
+          khop(o.buongGiam, q) ||
+          String(o.soThuTu ?? "") === q.trim(),
+      );
+    }
     return d;
   }, [ds, loc, q]);
 
@@ -125,8 +133,8 @@ export function ManKiemPhieu() {
         const kq = await apiClient.danhDauDaKiem(dangChon.id, ghiChu.trim());
 
         setDs((cu) => cu.map((o) => (o.id === kq.order.id ? kq.order : o)));
-        if (coThayDoi && duocSua) bao(`Đã sửa số lượng và kiểm xong phiếu ${kq.order.soPhieu}`);
-        else bao(`Đã kiểm phiếu ${kq.order.soPhieu}`);
+        if (coThayDoi && duocSua) bao(`Đã sửa số lượng và kiểm xong phiếu ${tenPhieu(kq.order)}`);
+        else bao(`Đã kiểm phiếu ${tenPhieu(kq.order)}`);
 
         if (tiepTuc) {
           const viTri = hienThi.findIndex((o) => o.id === dangChon.id);
@@ -150,7 +158,7 @@ export function ManKiemPhieu() {
       setDs((cu) => cu.map((o) => (o.id === kq.order.id ? kq.order : o)));
       setDangChonId(kq.order.id);
       setGhiChuSua(null);
-      bao(`Đã bỏ đánh dấu kiểm phiếu ${kq.order.soPhieu}`);
+      bao(`Đã bỏ đánh dấu kiểm phiếu ${tenPhieu(kq.order)}`);
     } catch (e) {
       baoLoi((e as Error).message);
     } finally {
@@ -222,7 +230,7 @@ export function ManKiemPhieu() {
           <OTim
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Tìm số phiếu, họ tên…"
+            placeholder="Tìm STT, số phiếu, họ tên…"
             aria-label="Tìm phiếu để kiểm"
             className="min-w-48"
           />
@@ -298,7 +306,7 @@ export function ManKiemPhieu() {
                       ✓
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="so block text-[11.5px] font-medium text-muc">{o.soPhieu}</span>
+                      <span className="so block text-[11.5px] font-medium text-muc">{tenPhieu(o)}</span>
                       <span className="mt-0.5 block truncate text-[13px] font-semibold text-muc">{o.hoTen}</span>
                       <span className="mt-0.5 block font-mono text-[10.5px] tracking-[0.02em] text-muc-nhat">
                         {o.buongGiam || "—"} · {o.items.length} món
@@ -317,7 +325,7 @@ export function ManKiemPhieu() {
               <div className="overflow-hidden rounded-lg border border-ke bg-giay-cao shadow-the">
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-dashed border-ke bg-giay px-4 py-2.5">
                   <div>
-                    <div className="so text-[12px] font-semibold text-muc">{dangChon.soPhieu}</div>
+                    <div className="so text-[12px] font-semibold text-muc">{tenPhieu(dangChon)}</div>
                     <div className="mt-0.5 font-mono text-[10px] tracking-[0.03em] text-muc-mo uppercase">
                       Ngày bán {ngayVN(dangChon.ngay)}
                     </div>

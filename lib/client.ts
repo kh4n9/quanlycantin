@@ -169,6 +169,14 @@ export type DuLieuPhieu = {
   buongGiam: string;
   ghiChu: string;
   items: LineInput[];
+  /**
+   * Số thứ tự trong ngày, tính từ 1.
+   * - Số dương: người dùng nhập tay, máy chủ kiểm trùng.
+   * - 0: yêu cầu lấy số còn trống nhỏ nhất trong ngày.
+   * - Bỏ trống: khi tạo phiếu là tự động; khi sửa phiếu là giữ nguyên số cũ
+   *   (trừ lúc đổi ngày — máy chủ tự đánh lại cho ngày mới).
+   */
+  soThuTu?: number;
 };
 
 export type DuLieuTaiKhoan = {
@@ -226,6 +234,11 @@ export const apiClient = {
   canPham: () => api<{ canPham: CanPhamGoiY[] }>("/api/can-pham"),
 
   orders: (q = "") => api<{ orders: Order[] }>(`/api/orders${q ? `?${q}` : ""}`),
+  /** Số thứ tự còn trống nhỏ nhất trong ngày, để gợi ý trên form phiếu. */
+  soThuTuTrong: (ngay: string, boQua = "") =>
+    api<{ soThuTu: number }>(
+      `/api/orders/so-thu-tu?ngay=${encodeURIComponent(ngay)}${boQua ? `&boQua=${encodeURIComponent(boQua)}` : ""}`,
+    ),
   /** Lấy đầy đủ một phiếu, dùng cho hộp chi tiết phiếu dùng chung. */
   layPhieuBan: (id: string) => api<{ order: Order }>(`/api/orders/${id}`),
   themPhieuBan: (body: DuLieuPhieu) =>

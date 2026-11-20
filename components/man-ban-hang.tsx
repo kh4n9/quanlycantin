@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { apiClient, type DuLieuPhieu } from "@/lib/client";
+import { tenPhieu } from "@/lib/format";
 import type { CanPhamGoiY, Product } from "@/lib/types";
 import { useNap } from "@/lib/use-nap";
 import { PhieuBanForm } from "./phieu-ban-form";
@@ -32,7 +33,7 @@ export function ManBanHang() {
   const luuPhieu = useCallback(
     async (duLieu: DuLieuPhieu) => {
       const kq = await apiClient.themPhieuBan(duLieu);
-      bao(`Đã lưu phiếu ${kq.order.soPhieu} của ${kq.order.hoTen}`);
+      bao(`Đã lưu phiếu ${tenPhieu(kq.order)} của ${kq.order.hoTen}`);
       await nap();
       xemTruoc(kq.order);
     },

@@ -9,6 +9,7 @@ import {
   chuanHoaMauInThieu,
 } from "./mau-in";
 import { bamMatKhau } from "./auth";
+import { ngayVN } from "./format";
 import type { CanPhamGoiY, LineItem, LineInput, Order, Product, Settings } from "./types";
 
 /* ============================ Khởi tạo ============================ */
@@ -44,6 +45,15 @@ async function chayKhoiTao(): Promise<void> {
     db.collection(COL.phieuBan).createIndex({ xoaLuc: 1, ngay: -1 }),
     // Kiểm một mặt hàng đã lên phiếu chưa trước khi cho xoá
     db.collection(COL.phieuBan).createIndex({ "items.productId": 1 }),
+    // Mỗi ngày không có hai phiếu cùng số thứ tự. Phiếu chưa được đánh số
+    // (soThuTu < 1) nằm ngoài chỉ mục nên dữ liệu cũ không làm hỏng chỉ mục.
+    db
+      .collection(COL.phieuBan)
+      .createIndex(
+        { ngay: 1, soThuTu: 1 },
+        { unique: true, partialFilterExpression: { soThuTu: { $gte: 1 } } },
+      )
+      .catch((e) => console.warn("[db] Không tạo được chỉ mục số thứ tự trong ngày:", (e as Error).message)),
     db.collection(COL.nhatKy).createIndex({ id: 1 }, { unique: true }),
     db.collection(COL.nhatKy).createIndex({ luc: -1 }),
     db.collection(COL.nhatKy).createIndex({ ngay: -1 }),
@@ -52,6 +62,14 @@ async function chayKhoiTao(): Promise<void> {
 
   await taoQuanTriDauTien();
   await chuyenDuLieuTuFileJson();
+  // Đánh số bù cho phiếu cũ không được phép chặn cả ứng dụng: lỗi ở đây chỉ ghi
+  // log và để lần khởi động sau làm tiếp.
+  try {
+    const daDanhSo = await danhSoThuTuPhieuCu();
+    if (daDanhSo > 0) console.log(`[db] Đã đánh số thứ tự trong ngày cho ${daDanhSo} phiếu cũ`);
+  } catch (e) {
+    console.warn("[db] Không đánh số thứ tự cho phiếu cũ được:", (e as Error).message);
+  }
 
   const daDon = await donThungRacQuaHan();
   if (daDon > 0) console.log(`[db] Đã tự xoá ${daDon} phiếu quá hạn lưu trong thùng rác`);
@@ -135,6 +153,66 @@ export function newId(tienTo = "id"): string {
 /** Bảng đếm dùng _id kiểu chuỗi, ví dụ "phieu_ban_2026". */
 type DocBoDem = { _id: string; giaTri: number };
 
+/** Những phiếu chưa được đánh số thứ tự trong ngày. */
+const THIEU_SO_THU_TU = {
+  $or: [{ soThuTu: { $exists: false } }, { soThuTu: null }, { soThuTu: { $lt: 1 } }],
+};
+
+/**
+ * Đánh số thứ tự trong ngày cho những phiếu lập trước khi có tính năng này.
+ *
+ * Mỗi ngày đánh lại từ 1 theo thứ tự lập phiếu (createdAt), nhảy qua những số
+ * đã có phiếu khác trong ngày dùng. Chạy ở mỗi lần khởi động nhưng chỉ đụng tới
+ * phiếu còn thiếu số, nên từ lần thứ hai trở đi gần như không tốn gì.
+ */
+async function danhSoThuTuPhieuCu(): Promise<number> {
+  const db = await getDb();
+  const boSung = await db
+    .collection(COL.phieuBan)
+    .find(THIEU_SO_THU_TU, { projection: { _id: 1, ngay: 1, createdAt: 1 } })
+    .sort({ ngay: 1, createdAt: 1, _id: 1 })
+    .toArray();
+  if (boSung.length === 0) return 0;
+
+  // Số đã dùng của từng ngày, để phiếu cũ không đè lên số của phiếu mới hơn
+  const daCo = await db
+    .collection(COL.phieuBan)
+    .find({ soThuTu: { $gte: 1 } }, { projection: { ngay: 1, soThuTu: 1 } })
+    .toArray();
+  const daDung = new Map<string, Set<number>>();
+  for (const doc of daCo) {
+    const ngay = String(doc.ngay ?? "");
+    if (!daDung.has(ngay)) daDung.set(ngay, new Set());
+    daDung.get(ngay)?.add(Math.round(Number(doc.soThuTu) || 0));
+  }
+
+  const capNhat = boSung.map((doc) => {
+    const ngay = String(doc.ngay ?? "");
+    const dung = daDung.get(ngay) ?? new Set<number>();
+    let so = 1;
+    while (dung.has(so)) so += 1;
+    dung.add(so);
+    daDung.set(ngay, dung);
+    return {
+      updateOne: {
+        // Lọc lại điều kiện "chưa có số" ngay lúc ghi: nếu một máy chủ khác vừa
+        // khởi động và đánh số trước thì lần ghi này không đè lên số đó.
+        filter: { _id: doc._id, ...THIEU_SO_THU_TU },
+        update: { $set: { soThuTu: so } },
+      },
+    };
+  });
+
+  try {
+    // ordered: false để phiếu nào ghi được thì ghi, phiếu trùng số của máy chủ
+    // khác để lần khởi động sau đánh tiếp thay vì hỏng cả mẻ.
+    await db.collection(COL.phieuBan).bulkWrite(capNhat, { ordered: false });
+  } catch (e) {
+    console.warn("[db] Đánh số thứ tự phiếu cũ chưa trọn:", (e as Error).message);
+  }
+  return capNhat.length;
+}
+
 /* ============================ Mặt hàng ============================ */
 
 export async function laySanPham(): Promise<Product[]> {
@@ -187,6 +265,57 @@ export async function soPhieuMoi(ngay: string): Promise<string> {
   return `PB-${nam}-${String(so).padStart(4, "0")}`;
 }
 
+/**
+ * Số thứ tự còn trống nhỏ nhất trong một ngày — bắt đầu dò từ 1 và nhảy qua
+ * những số đã có phiếu dùng. Nhờ vậy phiếu mới lấp vào chỗ trống nhỏ nhất chứ
+ * không phải số lớn nhất + 1.
+ *
+ * Phiếu đang nằm trong thùng rác vẫn tính là đã dùng số: phục hồi phiếu sẽ
+ * không bị trùng số với phiếu lập sau.
+ */
+export async function soThuTuConTrong(ngay: string, boQuaId = ""): Promise<number> {
+  const db = await getDb();
+  const dieuKien: Record<string, unknown> = { ngay: String(ngay || "") };
+  if (boQuaId) dieuKien.id = { $ne: boQuaId };
+  const ds = await db
+    .collection(COL.phieuBan)
+    .find(dieuKien, { projection: { soThuTu: 1 } })
+    .toArray();
+  const daDung = new Set(ds.map((d) => Math.round(Number(d.soThuTu) || 0)));
+  let so = 1;
+  while (daDung.has(so)) so += 1;
+  return so;
+}
+
+/** Số thứ tự đã có phiếu khác trong cùng ngày dùng chưa. */
+async function soThuTuDaDung(ngay: string, soThuTu: number, boQuaId = ""): Promise<boolean> {
+  const db = await getDb();
+  const dieuKien: Record<string, unknown> = { ngay: String(ngay || ""), soThuTu };
+  if (boQuaId) dieuKien.id = { $ne: boQuaId };
+  return (await db.collection(COL.phieuBan).countDocuments(dieuKien, { limit: 1 })) > 0;
+}
+
+/** Lỗi trùng khoá của MongoDB, thường là hai phiếu cùng lấy một số thứ tự trong ngày. */
+export function laLoiTrungKhoa(e: unknown): boolean {
+  return typeof e === "object" && e !== null && (e as { code?: number }).code === 11000;
+}
+
+/**
+ * Chọn số thứ tự cho một phiếu.
+ *
+ * `yeuCau` là số người dùng nhập tay; để trống hoặc <= 0 nghĩa là lấy số còn
+ * trống nhỏ nhất trong ngày. `boQuaId` là phiếu đang sửa — không tính chính nó
+ * khi kiểm trùng.
+ */
+export async function chonSoThuTu(ngay: string, yeuCau?: number | null, boQuaId = ""): Promise<number> {
+  const nhapTay = Math.round(Number(yeuCau) || 0);
+  if (nhapTay <= 0) return soThuTuConTrong(ngay, boQuaId);
+  if (await soThuTuDaDung(ngay, nhapTay, boQuaId)) {
+    throw new Error(`Số thứ tự ${nhapTay} đã có phiếu khác dùng trong ngày ${ngayVN(ngay) || ngay}`);
+  }
+  return nhapTay;
+}
+
 export type LocPhieu = { tu?: string; den?: string; hoTen?: string };
 
 /** Bù các trường thêm sau cho những phiếu lập trước khi có tính năng đó. */
@@ -199,6 +328,7 @@ function chuanHoaPhieu(doc: Record<string, unknown>): Order {
   return {
     ...(doc as unknown as Order),
     items,
+    soThuTu: Math.max(0, Math.round(Number(doc.soThuTu) || 0)),
     kiemLuc: String(doc.kiemLuc ?? ""),
     kiemBoi: String(doc.kiemBoi ?? ""),
     kiemGhiChu: String(doc.kiemGhiChu ?? ""),

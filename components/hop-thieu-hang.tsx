@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "@/lib/client";
-import { homNay, ngayVN, so } from "@/lib/format";
+import { homNay, ngayVN, so, tenPhieu } from "@/lib/format";
 import { conThieu, daBu } from "@/lib/thieu-hang";
 import type { BuHang, Order } from "@/lib/types";
 import { bao, baoLoi, BieuTuong, HopThoai, Nhan, Nut, ONhan, OText } from "./ui";
@@ -61,8 +61,8 @@ export function HopThieuHang({
       const con = kq.order.items.reduce((s, i) => s + conThieu(i), 0);
       bao(
         con > 0
-          ? `Đã ghi phiếu ${kq.order.soPhieu} còn thiếu ${so(con)} đơn vị hàng`
-          : `Phiếu ${kq.order.soPhieu} đã giao đủ`,
+          ? `Đã ghi phiếu ${tenPhieu(kq.order)} còn thiếu ${so(con)} đơn vị hàng`
+          : `Phiếu ${tenPhieu(kq.order)} đã giao đủ`,
       );
       onLuu(kq.order);
       // Lưu xong là xong việc với phiếu này — đóng luôn cho đỡ phải bấm thêm
@@ -91,8 +91,8 @@ export function HopThieuHang({
       const con = kq.order.items.reduce((s, i) => s + conThieu(i), 0);
       bao(
         con > 0
-          ? `Đã bù hàng cho phiếu ${kq.order.soPhieu}, còn thiếu ${so(con)} đơn vị`
-          : `Đã bù đủ hàng cho phiếu ${kq.order.soPhieu}`,
+          ? `Đã bù hàng cho phiếu ${tenPhieu(kq.order)}, còn thiếu ${so(con)} đơn vị`
+          : `Đã bù đủ hàng cho phiếu ${tenPhieu(kq.order)}`,
       );
       onLuu(kq.order);
       setDsBu({});
@@ -130,7 +130,7 @@ export function HopThieuHang({
         suaNgay || homNay(),
         suaGhiChu.trim(),
       );
-      bao(`Đã sửa lần bù hàng của phiếu ${kq.order.soPhieu}`);
+      bao(`Đã sửa lần bù hàng của phiếu ${tenPhieu(kq.order)}`);
       setDangSuaLanBu(null);
       onLuu(kq.order);
     } catch (e) {
@@ -150,7 +150,7 @@ export function HopThieuHang({
     setDangXuLyLanBu(true);
     try {
       const kq = await apiClient.xoaLanBuHang(phieu.id, i.productId, viTri);
-      bao(`Đã xoá lần bù hàng của phiếu ${kq.order.soPhieu}`);
+      bao(`Đã xoá lần bù hàng của phiếu ${tenPhieu(kq.order)}`);
       if (dangSuaLanBu?.productId === i.productId && dangSuaLanBu.viTri === viTri) {
         setDangSuaLanBu(null);
       }
@@ -185,7 +185,7 @@ export function HopThieuHang({
     <HopThoai
       mo
       dong={dong}
-      tieuDe={`Hàng thiếu — phiếu ${phieu.soPhieu}`}
+      tieuDe={`Hàng thiếu — phiếu ${tenPhieu(phieu)}`}
       rong="max-w-3xl"
       chanTrang={
         <>

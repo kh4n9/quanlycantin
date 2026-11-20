@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiClient, type DuLieuPhieu } from "@/lib/client";
 import { taiExcel } from "@/lib/excel";
-import { homNay, khop, ngayVN, so, tien } from "@/lib/format";
+import { homNay, khop, ngayVN, so, tenPhieu, tien } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import type { CanPhamGoiY, Order, Product } from "@/lib/types";
 import { useNap } from "@/lib/use-nap";
@@ -120,7 +120,15 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
     if (chiThieuHang) d = d.filter((o) => phieuConThieu(o) > 0);
     // Phiếu có chứa món đang lọc
     if (monLoc) d = d.filter((o) => o.items.some((i) => i.productId === monLoc.id));
-    if (q) d = d.filter((o) => khop(o.soPhieu, q) || khop(o.hoTen, q) || khop(o.buongGiam, q));
+    if (q) {
+      d = d.filter(
+        (o) =>
+          khop(o.soPhieu, q) ||
+          khop(o.hoTen, q) ||
+          khop(o.buongGiam, q) ||
+          String(o.soThuTu ?? "") === q.trim(),
+      );
+    }
     return d;
   }, [ds, q, chiThieuHang, monLoc]);
 
@@ -176,7 +184,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
     async (duLieu: DuLieuPhieu) => {
       if (!dangSua) return;
       const kq = await apiClient.suaPhieuBan(dangSua.id, duLieu);
-      bao(`Đã cập nhật phiếu ${kq.order.soPhieu}`);
+      bao(`Đã cập nhật phiếu ${tenPhieu(kq.order)}`);
       setDangSua(null);
       await nap();
     },
@@ -245,7 +253,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
     setDangXoaLuu(true);
     try {
       await apiClient.xoaPhieuBan(dangXoa.id, lyDoXoa.trim());
-      bao(`Đã chuyển phiếu ${dangXoa.soPhieu} vào thùng rác`);
+      bao(`Đã chuyển phiếu ${tenPhieu(dangXoa)} vào thùng rác`);
       setDangXoa(null);
       await nap();
       void demThungRac();
@@ -260,6 +268,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
     // Mỗi dòng hàng của phiếu là một dòng trong file để lọc và tổng hợp được
     const dong = hienThi.flatMap((o) =>
       o.items.map((i) => [
+        o.soThuTu || "",
         o.soPhieu,
         ngayVN(o.ngay),
         o.hoTen,
@@ -283,13 +292,13 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
         (monLoc ? ` — chỉ phiếu có món "${monLoc.ten}"` : "") +
         (chiThieuHang ? " — chỉ phiếu còn thiếu hàng" : ""),
       tieuDeCot: [
-        "Số phiếu", "Ngày", "Họ tên", "Năm sinh", "Buồng giam",
+        "STT", "Số phiếu", "Ngày", "Họ tên", "Năm sinh", "Buồng giam",
         "Mặt hàng", "ĐVT", "Số lượng", "Còn thiếu", "Đã bù", "Đơn giá", "Thành tiền",
         "Trạng thái kiểm", "Ghi chú kiểm",
       ],
       dong,
-      cotTien: [10, 11],
-      doRong: [16, 12, 26, 10, 12, 26, 8, 10, 11, 10, 12, 14, 20, 26],
+      cotTien: [11, 12],
+      doRong: [6, 16, 12, 26, 10, 12, 26, 8, 10, 11, 10, 12, 14, 20, 26],
     }).catch((e) => baoLoi((e as Error).message));
   };
 
@@ -322,7 +331,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
           <OTim
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Tìm số phiếu, họ tên, buồng giam…"
+            placeholder="Tìm STT, số phiếu, họ tên, buồng giam…"
             aria-label="Tìm phiếu bán"
             className="min-w-52"
           />
@@ -368,7 +377,14 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
                   <button type="button" onClick={() => setPhieuDangXem(o)} className="block w-full text-left">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="so text-[11.5px] font-medium text-muc">{o.soPhieu}</div>
+                        <div className="so text-[11.5px] font-medium text-muc">
+                          {o.soThuTu > 0 && (
+                            <span className="mr-1.5 rounded-sm bg-muc/8 px-1 py-0.5 text-[10px] text-muc-nhat">
+                              STT {o.soThuTu}
+                            </span>
+                          )}
+                          {o.soPhieu}
+                        </div>
                         <div className="mt-0.5 truncate font-semibold text-muc">{o.hoTen}</div>
                       </div>
                       <div className="shrink-0 text-right">
@@ -422,6 +438,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
           <TableHeader className="sticky top-0 z-10 bg-giay/95 font-mono text-[10px] tracking-[0.08em] text-muc-mo uppercase backdrop-blur">
             <TableRow className="[&>th]:border-b [&>th]:border-ke [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium">
               <TableHead className="w-36">Số phiếu</TableHead>
+              <TableHead className="w-14 text-center">STT</TableHead>
               <TableHead className="w-28">Ngày</TableHead>
               <TableHead>Can phạm</TableHead>
               <TableHead className="w-32">Buồng giam</TableHead>
@@ -433,7 +450,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
           <TableBody>
             {hienThi.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7}>
+                <TableCell colSpan={8}>
                   <Trong tieuDe={tieuDeTrong} moTa={moTaTrong} />
                 </TableCell>
               </TableRow>
@@ -445,6 +462,9 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
                 className="group cursor-pointer [&>td]:border-b [&>td]:border-ke/70 [&>td]:px-3 [&>td]:py-2.5 hover:bg-giay/70"
               >
                 <TableCell className="so text-[11.5px] font-medium text-muc">{o.soPhieu}</TableCell>
+                <TableCell className="so text-center text-[11.5px] text-muc-nhat">
+                  {o.soThuTu > 0 ? o.soThuTu : "—"}
+                </TableCell>
                 <TableCell className="text-[13px] text-muc-nhat">{ngayVN(o.ngay)}</TableCell>
                 <TableCell>
                   <div className="font-semibold text-muc">{o.hoTen}</div>
@@ -481,7 +501,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
           {hienThi.length > 0 && (
             <TableFooter className="sticky bottom-0 bg-giay/95 backdrop-blur">
               <TableRow className="[&>td]:border-t [&>td]:border-ke [&>td]:px-3 [&>td]:py-2.5">
-                <TableCell colSpan={4} className="text-[12px] font-medium text-muc-nhat">
+                <TableCell colSpan={5} className="text-[12px] font-medium text-muc-nhat">
                   {soTrang > 1 ? (
                     <>
                       Trang {so(trangHien)}/{so(soTrang)} · tổng cả kỳ {so(hienThi.length)} phiếu
@@ -517,7 +537,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
       <HopThoai
         mo={dangSua !== null}
         dong={() => setDangSua(null)}
-        tieuDe={dangSua ? `Sửa phiếu ${dangSua.soPhieu}` : ""}
+        tieuDe={dangSua ? `Sửa phiếu ${tenPhieu(dangSua)}` : ""}
         rong="max-w-5xl"
       >
         {dangSua && (
@@ -536,7 +556,7 @@ export function ManPhieuBan({ onSangBanHang }: { onSangBanHang: () => void }) {
       <HopThoai
         mo={dangXoa !== null}
         dong={() => setDangXoa(null)}
-        tieuDe={dangXoa ? `Chuyển phiếu ${dangXoa.soPhieu} vào thùng rác` : ""}
+        tieuDe={dangXoa ? `Chuyển phiếu ${tenPhieu(dangXoa)} vào thùng rác` : ""}
         chanTrang={
           <>
             <Nut onClick={() => setDangXoa(null)} disabled={dangXoaLuu}>
@@ -639,7 +659,7 @@ export function HopXemTruocPhieu() {
     <HopThoai
       mo={dangXem !== null}
       dong={dongXemTruoc}
-      tieuDe={dangXem ? `Phiếu bán ${dangXem.soPhieu}` : ""}
+      tieuDe={dangXem ? `Phiếu bán ${tenPhieu(dangXem)}` : ""}
       rong="max-w-3xl"
       chanTrang={
         <>

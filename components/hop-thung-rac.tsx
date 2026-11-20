@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { apiClient } from "@/lib/client";
-import { khop, ngayVN, so } from "@/lib/format";
+import { khop, ngayVN, so, tenPhieu } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { useNap } from "@/lib/use-nap";
 import type { Order } from "@/lib/types";
@@ -64,7 +64,11 @@ export function HopThungRac({
       q
         ? ds.filter(
             (o) =>
-              khop(o.soPhieu, q) || khop(o.hoTen, q) || khop(o.buongGiam, q) || khop(o.lyDoXoa, q),
+              khop(o.soPhieu, q) ||
+              khop(o.hoTen, q) ||
+              khop(o.buongGiam, q) ||
+              khop(o.lyDoXoa, q) ||
+              String(o.soThuTu ?? "") === q.trim(),
           )
         : ds,
     [ds, q],
@@ -74,7 +78,7 @@ export function HopThungRac({
     setDangChay(o.id);
     try {
       await apiClient.phucHoiPhieuBan(o.id);
-      bao(`Đã phục hồi phiếu ${o.soPhieu}`);
+      bao(`Đã phục hồi phiếu ${tenPhieu(o)}`);
       await nap();
       onThayDoi();
     } catch (e) {
@@ -87,7 +91,7 @@ export function HopThungRac({
   const xoaVinhVien = async (o: Order) => {
     if (
       !window.confirm(
-        `Xoá VĨNH VIỄN phiếu ${o.soPhieu} của ${o.hoTen}?\n\nThao tác này không thể hoàn tác.`,
+        `Xoá VĨNH VIỄN phiếu ${tenPhieu(o)} của ${o.hoTen}?\n\nThao tác này không thể hoàn tác.`,
       )
     ) {
       return;
@@ -95,7 +99,7 @@ export function HopThungRac({
     setDangChay(o.id);
     try {
       await apiClient.xoaVinhVienPhieuBan(o.id);
-      bao(`Đã xoá vĩnh viễn phiếu ${o.soPhieu}`);
+      bao(`Đã xoá vĩnh viễn phiếu ${tenPhieu(o)}`);
       await nap();
       onThayDoi();
     } catch (e) {
@@ -179,7 +183,7 @@ export function HopThungRac({
                     }`}
                     title="Bấm để xem lại phiếu"
                   >
-                    <TableCell className="so text-[11px] font-medium text-muc-mo line-through">{o.soPhieu}</TableCell>
+                    <TableCell className="so text-[11px] font-medium text-muc-mo line-through">{tenPhieu(o)}</TableCell>
                     <TableCell className="so text-[11px] text-muc-nhat">{ngayVN(o.ngay)}</TableCell>
                     <TableCell>
                       <div className="font-semibold text-muc">{o.hoTen}</div>

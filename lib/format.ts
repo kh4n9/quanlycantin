@@ -10,6 +10,14 @@ export function tien(n: number): string {
   return `${so(n)} đ`;
 }
 
+/**
+ * Tên phiếu để hiện trong tiêu đề, thông báo: kèm số thứ tự trong ngày nếu có.
+ * Ví dụ "PB-2026-0012 · STT 3".
+ */
+export function tenPhieu(p: { soPhieu: string; soThuTu?: number }): string {
+  return p.soThuTu ? `${p.soPhieu} · STT ${p.soThuTu}` : p.soPhieu;
+}
+
 /** "2026-10-02" -> "02/10/2026" */
 export function ngayVN(iso: string): string {
   if (!iso) return "";

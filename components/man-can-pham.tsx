@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { apiClient } from "@/lib/client";
 import { taiExcel } from "@/lib/excel";
-import { homNay, khop, ngayVN, so, tien } from "@/lib/format";
+import { homNay, khop, ngayVN, so, tenPhieu, tien } from "@/lib/format";
 import { conThieu } from "@/lib/thieu-hang";
 import type { Order } from "@/lib/types";
 import { useNap } from "@/lib/use-nap";
@@ -214,6 +214,7 @@ export function ManCanPham() {
           ten: "Chi tiet",
           tieuDeCot: [
             "Họ tên",
+            "STT",
             "Số phiếu",
             "Ngày",
             "Mã hàng",
@@ -227,6 +228,7 @@ export function ManCanPham() {
             p.phieu.flatMap((o) =>
               o.items.map((item) => [
                 p.hoTen,
+                o.soThuTu || "",
                 o.soPhieu,
                 ngayVN(o.ngay),
                 item.ma,
@@ -238,8 +240,8 @@ export function ManCanPham() {
               ]),
             ),
           ),
-          cotTien: [7],
-          doRong: [26, 15, 12, 14, 32, 10, 12, 16, 12],
+          cotTien: [8],
+          doRong: [26, 6, 15, 12, 14, 32, 10, 12, 16, 12],
         },
       ]);
       bao(`Đã xuất ${so(dsDangXem.length)} can phạm ra Excel`);
@@ -593,7 +595,7 @@ function HopChiTietCanPham({
                       className="cursor-pointer transition-colors hover:bg-giay/60 [&>td]:border-b [&>td]:border-ke/60 [&>td]:px-3 [&>td]:py-2"
                     >
                       <TableCell className="whitespace-nowrap font-mono text-[11px] text-muc-nhat">{ngayVN(o.ngay)}</TableCell>
-                      <TableCell className="so text-[11.5px] font-semibold text-muc">{o.soPhieu}</TableCell>
+                      <TableCell className="so text-[11.5px] font-semibold text-muc">{tenPhieu(o)}</TableCell>
                       <TableCell className="so text-center text-muc-nhat">{so(o.items.length)}</TableCell>
                       <TableCell className="so text-right text-muc">
                         {so(o.items.reduce((s, item) => s + item.soLuong, 0))}

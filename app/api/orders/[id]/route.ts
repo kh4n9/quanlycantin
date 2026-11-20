@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { loiKhongCoQuyen, yeuCau } from "@/lib/auth";
-import { dungDongHang, khoiTao, suaPhieuBan, timPhieuBan, xoaPhieuBan } from "@/lib/db";
+import { chonSoThuTu, dungDongHang, khoiTao, laLoiTrungKhoa, suaPhieuBan, timPhieuBan, xoaPhieuBan } from "@/lib/db";
 import { ngayVN, so, tien } from "@/lib/format";
 import { soSanhTruong } from "@/lib/nhat-ky";
 import { ghiNhatKy } from "@/lib/nhat-ky-server";
+import type { Order } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -64,12 +65,38 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       patch.tongTien = tongTien;
     }
 
-    const phieu = await suaPhieuBan(id, patch as never);
-    if (!phieu) {
-      return NextResponse.json({ error: "Không tìm thấy phiếu bán" }, { status: 404 });
+    // Số thứ tự tính theo ngày. Gửi số dương là nhập tay (kiểm trùng), gửi 0 là
+    // yêu cầu tự động lấy số trống nhỏ nhất. Không gửi gì (kể cả null/rỗng) thì
+    // giữ nguyên, trừ khi ngày bán đổi — lúc đó phải đánh lại số cho ngày mới.
+    const ngayMoi = String(patch.ngay ?? truoc.ngay);
+    const doiNgay = body.ngay !== undefined && ngayMoi !== truoc.ngay;
+    const coGuiSo = body.soThuTu !== undefined && body.soThuTu !== null && body.soThuTu !== "";
+    const soYeuCau = coGuiSo ? Number(body.soThuTu) : undefined;
+    if (soYeuCau !== undefined && (!Number.isFinite(soYeuCau) || !Number.isInteger(soYeuCau) || soYeuCau < 0)) {
+      return NextResponse.json({ error: "Số thứ tự phải là số nguyên từ 0 trở lên" }, { status: 400 });
     }
+    // 0 hoặc đổi ngày mà không nhập tay thì máy chủ tự chọn số trống nhỏ nhất
+    const canTuDong = soYeuCau === 0 || (soYeuCau === undefined && doiNgay);
 
-    const sau = { ...truoc, ...patch } as typeof truoc;
+    let phieu: Order | null = null;
+    let patchCuoi: Record<string, unknown> = patch;
+    // Số tự chọn có thể bị phiếu khác vừa lấy: thử lại vài lần. Số nhập tay thì
+    // không thử lại — báo lỗi để người dùng biết mà chọn số khác.
+    const soLanThu = canTuDong ? 5 : 1;
+    for (let lan = 1; lan <= soLanThu && !phieu; lan += 1) {
+      const deSua: Record<string, unknown> = { ...patch };
+      if (canTuDong) deSua.soThuTu = await chonSoThuTu(ngayMoi, 0, id);
+      else if (soYeuCau !== undefined) deSua.soThuTu = await chonSoThuTu(ngayMoi, soYeuCau, id);
+      try {
+        phieu = await suaPhieuBan(id, deSua as never);
+        patchCuoi = deSua;
+      } catch (e) {
+        if (!canTuDong || lan >= soLanThu || !laLoiTrungKhoa(e)) throw e;
+      }
+    }
+    if (!phieu) throw new Error("Không chọn được số thứ tự còn trống, vui lòng thử lại");
+
+    const sau = { ...truoc, ...patchCuoi } as typeof truoc;
     const thayDoi = soSanhTruong(
       truoc as unknown as Record<string, unknown>,
       sau as unknown as Record<string, unknown>,
@@ -79,6 +106,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         buongGiam: "Buồng giam",
         ngay: "Ngày bán",
         ghiChu: "Ghi chú",
+        soThuTu: "Số thứ tự",
       },
       { ngay: (v) => ngayVN(String(v)) || "—" },
     );
@@ -99,6 +127,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     });
     return NextResponse.json({ order: phieu });
   } catch (e) {
+    if (laLoiTrungKhoa(e)) {
+      return NextResponse.json(
+        { error: "Số thứ tự vừa bị phiếu khác lấy, vui lòng chọn số khác" },
+        { status: 409 },
+      );
+    }
     return NextResponse.json({ error: (e as Error).message }, { status: 400 });
   }
 }

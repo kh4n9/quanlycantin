@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiClient, type DuLieuPhieu } from "@/lib/client";
-import { ngayVN, so, tien } from "@/lib/format";
+import { ngayVN, so, tenPhieu, tien } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { conThieu, daBu, phieuConThieu } from "@/lib/thieu-hang";
 import type { CanPhamGoiY, Order, Product } from "@/lib/types";
@@ -113,7 +113,7 @@ export function HopChiTietPhieu({
     setPhieu(kq.order);
     setMoSua(false);
     onThayDoi?.(kq.order);
-    bao(`Đã cập nhật phiếu ${kq.order.soPhieu}`);
+    bao(`Đã cập nhật phiếu ${tenPhieu(kq.order)}`);
   };
 
   const capNhatThieu = (o: Order) => {
@@ -141,7 +141,7 @@ export function HopChiTietPhieu({
       <HopThoai
         mo={orderId !== null}
         dong={onDong}
-        tieuDe={phieu ? `Phiếu bán ${phieu.soPhieu}` : "Chi tiết phiếu"}
+        tieuDe={phieu ? `Phiếu bán ${tenPhieu(phieu)}` : "Chi tiết phiếu"}
         rong="max-w-4xl"
         khoaEsc={moThieu || moSua}
         chanTrang={
@@ -185,7 +185,14 @@ export function HopChiTietPhieu({
                   <BieuTuong ten="phieu" />
                 </span>
                 <div className="min-w-0">
-                  <div className="so text-[11.5px] font-semibold text-muc">{phieu.soPhieu}</div>
+                  <div className="so flex flex-wrap items-center gap-1.5 text-[11.5px] font-semibold text-muc">
+                    {phieu.soPhieu}
+                    {phieu.soThuTu > 0 && (
+                      <span className="rounded-sm bg-muc/8 px-1.5 py-0.5 text-[10px] font-medium text-muc-nhat">
+                        STT {phieu.soThuTu}
+                      </span>
+                    )}
+                  </div>
                   <div className="truncate font-serif text-[17px] font-semibold tracking-[-0.01em] text-muc">
                     {phieu.hoTen}
                   </div>
@@ -216,7 +223,8 @@ export function HopChiTietPhieu({
               </div>
             </div>
 
-            <div className={`grid grid-cols-2 gap-2 ${coTien ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
+            <div className={`grid grid-cols-2 gap-2 ${coTien ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}>
+              <OSo nhan="Số thứ tự" giaTri={phieu.soThuTu > 0 ? so(phieu.soThuTu) : "—"} />
               <OSo nhan="Mặt hàng" giaTri={so(phieu.items.length)} />
               <OSo nhan="Lượng hàng" giaTri={so(tongLuong)} />
               {coTien && <OSo nhan="Tổng tiền" giaTri={tien(phieu.tongTien)} />}
@@ -344,7 +352,7 @@ export function HopChiTietPhieu({
         <HopThoai
           mo
           dong={() => setMoSua(false)}
-          tieuDe={`Chỉnh sửa phiếu ${phieu.soPhieu}`}
+          tieuDe={`Chỉnh sửa phiếu ${tenPhieu(phieu)}`}
           rong="max-w-5xl"
         >
           <div className="max-h-[76vh] overflow-y-auto pr-1">
